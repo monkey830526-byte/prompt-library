@@ -1,15 +1,75 @@
-[
-  {
-    "id": "mod2wdt64ejzw",
-    "created": 1777045316586,
-    "type": "photo",
-    "title": "dm 名人",
-    "thumbnail": "",
-    "promptZh": "名人代言提示-真是驚艷\nGpt-lmage2 \n能讓任何人代言你的品牌和產品！\nPrompt：\n「為我製作一張 [人物] 代言 [品牌/產品] 的海報。」\n\n但只是玩玩就好 別剖到各大社群 切勿商用",
-    "promptEn": "",
-    "tags": [],
-    "notes": "",
-    "favorite": false,
-    "updated": 1777045316586
-  }
-]
+{
+  "categories": [
+    {
+      "id": "seedance",
+      "name": "Seedance 2.0",
+      "icon": "🎞️",
+      "type": "video",
+      "color": "#8b5cf6"
+    },
+    {
+      "id": "sora",
+      "name": "Sora",
+      "icon": "🎬",
+      "type": "video",
+      "color": "#ef4444"
+    },
+    {
+      "id": "kling",
+      "name": "Kling",
+      "icon": "🎥",
+      "type": "video",
+      "color": "#f97316"
+    },
+    {
+      "id": "midjourney",
+      "name": "Midjourney",
+      "icon": "🎨",
+      "type": "photo",
+      "color": "#3b82f6"
+    },
+    {
+      "id": "flux",
+      "name": "Flux",
+      "icon": "✨",
+      "type": "photo",
+      "color": "#10b981"
+    },
+    {
+      "id": "dalle",
+      "name": "DALL-E 3",
+      "icon": "🖼️",
+      "type": "photo",
+      "color": "#06b6d4"
+    }
+  ],
+  "prompts": [
+    {
+      "id": "mod2wdt64ejzw",
+      "created": 1777045316586,
+      "type": "photo",
+      "title": "dm 名人",
+      "thumbnail": "",
+      "promptZh": "名人代言提示-真是驚艷\nGpt-lmage2 \n能讓任何人代言你的品牌和產品！\nPrompt：\n「為我製作一張 [人物] 代言 [品牌/產品] 的海報。」\n\n但只是玩玩就好 別剖到各大社群 切勿商用",
+      "promptEn": "",
+      "tags": [],
+      "notes": "",
+      "favorite": false,
+      "updated": 1777045316586,
+      "categoryId": "midjourney"
+    },
+    {
+      "id": "mod3tg9o20pbz",
+      "created": 1777046859420,
+      "categoryId": "midjourney",
+      "title": "建築",
+      "thumbnail": "",
+      "promptZh": "這是一份非常結構化且專業的AI繪圖提示詞（Prompt）或建築設計任務書。從文本的用語和邏輯來看，它專門用於指導AI（如 Midjourney 等）生成高品質的建築概念排版圖。\n\n以下是圖片中文字的完整提取與結構分析：\n\n📝 完整文字提取\n根據圖片中的主體元素的形態，設計一個現代建築，現代商業購物中心，位於重慶嘉陵江邊江北嘴CBD。僅將主體元素作為設計靈感的來源——從它的形態、色彩、質感、色調，比例及行為特徵中汲取靈感——而不得複製其面部、頭部或具體形態。清晰形象的原始設計理念，設計主題標題，最終輸出應包含三個部分：\n\n概念性體量演變草圖，BIG風格——展示了建築形態如何從主題元素的特徵中發展而來，並附有清晰標註的步驟，中文展示。\n\n一份切合實際、完整詳盡的建築方案——設計理念標題，一幅以該主體元素為靈感來源、展現功能性建築的真實照片效果渲染圖，其中描繪了人類活動、流通路徑以及可信的現場環境。最終的展板應顯得專業、富有創意，並適合用於闡述設計概念，以元素為主題的背景，整個展板採用結構化、競賽級的佈局，高級排版，國際風格。圖紙內容包括總平面圖，內部空間光影節點，人行流線分析，交通流線分析，周邊及城市分析，文化脈絡分析，\n\n3-4個不同角度的建築效果圖展示",
+      "promptEn": "",
+      "tags": [],
+      "notes": "",
+      "favorite": false,
+      "updated": 1777046859420
+    }
+  ]
+}
