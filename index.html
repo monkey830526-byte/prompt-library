@@ -5,254 +5,214 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>提詞庫 Prompt Library</title>
 <style>
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body {
-    font-family: -apple-system, "Segoe UI", "Microsoft JhengHei", sans-serif;
-    background: #0f172a;
-    color: #e2e8f0;
-    min-height: 100vh;
-    padding: 20px;
-  }
-  .container { max-width: 1200px; margin: 0 auto; }
-  header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 20px;
-    flex-wrap: wrap;
-    gap: 12px;
-  }
-  h1 { font-size: 24px; color: #f1f5f9; display: flex; align-items: center; gap: 10px; }
-  .mode-badge {
-    font-size: 12px;
-    padding: 3px 8px;
-    border-radius: 4px;
-    font-weight: normal;
-  }
-  .mode-badge.read { background: #334155; color: #94a3b8; }
-  .mode-badge.edit { background: #10b981; color: white; }
-  .sync-status {
-    font-size: 12px;
-    color: #94a3b8;
-    display: flex;
-    align-items: center;
-    gap: 4px;
-  }
-  .tabs { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
-  .tab {
-    padding: 8px 16px;
-    background: #1e293b;
-    border: 1px solid #334155;
-    border-radius: 8px;
-    cursor: pointer;
-    color: #cbd5e1;
-    font-size: 14px;
-    transition: all 0.15s;
-  }
-  .tab:hover { background: #334155; }
-  .tab.active { background: #3b82f6; border-color: #3b82f6; color: white; }
-  .toolbar {
-    display: flex;
-    gap: 10px;
-    margin-bottom: 20px;
-    flex-wrap: wrap;
-    align-items: center;
-  }
-  input, textarea, select {
-    background: #1e293b;
-    border: 1px solid #334155;
-    border-radius: 8px;
-    padding: 10px 12px;
-    color: #e2e8f0;
-    font-size: 14px;
-    font-family: inherit;
-  }
-  input:focus, textarea:focus, select:focus {
-    outline: none;
-    border-color: #3b82f6;
-  }
-  .search { flex: 1; min-width: 200px; }
-  button {
-    background: #3b82f6;
-    border: none;
-    border-radius: 8px;
-    padding: 10px 16px;
-    color: white;
-    cursor: pointer;
-    font-size: 14px;
-    font-weight: 500;
-    transition: background 0.15s;
-  }
-  button:hover { background: #2563eb; }
-  button.ghost { background: #334155; }
-  button.ghost:hover { background: #475569; }
-  button.danger { background: #ef4444; }
-  button.danger:hover { background: #dc2626; }
-  button.small { padding: 6px 10px; font-size: 12px; }
-  button.icon {
-    padding: 8px 10px;
-    background: transparent;
-    border: 1px solid #334155;
-  }
-  button.icon:hover { background: #334155; }
-  .grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-    gap: 16px;
-  }
-  .card {
-    background: #1e293b;
-    border: 1px solid #334155;
-    border-radius: 12px;
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-  }
-  .card-thumb {
-    width: 100%;
-    height: 180px;
-    background: #0f172a;
-    object-fit: cover;
-    display: block;
-  }
-  .card-thumb.placeholder {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 48px;
-    color: #475569;
-  }
-  .card-body { padding: 14px; flex: 1; display: flex; flex-direction: column; gap: 8px; }
-  .card-title { font-size: 16px; font-weight: 600; color: #f1f5f9; }
-  .card-meta { font-size: 12px; color: #94a3b8; }
-  .badge {
-    display: inline-block;
-    padding: 2px 8px;
-    background: #0ea5e9;
-    color: white;
-    border-radius: 4px;
-    font-size: 11px;
-    margin-right: 4px;
-  }
-  .badge.video { background: #8b5cf6; }
-  .badge.photo { background: #10b981; }
-  .tags { display: flex; flex-wrap: wrap; gap: 4px; }
-  .tag {
-    background: #334155;
-    color: #cbd5e1;
-    padding: 2px 8px;
-    border-radius: 4px;
-    font-size: 11px;
-  }
-  .prompt-text {
-    background: #0f172a;
-    padding: 8px;
-    border-radius: 6px;
-    font-size: 12px;
-    color: #cbd5e1;
-    max-height: 60px;
-    overflow-y: auto;
-    white-space: pre-wrap;
-    word-break: break-word;
-  }
-  .card-actions { display: flex; gap: 6px; margin-top: auto; flex-wrap: wrap; }
-  .modal-backdrop {
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.7);
-    display: none;
-    align-items: center;
-    justify-content: center;
-    padding: 20px;
-    z-index: 100;
-  }
-  .modal-backdrop.active { display: flex; }
-  .modal {
-    background: #1e293b;
-    border-radius: 12px;
-    padding: 24px;
-    width: 100%;
-    max-width: 600px;
-    max-height: 90vh;
-    overflow-y: auto;
-  }
-  .modal h2 { margin-bottom: 16px; }
-  .form-group { margin-bottom: 14px; }
-  .form-group label {
-    display: block;
-    margin-bottom: 6px;
-    font-size: 13px;
-    color: #94a3b8;
-  }
-  .form-group input,
-  .form-group textarea,
-  .form-group select { width: 100%; }
-  .form-group textarea { min-height: 80px; resize: vertical; font-family: inherit; }
-  .modal-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 20px; }
-  .empty {
-    text-align: center;
-    padding: 60px 20px;
-    color: #64748b;
-  }
-  .empty-icon { font-size: 48px; margin-bottom: 12px; }
-  .toast {
-    position: fixed;
-    bottom: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: #10b981;
-    color: white;
-    padding: 10px 20px;
-    border-radius: 8px;
-    opacity: 0;
-    transition: opacity 0.2s;
-    pointer-events: none;
-    z-index: 200;
-  }
-  .toast.show { opacity: 1; }
-  .toast.error { background: #ef4444; }
-  .stats { font-size: 13px; color: #94a3b8; }
-  .help-text {
-    font-size: 12px;
-    color: #94a3b8;
-    margin-top: 4px;
-    line-height: 1.5;
-  }
-  .help-text a { color: #60a5fa; }
-  .edit-only { display: none; }
-  body.edit-mode .edit-only { display: inline-flex; }
-  body.edit-mode .card-actions .edit-only { display: inline-block; }
-  .spin {
-    display: inline-block;
-    animation: spin 1s linear infinite;
-  }
-  @keyframes spin { to { transform: rotate(360deg); } }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: -apple-system, "Segoe UI", "Microsoft JhengHei", sans-serif;
+  background: #0f172a;
+  color: #e2e8f0;
+  min-height: 100vh;
+  padding: 20px;
+}
+.container { max-width: 1280px; margin: 0 auto; }
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+h1 { font-size: 22px; color: #f1f5f9; display: flex; align-items: center; gap: 8px; }
+.mode-badge { font-size: 11px; padding: 2px 8px; border-radius: 4px; font-weight: normal; }
+.mode-badge.read { background: #334155; color: #94a3b8; }
+.mode-badge.edit { background: #10b981; color: white; }
+.sync-status { font-size: 12px; color: #94a3b8; display: flex; align-items: center; gap: 4px; }
+.header-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+
+/* Tabs */
+.tabs-wrapper { display: flex; align-items: center; gap: 6px; margin-bottom: 16px; flex-wrap: wrap; }
+.tab {
+  padding: 7px 14px;
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 8px;
+  cursor: pointer;
+  color: #cbd5e1;
+  font-size: 13px;
+  transition: all 0.15s;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.tab:hover { background: #334155; }
+.tab.active { color: white; border-color: transparent; }
+.tab-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.tab-add {
+  padding: 7px 12px;
+  background: transparent;
+  border: 1px dashed #475569;
+  border-radius: 8px;
+  cursor: pointer;
+  color: #64748b;
+  font-size: 13px;
+  transition: all 0.15s;
+}
+.tab-add:hover { border-color: #94a3b8; color: #94a3b8; }
+
+/* Toolbar */
+.toolbar { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; align-items: center; }
+input, textarea, select {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 8px;
+  padding: 10px 12px;
+  color: #e2e8f0;
+  font-size: 14px;
+  font-family: inherit;
+}
+input:focus, textarea:focus, select:focus { outline: none; border-color: #3b82f6; }
+.search-wrap { flex: 1; min-width: 220px; position: relative; }
+.search-wrap input { width: 100%; padding-left: 36px; }
+.search-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #64748b; font-size: 14px; pointer-events: none; }
+
+button {
+  background: #3b82f6;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 16px;
+  color: white;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: background 0.15s;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+button:hover { background: #2563eb; }
+button.ghost { background: #334155; color: #e2e8f0; }
+button.ghost:hover { background: #475569; }
+button.danger { background: #ef4444; }
+button.danger:hover { background: #dc2626; }
+button.small { padding: 5px 10px; font-size: 12px; }
+button.icon-btn { background: transparent; border: 1px solid #334155; padding: 8px 10px; color: #94a3b8; }
+button.icon-btn:hover { background: #334155; color: #e2e8f0; }
+
+/* Grid */
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; }
+.card { background: #1e293b; border: 1px solid #334155; border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; transition: border-color 0.15s; }
+.card:hover { border-color: #475569; }
+.card-thumb { width: 100%; height: 170px; background: #0f172a; object-fit: cover; display: block; }
+.card-thumb.placeholder { display: flex; align-items: center; justify-content: center; font-size: 44px; color: #334155; }
+.card-body { padding: 12px; flex: 1; display: flex; flex-direction: column; gap: 8px; }
+.card-badges { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.cat-badge { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 500; color: white; }
+.fav-badge { color: #f59e0b; font-size: 14px; }
+.card-title { font-size: 15px; font-weight: 600; color: #f1f5f9; line-height: 1.3; }
+.card-meta { font-size: 11px; color: #64748b; }
+.tags { display: flex; flex-wrap: wrap; gap: 4px; }
+.tag { background: #0f172a; color: #94a3b8; padding: 2px 7px; border-radius: 4px; font-size: 11px; }
+.prompt-box { background: #0f172a; padding: 8px; border-radius: 6px; font-size: 12px; max-height: 56px; overflow-y: auto; white-space: pre-wrap; word-break: break-word; line-height: 1.5; }
+.prompt-zh { color: #cbd5e1; }
+.prompt-en { color: #7dd3fc; }
+.card-actions { display: flex; gap: 5px; margin-top: auto; flex-wrap: wrap; }
+.empty { text-align: center; padding: 80px 20px; color: #475569; }
+.empty-icon { font-size: 56px; margin-bottom: 12px; }
+.stats { font-size: 12px; color: #64748b; white-space: nowrap; }
+
+/* Modal */
+.modal-backdrop {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.75);
+  display: none; align-items: center; justify-content: center;
+  padding: 16px; z-index: 100;
+}
+.modal-backdrop.active { display: flex; }
+.modal {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 14px;
+  padding: 24px;
+  width: 100%;
+  max-width: 580px;
+  max-height: 92vh;
+  overflow-y: auto;
+}
+.modal-sm { max-width: 420px; }
+.modal h2 { margin-bottom: 18px; font-size: 18px; }
+.form-group { margin-bottom: 14px; }
+.form-group label { display: block; margin-bottom: 6px; font-size: 12px; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em; }
+.form-group input, .form-group textarea, .form-group select { width: 100%; }
+.form-group textarea { min-height: 80px; resize: vertical; font-family: inherit; line-height: 1.5; }
+.form-row { display: flex; gap: 10px; }
+.form-row .form-group { flex: 1; }
+.modal-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 20px; flex-wrap: wrap; }
+.help-text { font-size: 12px; color: #64748b; margin-top: 5px; line-height: 1.5; }
+.help-text a { color: #60a5fa; }
+
+/* Category list in settings */
+.cat-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 14px; }
+.cat-item {
+  display: flex; align-items: center; gap: 10px;
+  background: #0f172a; padding: 10px 12px; border-radius: 8px;
+  border: 1px solid #334155;
+}
+.cat-item-dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
+.cat-item-name { flex: 1; font-size: 14px; }
+.cat-item-type { font-size: 11px; color: #64748b; }
+.cat-item-actions { display: flex; gap: 6px; }
+
+/* Color picker row */
+.color-options { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 6px; }
+.color-opt {
+  width: 28px; height: 28px; border-radius: 50%; cursor: pointer;
+  border: 3px solid transparent; transition: border-color 0.15s;
+}
+.color-opt.selected { border-color: white; }
+
+/* Toast */
+.toast {
+  position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+  background: #10b981; color: white; padding: 10px 20px;
+  border-radius: 8px; opacity: 0; transition: opacity 0.2s;
+  pointer-events: none; z-index: 300; white-space: nowrap;
+}
+.toast.show { opacity: 1; }
+.toast.err { background: #ef4444; }
+
+.spin { display: inline-block; animation: spin 1s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.edit-only { display: none !important; }
+body.edit-mode .edit-only { display: inline-flex !important; }
 </style>
 </head>
 <body>
 <div class="container">
   <header>
-    <h1>
-      🎬 提詞庫
-      <span class="mode-badge read" id="modeBadge">唯讀</span>
-    </h1>
-    <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+    <h1>🎬 提詞庫 <span class="mode-badge read" id="modeBadge">👁️ 唯讀</span></h1>
+    <div class="header-actions">
       <span class="sync-status" id="syncStatus"></span>
-      <button class="edit-only" id="btnAdd">+ 新增</button>
+      <button class="edit-only" id="btnAdd">+ 新增提詞</button>
       <button class="ghost edit-only" id="btnExport">匯出</button>
-      <button class="icon" id="btnSettings" title="設定">⚙️</button>
+      <button class="icon-btn" id="btnSettings" title="設定">⚙️</button>
     </div>
   </header>
 
-  <div class="tabs" id="tabs">
-    <div class="tab active" data-type="all">全部</div>
-    <div class="tab" data-type="video">🎞️ 影片</div>
-    <div class="tab" data-type="photo">📷 照片</div>
-    <div class="tab" data-type="favorite">⭐ 收藏</div>
+  <!-- Tabs -->
+  <div class="tabs-wrapper" id="tabsWrapper">
+    <div class="tab active" data-filter="all">全部</div>
+    <div class="tab" data-filter="fav">⭐ 收藏</div>
+    <!-- dynamic tabs injected here -->
+    <div class="tab-add edit-only" id="btnAddCat">＋ 新增分類</div>
   </div>
 
+  <!-- Toolbar -->
   <div class="toolbar">
-    <input type="text" class="search" id="search" placeholder="搜尋標題 / prompt / 標籤…">
+    <div class="search-wrap">
+      <span class="search-icon">🔍</span>
+      <input type="text" id="search" placeholder="搜尋標題、Prompt、標籤…">
+    </div>
     <select id="sortBy">
       <option value="updated">最近更新</option>
       <option value="created">建立時間</option>
@@ -262,23 +222,20 @@
   </div>
 
   <div class="grid" id="grid"></div>
-  <div class="empty" id="empty" style="display:none;">
+  <div class="empty" id="empty" style="display:none">
     <div class="empty-icon">📭</div>
-    <div>目前沒有提詞</div>
+    <div>沒有符合的提詞</div>
   </div>
 </div>
 
-<!-- 新增 / 編輯提詞 Modal -->
-<div class="modal-backdrop" id="modal">
+<!-- ===== 提詞 Modal ===== -->
+<div class="modal-backdrop" id="promptModal">
   <div class="modal">
-    <h2 id="modalTitle">新增提詞</h2>
-    <form id="form">
+    <h2 id="promptModalTitle">新增提詞</h2>
+    <form id="promptForm">
       <div class="form-group">
-        <label>類型</label>
-        <select name="type" required>
-          <option value="video">🎞️ 影片</option>
-          <option value="photo">📷 照片</option>
-        </select>
+        <label>分類</label>
+        <select name="categoryId" id="catSelect" required></select>
       </div>
       <div class="form-group">
         <label>標題</label>
@@ -297,7 +254,7 @@
         <textarea name="promptEn" placeholder="English prompt for API"></textarea>
       </div>
       <div class="form-group">
-        <label>標籤（用逗號分隔）</label>
+        <label>標籤（逗號分隔）</label>
         <input name="tags" placeholder="電影感, 夕陽, 街景">
       </div>
       <div class="form-group">
@@ -305,29 +262,73 @@
         <textarea name="notes" placeholder="例：ratio 16:9, duration 5s"></textarea>
       </div>
       <div class="form-group">
-        <label>
-          <input type="checkbox" name="favorite" style="width:auto; margin-right:6px;">
-          加入收藏
-        </label>
+        <label><input type="checkbox" name="favorite" style="width:auto;margin-right:6px">加入收藏</label>
       </div>
       <div class="modal-actions">
-        <button type="button" class="ghost" id="btnCancel">取消</button>
+        <button type="button" class="ghost" id="btnPromptCancel">取消</button>
         <button type="submit">儲存</button>
       </div>
     </form>
   </div>
 </div>
 
-<!-- 設定 Modal -->
+<!-- ===== 分類 Modal ===== -->
+<div class="modal-backdrop" id="catModal">
+  <div class="modal modal-sm">
+    <h2 id="catModalTitle">新增分類</h2>
+    <form id="catForm">
+      <div class="form-group">
+        <label>分類名稱</label>
+        <input name="name" required placeholder="例：Seedance 2.0">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>圖示（Emoji）</label>
+          <input name="icon" placeholder="🎞️" maxlength="4" style="font-size:20px">
+        </div>
+        <div class="form-group">
+          <label>類型</label>
+          <select name="type">
+            <option value="video">🎞️ 影片</option>
+            <option value="photo">📷 照片</option>
+            <option value="other">✨ 其他</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>顏色</label>
+        <div class="color-options" id="colorOptions"></div>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="ghost" id="btnCatCancel">取消</button>
+        <button type="submit">儲存分類</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ===== 分類管理 Modal ===== -->
+<div class="modal-backdrop" id="manageCatModal">
+  <div class="modal modal-sm">
+    <h2>📂 管理分類</h2>
+    <div class="cat-list" id="catList"></div>
+    <div class="modal-actions">
+      <button class="ghost" id="btnCloseMgr">關閉</button>
+      <button class="edit-only" id="btnNewCatFromMgr">＋ 新增分類</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 設定 Modal ===== -->
 <div class="modal-backdrop" id="settingsModal">
-  <div class="modal">
+  <div class="modal modal-sm">
     <h2>⚙️ 設定</h2>
     <div class="form-group">
       <label>GitHub Personal Access Token</label>
-      <input type="password" id="tokenInput" placeholder="ghp_... 或 github_pat_...">
+      <input type="password" id="tokenInput" placeholder="github_pat_...">
       <div class="help-text">
-        只有擁有 Token 的人才能編輯。Token 會儲存在這台瀏覽器的 localStorage，不會外洩。<br>
-        不知道怎麼建立？<a href="https://github.com/settings/tokens?type=beta" target="_blank">點此前往 GitHub 建立</a>
+        有 Token → 可編輯。Token 存在本機瀏覽器，不會外洩。<br>
+        <a href="https://github.com/settings/tokens?type=beta" target="_blank">前往 GitHub 建立 Token</a>
       </div>
     </div>
     <div class="form-group">
@@ -340,16 +341,17 @@
     </div>
     <div class="form-group">
       <label>資料檔路徑</label>
-      <input id="pathInput" placeholder="data.json" value="data.json">
+      <input id="pathInput" value="data.json">
     </div>
     <div class="form-group">
       <label>分支</label>
-      <input id="branchInput" placeholder="main" value="main">
+      <input id="branchInput" value="main">
     </div>
-    <div class="modal-actions">
-      <button type="button" class="danger" id="btnClearToken">清除 Token（登出）</button>
-      <button type="button" class="ghost" id="btnCloseSettings">關閉</button>
-      <button type="button" id="btnSaveSettings">儲存並重新載入</button>
+    <div class="modal-actions" style="flex-wrap:wrap;">
+      <button class="danger small" id="btnManageCats">管理分類</button>
+      <button class="danger small" id="btnClearToken">登出</button>
+      <button class="ghost" id="btnCloseSettings">關閉</button>
+      <button id="btnSaveSettings">儲存並重載</button>
     </div>
   </div>
 </div>
@@ -357,361 +359,414 @@
 <div class="toast" id="toast"></div>
 
 <script>
-// ============ 設定 ============
-const DEFAULT_CONFIG = {
-  owner: 'monkey830526-byte',
-  repo: 'prompt-library',
-  path: 'data.json',
-  branch: 'main',
-};
-const CONFIG_KEY = 'prompt_library_config';
-const TOKEN_KEY = 'prompt_library_token';
+// ============ Config ============
+const DEFAULT_CFG = { owner: 'monkey830526-byte', repo: 'prompt-library', path: 'data.json', branch: 'main' };
+const CFG_KEY = 'plib_config', TOKEN_KEY = 'plib_token', LOCAL_KEY = 'plib_local_v2';
+const PRESET_COLORS = ['#8b5cf6','#3b82f6','#10b981','#f59e0b','#ef4444','#06b6d4','#ec4899','#84cc16','#f97316','#6366f1'];
+const DEFAULT_CATS = [
+  { id: 'seedance', name: 'Seedance 2.0', icon: '🎞️', type: 'video', color: '#8b5cf6' },
+  { id: 'sora',     name: 'Sora',         icon: '🎬', type: 'video', color: '#ef4444' },
+  { id: 'kling',    name: 'Kling',        icon: '🎥', type: 'video', color: '#f97316' },
+  { id: 'midjourney', name: 'Midjourney', icon: '🎨', type: 'photo', color: '#3b82f6' },
+  { id: 'flux',     name: 'Flux',         icon: '✨', type: 'photo', color: '#10b981' },
+  { id: 'dalle',    name: 'DALL-E 3',     icon: '🖼️', type: 'photo', color: '#06b6d4' },
+];
 
-function getConfig() {
-  try {
-    return { ...DEFAULT_CONFIG, ...JSON.parse(localStorage.getItem(CONFIG_KEY) || '{}') };
-  } catch { return { ...DEFAULT_CONFIG }; }
-}
-function setConfig(cfg) {
-  localStorage.setItem(CONFIG_KEY, JSON.stringify(cfg));
-}
-function getToken() { return localStorage.getItem(TOKEN_KEY) || ''; }
-function setToken(t) {
-  if (t) localStorage.setItem(TOKEN_KEY, t);
-  else localStorage.removeItem(TOKEN_KEY);
-}
+function getCfg() { try { return { ...DEFAULT_CFG, ...JSON.parse(localStorage.getItem(CFG_KEY)||'{}') }; } catch { return {...DEFAULT_CFG}; } }
+function setCfg(c) { localStorage.setItem(CFG_KEY, JSON.stringify(c)); }
+function getToken() { return localStorage.getItem(TOKEN_KEY)||''; }
+function setToken(t) { t ? localStorage.setItem(TOKEN_KEY,t) : localStorage.removeItem(TOKEN_KEY); }
 
-// ============ 狀態 ============
-let items = [];
+// ============ State ============
+let data = { categories: [], prompts: [] };
 let fileSha = null;
-let editingId = null;
-let activeType = 'all';
+let activeFilter = 'all'; // 'all' | 'fav' | category.id
+let editingPromptId = null;
+let editingCatId = null;
+let selectedColor = PRESET_COLORS[0];
 let saveTimer = null;
 let saving = false;
 
 const $ = id => document.getElementById(id);
 
-// ============ UI 輔助 ============
-function toast(msg, isError = false) {
-  const t = $('toast');
-  t.textContent = msg;
-  t.className = 'toast show' + (isError ? ' error' : '');
-  setTimeout(() => t.classList.remove('show'), 2000);
+// ============ Helpers ============
+function toast(msg, err=false) {
+  const t=$('toast'); t.textContent=msg; t.className='toast show'+(err?' err':'');
+  setTimeout(()=>t.classList.remove('show'),2200);
 }
-function setSyncStatus(text, spin = false) {
-  $('syncStatus').innerHTML = spin ? `<span class="spin">⏳</span> ${text}` : text;
+function setSyncStatus(txt, spin=false) {
+  $('syncStatus').innerHTML = spin ? `<span class="spin">⏳</span> ${txt}` : txt;
 }
-function escapeHtml(s) {
-  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function esc(s) { return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function uid() { return Date.now().toString(36)+Math.random().toString(36).slice(2,7); }
+function fmt(ts) {
+  if(!ts) return '';
+  const d=new Date(ts);
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 }
-function escapeAttr(s) { return String(s).replace(/"/g, '&quot;'); }
-function formatDate(ts) {
-  if (!ts) return '';
-  const d = new Date(ts);
-  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
-}
-function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
+function getCat(id) { return data.categories.find(c=>c.id===id)||null; }
 
 // ============ GitHub API ============
 async function fetchData() {
-  const cfg = getConfig();
-  const token = getToken();
-  setSyncStatus('載入中…', true);
+  const cfg=getCfg(), tok=getToken();
+  setSyncStatus('載入中…',true);
   try {
-    // 有 token 時用 API（可拿到 sha 以便寫入）；沒 token 時用 raw URL（公開讀取）
-    if (token) {
-      const url = `https://api.github.com/repos/${cfg.owner}/${cfg.repo}/contents/${cfg.path}?ref=${cfg.branch}`;
-      const res = await fetch(url, { headers: { Authorization: `Bearer ${token}`, Accept: 'application/vnd.github+json' }});
-      if (res.status === 404) { items = []; fileSha = null; setSyncStatus('（新檔案，尚未建立）'); return; }
-      if (!res.ok) throw new Error(`GitHub API ${res.status}`);
-      const json = await res.json();
-      fileSha = json.sha;
-      const content = decodeURIComponent(escape(atob(json.content.replace(/\n/g, ''))));
-      items = JSON.parse(content || '[]');
+    if(tok) {
+      const res=await fetch(`https://api.github.com/repos/${cfg.owner}/${cfg.repo}/contents/${cfg.path}?ref=${cfg.branch}`,
+        {headers:{Authorization:`Bearer ${tok}`,Accept:'application/vnd.github+json'}});
+      if(res.status===404){ data={categories:[...DEFAULT_CATS],prompts:[]}; fileSha=null; setSyncStatus('（新資料，尚未推送）'); return; }
+      if(!res.ok) throw new Error(`API ${res.status}`);
+      const j=await res.json(); fileSha=j.sha;
+      const raw=decodeURIComponent(escape(atob(j.content.replace(/\n/g,''))));
+      const parsed=JSON.parse(raw||'{}');
+      data = parsedToData(parsed);
     } else {
-      const url = `https://raw.githubusercontent.com/${cfg.owner}/${cfg.repo}/${cfg.branch}/${cfg.path}?t=${Date.now()}`;
-      const res = await fetch(url);
-      if (!res.ok) {
-        if (res.status === 404) { items = []; setSyncStatus('（尚未有資料）'); return; }
-        throw new Error(`讀取失敗 ${res.status}`);
-      }
-      items = await res.json();
+      const url=`https://raw.githubusercontent.com/${cfg.owner}/${cfg.repo}/${cfg.branch}/${cfg.path}?t=${Date.now()}`;
+      const res=await fetch(url);
+      if(!res.ok){ if(res.status===404){data={categories:[...DEFAULT_CATS],prompts:[]};setSyncStatus('（尚未有資料）');return;} throw new Error(res.status); }
+      data=parsedToData(await res.json());
     }
-    setSyncStatus(`✓ 已同步 · ${items.length} 筆`);
-  } catch (err) {
-    console.error(err);
-    setSyncStatus('⚠️ 讀取失敗：' + err.message);
-    toast('讀取失敗：' + err.message, true);
-    items = [];
+    setSyncStatus(`✓ 已同步 · ${data.prompts.length} 筆`);
+  } catch(e) {
+    console.error(e); setSyncStatus('⚠️ 載入失敗',false); toast('載入失敗：'+e.message,true);
+    const local=localStorage.getItem(LOCAL_KEY);
+    if(local) { try{ data=JSON.parse(local); setSyncStatus('（離線模式）'); }catch{} }
   }
+}
+
+function parsedToData(raw) {
+  // support old format (array) and new format ({categories,prompts})
+  if(Array.isArray(raw)) {
+    // migrate old format
+    return { categories:[...DEFAULT_CATS], prompts: raw.map(p=>({ ...p, categoryId: p.type==='video'?'seedance':'midjourney' })) };
+  }
+  return {
+    categories: raw.categories&&raw.categories.length ? raw.categories : [...DEFAULT_CATS],
+    prompts: raw.prompts||[]
+  };
 }
 
 async function saveData() {
-  const cfg = getConfig();
-  const token = getToken();
-  if (!token) { toast('未登入，無法儲存', true); return; }
-  if (saving) return;
-  saving = true;
-  setSyncStatus('儲存中…', true);
+  const cfg=getCfg(), tok=getToken();
+  if(!tok){toast('未登入',true);return;}
+  if(saving) return;
+  saving=true; setSyncStatus('儲存中…',true);
+  localStorage.setItem(LOCAL_KEY, JSON.stringify(data));
   try {
-    const content = JSON.stringify(items, null, 2);
-    const encoded = btoa(unescape(encodeURIComponent(content)));
-    const url = `https://api.github.com/repos/${cfg.owner}/${cfg.repo}/contents/${cfg.path}`;
-    const body = {
-      message: `Update prompt library (${items.length} items)`,
-      content: encoded,
-      branch: cfg.branch,
-    };
-    if (fileSha) body.sha = fileSha;
-    const res = await fetch(url, {
-      method: 'PUT',
-      headers: { Authorization: `Bearer ${token}`, Accept: 'application/vnd.github+json', 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
+    const content=JSON.stringify(data,null,2);
+    const encoded=btoa(unescape(encodeURIComponent(content)));
+    const body={message:`Update (${data.prompts.length} prompts)`,content:encoded,branch:cfg.branch};
+    if(fileSha) body.sha=fileSha;
+    const res=await fetch(`https://api.github.com/repos/${cfg.owner}/${cfg.repo}/contents/${cfg.path}`,{
+      method:'PUT',
+      headers:{Authorization:`Bearer ${tok}`,Accept:'application/vnd.github+json','Content-Type':'application/json'},
+      body:JSON.stringify(body)
     });
-    if (!res.ok) {
-      const errJson = await res.json().catch(() => ({}));
-      throw new Error(errJson.message || `GitHub API ${res.status}`);
-    }
-    const json = await res.json();
-    fileSha = json.content.sha;
-    setSyncStatus(`✓ 已同步 · ${items.length} 筆`);
-  } catch (err) {
-    console.error(err);
-    setSyncStatus('⚠️ 儲存失敗：' + err.message);
-    toast('儲存失敗：' + err.message, true);
-  } finally {
-    saving = false;
-  }
+    if(!res.ok){const e=await res.json().catch(()=>({})); throw new Error(e.message||res.status);}
+    fileSha=(await res.json()).content.sha;
+    setSyncStatus(`✓ 已同步 · ${data.prompts.length} 筆`);
+  } catch(e) {
+    console.error(e); setSyncStatus('⚠️ 儲存失敗'); toast('儲存失敗：'+e.message,true);
+  } finally { saving=false; }
 }
 
 function scheduleSave() {
-  if (!getToken()) return;
-  clearTimeout(saveTimer);
-  setSyncStatus('待儲存…');
-  saveTimer = setTimeout(saveData, 1200);
+  if(!getToken()) return;
+  clearTimeout(saveTimer); setSyncStatus('待儲存…');
+  saveTimer=setTimeout(saveData,1200);
 }
 
-// ============ 渲染 ============
+// ============ Render Tabs ============
+function renderTabs() {
+  const wrap=$('tabsWrapper');
+  // keep first two (all, fav) and last (add)
+  const addBtn=$('btnAddCat');
+  const staticTabs=Array.from(wrap.children).filter(c=>c.dataset.filter==='all'||c.dataset.filter==='fav');
+  // remove dynamic
+  Array.from(wrap.children).forEach(c=>{ if(!c.dataset.filter||(!['all','fav'].includes(c.dataset.filter))) c.remove(); });
+
+  data.categories.forEach(cat=>{
+    const t=document.createElement('div');
+    t.className='tab'+(activeFilter===cat.id?' active':'');
+    t.dataset.filter=cat.id;
+    t.innerHTML=`<span class="tab-dot" style="background:${cat.color}"></span>${esc(cat.icon||'')} ${esc(cat.name)}`;
+    t.onclick=()=>setFilter(cat.id);
+    wrap.insertBefore(t, addBtn);
+  });
+
+  // update all/fav active state
+  wrap.querySelector('[data-filter="all"]').className='tab'+(activeFilter==='all'?' active':'');
+  wrap.querySelector('[data-filter="fav"]').className='tab'+(activeFilter==='fav'?' active':'');
+}
+
+function setFilter(f) {
+  activeFilter=f;
+  renderTabs();
+  render();
+}
+
+// ============ Render Grid ============
 function render() {
-  const q = $('search').value.trim().toLowerCase();
-  const sortBy = $('sortBy').value;
-  let list = items.slice();
+  const q=$('search').value.trim().toLowerCase();
+  const sort=$('sortBy').value;
+  let list=data.prompts.slice();
 
-  if (activeType === 'favorite') list = list.filter(i => i.favorite);
-  else if (activeType !== 'all') list = list.filter(i => i.type === activeType);
+  if(activeFilter==='fav') list=list.filter(p=>p.favorite);
+  else if(activeFilter!=='all') list=list.filter(p=>p.categoryId===activeFilter);
 
-  if (q) {
-    list = list.filter(i =>
-      (i.title || '').toLowerCase().includes(q) ||
-      (i.promptZh || '').toLowerCase().includes(q) ||
-      (i.promptEn || '').toLowerCase().includes(q) ||
-      (i.tags || []).some(t => t.toLowerCase().includes(q))
-    );
-  }
+  if(q) list=list.filter(p=>
+    (p.title||'').toLowerCase().includes(q)||
+    (p.promptZh||'').toLowerCase().includes(q)||
+    (p.promptEn||'').toLowerCase().includes(q)||
+    (p.notes||'').toLowerCase().includes(q)||
+    (p.tags||[]).some(t=>t.toLowerCase().includes(q))||
+    (getCat(p.categoryId)?.name||'').toLowerCase().includes(q)
+  );
 
-  if (sortBy === 'title') list.sort((a, b) => (a.title || '').localeCompare(b.title || ''));
-  else if (sortBy === 'created') list.sort((a, b) => b.created - a.created);
-  else list.sort((a, b) => b.updated - a.updated);
+  if(sort==='title') list.sort((a,b)=>(a.title||'').localeCompare(b.title||''));
+  else if(sort==='created') list.sort((a,b)=>b.created-a.created);
+  else list.sort((a,b)=>b.updated-a.updated);
 
-  $('stats').textContent = `顯示 ${list.length} 筆 / 共 ${items.length}`;
+  $('stats').textContent=`${list.length} / ${data.prompts.length} 筆`;
+  const grid=$('grid');
+  grid.innerHTML='';
+  $('empty').style.display=list.length===0?'block':'none';
 
-  const grid = $('grid');
-  grid.innerHTML = '';
-  $('empty').style.display = list.length === 0 ? 'block' : 'none';
-
-  for (const item of list) {
-    const card = document.createElement('div');
-    card.className = 'card';
-    const typeBadge = item.type === 'video' ? '<span class="badge video">🎞️ 影片</span>' : '<span class="badge photo">📷 照片</span>';
-    const favBadge = item.favorite ? '<span class="badge" style="background:#f59e0b;">⭐</span>' : '';
-    const tagsHtml = (item.tags || []).map(t => `<span class="tag">${escapeHtml(t)}</span>`).join('');
-    const thumb = item.thumbnail
-      ? `<img class="card-thumb" src="${escapeAttr(item.thumbnail)}" onerror="this.outerHTML='<div class=\\'card-thumb placeholder\\'>${item.type === 'video' ? '🎞️' : '📷'}</div>'">`
-      : `<div class="card-thumb placeholder">${item.type === 'video' ? '🎞️' : '📷'}</div>`;
-
-    card.innerHTML = `
+  list.forEach(p=>{
+    const cat=getCat(p.categoryId);
+    const card=document.createElement('div');
+    card.className='card';
+    const thumb=p.thumbnail
+      ?`<img class="card-thumb" src="${esc(p.thumbnail)}" onerror="this.outerHTML='<div class=\\'card-thumb placeholder\\'>${esc(cat?.icon||'📄')}</div>'">`
+      :`<div class="card-thumb placeholder">${esc(cat?.icon||'📄')}</div>`;
+    const catBadge=cat?`<span class="cat-badge" style="background:${cat.color}">${esc(cat.icon||'')} ${esc(cat.name)}</span>`:'';
+    const favBadge=p.favorite?`<span class="fav-badge">⭐</span>`:'';
+    const tags=(p.tags||[]).map(t=>`<span class="tag">${esc(t)}</span>`).join('');
+    card.innerHTML=`
       ${thumb}
       <div class="card-body">
-        <div>${typeBadge}${favBadge}</div>
-        <div class="card-title">${escapeHtml(item.title || '未命名')}</div>
-        ${item.promptZh ? `<div class="prompt-text">${escapeHtml(item.promptZh)}</div>` : ''}
-        ${item.promptEn ? `<div class="prompt-text" style="color:#7dd3fc;">${escapeHtml(item.promptEn)}</div>` : ''}
-        <div class="tags">${tagsHtml}</div>
-        <div class="card-meta">更新於 ${formatDate(item.updated)}</div>
+        <div class="card-badges">${catBadge}${favBadge}</div>
+        <div class="card-title">${esc(p.title||'未命名')}</div>
+        ${p.promptZh?`<div class="prompt-box prompt-zh">${esc(p.promptZh)}</div>`:''}
+        ${p.promptEn?`<div class="prompt-box prompt-en">${esc(p.promptEn)}</div>`:''}
+        ${tags?`<div class="tags">${tags}</div>`:''}
+        <div class="card-meta">更新 ${fmt(p.updated)}</div>
         <div class="card-actions">
-          ${item.promptZh ? `<button class="small" data-copy-zh="${item.id}">複製中文</button>` : ''}
-          ${item.promptEn ? `<button class="small" data-copy-en="${item.id}">複製英文</button>` : ''}
-          <button class="small ghost edit-only" data-edit="${item.id}">編輯</button>
-          <button class="small ghost edit-only" data-fav="${item.id}">${item.favorite ? '取消收藏' : '收藏'}</button>
-          <button class="small danger edit-only" data-del="${item.id}">刪除</button>
+          ${p.promptZh?`<button class="small" data-copy-zh="${p.id}">複製中文</button>`:''}
+          ${p.promptEn?`<button class="small ghost" data-copy-en="${p.id}">複製英文</button>`:''}
+          <button class="small ghost edit-only" data-edit="${p.id}">編輯</button>
+          <button class="small ghost edit-only" data-fav="${p.id}">${p.favorite?'取消收藏':'收藏'}</button>
+          <button class="small danger edit-only" data-del="${p.id}">刪除</button>
         </div>
-      </div>
-    `;
+      </div>`;
     grid.appendChild(card);
-  }
-}
-
-// ============ 提詞 Modal ============
-function openModal(item) {
-  editingId = item ? item.id : null;
-  $('modalTitle').textContent = item ? '編輯提詞' : '新增提詞';
-  const f = $('form');
-  f.reset();
-  if (item) {
-    f.type.value = item.type || 'video';
-    f.title.value = item.title || '';
-    f.thumbnail.value = item.thumbnail || '';
-    f.promptZh.value = item.promptZh || '';
-    f.promptEn.value = item.promptEn || '';
-    f.tags.value = (item.tags || []).join(', ');
-    f.notes.value = item.notes || '';
-    f.favorite.checked = !!item.favorite;
-  }
-  $('modal').classList.add('active');
-}
-function closeModal() {
-  $('modal').classList.remove('active');
-  editingId = null;
-}
-
-// ============ 設定 Modal ============
-function openSettings() {
-  const cfg = getConfig();
-  $('tokenInput').value = getToken();
-  $('ownerInput').value = cfg.owner;
-  $('repoInput').value = cfg.repo;
-  $('pathInput').value = cfg.path;
-  $('branchInput').value = cfg.branch;
-  $('settingsModal').classList.add('active');
-}
-function closeSettings() {
-  $('settingsModal').classList.remove('active');
-}
-
-// ============ 模式切換 ============
-function updateMode() {
-  const hasToken = !!getToken();
-  document.body.classList.toggle('edit-mode', hasToken);
-  $('modeBadge').className = 'mode-badge ' + (hasToken ? 'edit' : 'read');
-  $('modeBadge').textContent = hasToken ? '✏️ 可編輯' : '👁️ 唯讀';
-}
-
-// ============ 事件 ============
-$('btnAdd').onclick = () => openModal(null);
-$('btnCancel').onclick = closeModal;
-$('modal').onclick = e => { if (e.target === $('modal')) closeModal(); };
-
-$('btnSettings').onclick = openSettings;
-$('btnCloseSettings').onclick = closeSettings;
-$('settingsModal').onclick = e => { if (e.target === $('settingsModal')) closeSettings(); };
-$('btnClearToken').onclick = () => {
-  if (confirm('清除 Token 後將變成唯讀模式，確定？')) {
-    setToken('');
-    updateMode();
-    closeSettings();
-    toast('已登出');
-    fetchData().then(render);
-  }
-};
-$('btnSaveSettings').onclick = async () => {
-  setToken($('tokenInput').value.trim());
-  setConfig({
-    owner: $('ownerInput').value.trim() || DEFAULT_CONFIG.owner,
-    repo: $('repoInput').value.trim() || DEFAULT_CONFIG.repo,
-    path: $('pathInput').value.trim() || 'data.json',
-    branch: $('branchInput').value.trim() || 'main',
   });
-  closeSettings();
-  updateMode();
-  await fetchData();
-  render();
-  toast('設定已儲存');
-};
+}
 
-$('form').onsubmit = e => {
-  e.preventDefault();
-  const data = new FormData(e.target);
-  const now = Date.now();
-  const tags = (data.get('tags') || '').split(',').map(s => s.trim()).filter(Boolean);
-  const payload = {
-    type: data.get('type'),
-    title: data.get('title'),
-    thumbnail: data.get('thumbnail'),
-    promptZh: data.get('promptZh'),
-    promptEn: data.get('promptEn'),
-    tags,
-    notes: data.get('notes'),
-    favorite: data.get('favorite') === 'on',
-    updated: now,
-  };
-  if (editingId) {
-    const i = items.findIndex(x => x.id === editingId);
-    if (i >= 0) items[i] = { ...items[i], ...payload };
-  } else {
-    items.push({ id: uid(), created: now, ...payload });
+// ============ Category Select ============
+function populateCatSelect(selectedId) {
+  const sel=$('catSelect');
+  sel.innerHTML=data.categories.map(c=>`<option value="${c.id}"${c.id===selectedId?' selected':''}>${c.icon||''} ${esc(c.name)}</option>`).join('');
+}
+
+// ============ Color Picker ============
+function renderColorPicker(selected) {
+  selectedColor=selected||PRESET_COLORS[0];
+  $('colorOptions').innerHTML=PRESET_COLORS.map(c=>`
+    <div class="color-opt${c===selectedColor?' selected':''}" style="background:${c}" data-color="${c}"></div>
+  `).join('');
+  $('colorOptions').querySelectorAll('.color-opt').forEach(el=>{
+    el.onclick=()=>{ selectedColor=el.dataset.color; renderColorPicker(selectedColor); };
+  });
+}
+
+// ============ Prompt Modal ============
+function openPromptModal(p) {
+  editingPromptId=p?p.id:null;
+  $('promptModalTitle').textContent=p?'編輯提詞':'新增提詞';
+  const f=$('promptForm'); f.reset();
+  populateCatSelect(p?.categoryId || (activeFilter!=='all'&&activeFilter!=='fav'?activeFilter:data.categories[0]?.id));
+  if(p){
+    f.title.value=p.title||'';
+    f.thumbnail.value=p.thumbnail||'';
+    f.promptZh.value=p.promptZh||'';
+    f.promptEn.value=p.promptEn||'';
+    f.tags.value=(p.tags||[]).join(', ');
+    f.notes.value=p.notes||'';
+    f.favorite.checked=!!p.favorite;
   }
-  render();
-  closeModal();
-  scheduleSave();
-  toast(editingId ? '已更新' : '已新增');
+  $('promptModal').classList.add('active');
+}
+function closePromptModal(){ $('promptModal').classList.remove('active'); editingPromptId=null; }
+
+// ============ Cat Modal ============
+function openCatModal(cat) {
+  editingCatId=cat?cat.id:null;
+  $('catModalTitle').textContent=cat?'編輯分類':'新增分類';
+  const f=$('catForm'); f.reset();
+  if(cat){ f.name.value=cat.name; f.icon.value=cat.icon||''; f.type.value=cat.type||'video'; }
+  renderColorPicker(cat?.color);
+  $('catModal').classList.add('active');
+}
+function closeCatModal(){ $('catModal').classList.remove('active'); editingCatId=null; }
+
+// ============ Category Manager ============
+function openCatManager() {
+  renderCatManager();
+  $('manageCatModal').classList.add('active');
+}
+function closeCatManager(){ $('manageCatModal').classList.remove('active'); }
+function renderCatManager() {
+  $('catList').innerHTML=data.categories.map(cat=>`
+    <div class="cat-item">
+      <div class="cat-item-dot" style="background:${cat.color}"></div>
+      <div>${esc(cat.icon||'')} <span class="cat-item-name">${esc(cat.name)}</span></div>
+      <span class="cat-item-type">${cat.type==='video'?'影片':cat.type==='photo'?'照片':'其他'}</span>
+      <div class="cat-item-actions">
+        <button class="small ghost edit-only" data-edit-cat="${cat.id}">編輯</button>
+        <button class="small danger edit-only" data-del-cat="${cat.id}">刪除</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ============ Mode ============
+function updateMode() {
+  const has=!!getToken();
+  document.body.classList.toggle('edit-mode',has);
+  $('modeBadge').className='mode-badge '+(has?'edit':'read');
+  $('modeBadge').textContent=has?'✏️ 可編輯':'👁️ 唯讀';
+}
+
+// ============ Events ============
+// Tabs (static)
+$('tabsWrapper').querySelector('[data-filter="all"]').onclick=()=>setFilter('all');
+$('tabsWrapper').querySelector('[data-filter="fav"]').onclick=()=>setFilter('fav');
+$('btnAddCat').onclick=()=>openCatModal(null);
+
+// Prompt modal
+$('btnAdd').onclick=()=>openPromptModal(null);
+$('btnPromptCancel').onclick=closePromptModal;
+$('promptModal').onclick=e=>{ if(e.target===$('promptModal')) closePromptModal(); };
+$('promptForm').onsubmit=e=>{
+  e.preventDefault();
+  const fd=new FormData(e.target), now=Date.now();
+  const tags=(fd.get('tags')||'').split(',').map(s=>s.trim()).filter(Boolean);
+  const payload={ categoryId:fd.get('categoryId'), title:fd.get('title'), thumbnail:fd.get('thumbnail'),
+    promptZh:fd.get('promptZh'), promptEn:fd.get('promptEn'), tags, notes:fd.get('notes'),
+    favorite:fd.get('favorite')==='on', updated:now };
+  if(editingPromptId) {
+    const i=data.prompts.findIndex(p=>p.id===editingPromptId);
+    if(i>=0) data.prompts[i]={...data.prompts[i],...payload};
+  } else {
+    data.prompts.push({id:uid(),created:now,...payload});
+  }
+  render(); closePromptModal(); scheduleSave();
+  toast(editingPromptId?'已更新':'已新增');
 };
 
-$('search').oninput = render;
-$('sortBy').onchange = render;
-
-$('tabs').onclick = e => {
-  const t = e.target.closest('.tab');
-  if (!t) return;
-  document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
-  t.classList.add('active');
-  activeType = t.dataset.type;
-  render();
+// Cat modal
+$('btnCatCancel').onclick=closeCatModal;
+$('catModal').onclick=e=>{ if(e.target===$('catModal')) closeCatModal(); };
+$('catForm').onsubmit=e=>{
+  e.preventDefault();
+  const fd=new FormData(e.target);
+  const payload={name:fd.get('name'),icon:fd.get('icon')||'📄',type:fd.get('type'),color:selectedColor};
+  if(editingCatId) {
+    const i=data.categories.findIndex(c=>c.id===editingCatId);
+    if(i>=0) data.categories[i]={...data.categories[i],...payload};
+  } else {
+    data.categories.push({id:uid(),...payload});
+  }
+  renderTabs(); render();
+  if($('manageCatModal').classList.contains('active')) renderCatManager();
+  closeCatModal(); scheduleSave();
+  toast(editingCatId?'分類已更新':'分類已新增');
 };
 
-$('grid').onclick = async e => {
-  const btn = e.target.closest('button');
-  if (!btn) return;
-  const id = btn.dataset.copyZh || btn.dataset.copyEn || btn.dataset.edit || btn.dataset.del || btn.dataset.fav;
-  const item = items.find(x => x.id === id);
-  if (!item) return;
+// Cat manager
+$('btnManageCats').onclick=()=>{ closeSettings(); openCatManager(); };
+$('btnCloseMgr').onclick=closeCatManager;
+$('manageCatModal').onclick=e=>{ if(e.target===$('manageCatModal')) closeCatManager(); };
+$('btnNewCatFromMgr').onclick=()=>openCatModal(null);
+$('catList').addEventListener('click',e=>{
+  const editBtn=e.target.closest('[data-edit-cat]');
+  const delBtn=e.target.closest('[data-del-cat]');
+  if(editBtn){ const cat=data.categories.find(c=>c.id===editBtn.dataset.editCat); if(cat) openCatModal(cat); }
+  if(delBtn){
+    const id=delBtn.dataset.delCat;
+    const cat=data.categories.find(c=>c.id===id);
+    const used=data.prompts.filter(p=>p.categoryId===id).length;
+    if(!confirm(`刪除分類「${cat?.name}」？${used?`\n（${used} 筆提詞會失去分類）`:''}`)) return;
+    data.categories=data.categories.filter(c=>c.id!==id);
+    if(activeFilter===id) activeFilter='all';
+    renderTabs(); render(); renderCatManager(); scheduleSave();
+    toast('分類已刪除');
+  }
+});
 
-  if (btn.dataset.copyZh) {
-    await navigator.clipboard.writeText(item.promptZh || '');
-    toast('已複製中文 Prompt');
-  } else if (btn.dataset.copyEn) {
-    await navigator.clipboard.writeText(item.promptEn || '');
-    toast('已複製英文 Prompt');
-  } else if (btn.dataset.edit) {
-    openModal(item);
-  } else if (btn.dataset.fav) {
-    item.favorite = !item.favorite;
-    item.updated = Date.now();
-    render();
-    scheduleSave();
-  } else if (btn.dataset.del) {
-    if (confirm(`確定刪除「${item.title}」？`)) {
-      items = items.filter(x => x.id !== id);
-      render();
-      scheduleSave();
-      toast('已刪除');
+// Grid actions
+$('grid').onclick=async e=>{
+  const btn=e.target.closest('button');
+  if(!btn) return;
+  const id=btn.dataset.copyZh||btn.dataset.copyEn||btn.dataset.edit||btn.dataset.del||btn.dataset.fav;
+  const p=data.prompts.find(x=>x.id===id);
+  if(!p) return;
+  if(btn.dataset.copyZh){ await navigator.clipboard.writeText(p.promptZh||''); toast('已複製中文 Prompt'); }
+  else if(btn.dataset.copyEn){ await navigator.clipboard.writeText(p.promptEn||''); toast('已複製英文 Prompt'); }
+  else if(btn.dataset.edit) openPromptModal(p);
+  else if(btn.dataset.fav){ p.favorite=!p.favorite; p.updated=Date.now(); render(); scheduleSave(); }
+  else if(btn.dataset.del){
+    if(confirm(`刪除「${p.title}」？`)){
+      data.prompts=data.prompts.filter(x=>x.id!==id);
+      render(); scheduleSave(); toast('已刪除');
     }
   }
 };
 
-$('btnExport').onclick = () => {
-  const blob = new Blob([JSON.stringify(items, null, 2)], { type: 'application/json' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `prompt-library-${new Date().toISOString().slice(0,10)}.json`;
-  a.click();
-  URL.revokeObjectURL(url);
-  toast('已匯出');
+// Settings
+function openSettings() {
+  const cfg=getCfg();
+  $('tokenInput').value=getToken();
+  $('ownerInput').value=cfg.owner;
+  $('repoInput').value=cfg.repo;
+  $('pathInput').value=cfg.path;
+  $('branchInput').value=cfg.branch;
+  $('settingsModal').classList.add('active');
+}
+function closeSettings(){ $('settingsModal').classList.remove('active'); }
+$('btnSettings').onclick=openSettings;
+$('btnCloseSettings').onclick=closeSettings;
+$('settingsModal').onclick=e=>{ if(e.target===$('settingsModal')) closeSettings(); };
+$('btnClearToken').onclick=()=>{
+  if(!confirm('清除 Token（登出）？')) return;
+  setToken(''); updateMode(); closeSettings(); toast('已登出');
+  fetchData().then(()=>{ renderTabs(); render(); });
+};
+$('btnSaveSettings').onclick=async()=>{
+  setToken($('tokenInput').value.trim());
+  setCfg({ owner:$('ownerInput').value.trim()||DEFAULT_CFG.owner, repo:$('repoInput').value.trim()||DEFAULT_CFG.repo,
+    path:$('pathInput').value.trim()||'data.json', branch:$('branchInput').value.trim()||'main' });
+  closeSettings(); updateMode();
+  await fetchData(); renderTabs(); render(); toast('設定已儲存');
 };
 
-// ============ 啟動 ============
+// Search & sort
+$('search').oninput=render;
+$('sortBy').onchange=render;
+
+// Export
+$('btnExport').onclick=()=>{
+  const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a'); a.href=url;
+  a.download=`prompt-library-${new Date().toISOString().slice(0,10)}.json`;
+  a.click(); URL.revokeObjectURL(url); toast('已匯出');
+};
+
+// ============ Init ============
 updateMode();
-fetchData().then(render);
+fetchData().then(()=>{ renderTabs(); render(); });
 </script>
 </body>
 </html>
