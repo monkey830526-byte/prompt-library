@@ -70,6 +70,19 @@
       "notes": "",
       "favorite": false,
       "updated": 1777046859420
+    },
+    {
+      "id": "mod49luz0huoo",
+      "created": 1777047613163,
+      "categoryId": "midjourney",
+      "title": "土地變成建物",
+      "thumbnail": "",
+      "promptZh": "這是一張城市鳥瞰實景照，不改變原鏡頭視角，維持紅線外不變，在紅線範圍內設計一座現代化的建築，其外觀具有流線型設計，高低起伏，錯綜複雜，窗戶內部發出柔和的燈光。建築周圍的環境整潔，有幾棵樹木和一些行人，最後去除紅線，維持底圖尺寸不變，4K畫質",
+      "promptEn": "",
+      "tags": [],
+      "notes": "",
+      "favorite": false,
+      "updated": 1777047613163
     }
   ]
 }
