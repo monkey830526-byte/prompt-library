@@ -97,6 +97,22 @@
       "notes": "",
       "favorite": false,
       "updated": 1777127939295
+    },
+    {
+      "id": "moehz1am50sy",
+      "created": 1777131098160,
+      "pinned": false,
+      "copyCount": 0,
+      "catId": "photo",
+      "subId": "",
+      "title": "髮型",
+      "thumbnail": "https://raw.githubusercontent.com/monkey830526-byte/prompt-library/main/images/img_1777131064781.png",
+      "promptZh": "髮型分析圖卡 Prompt：\n\n請根據我上傳的人像照片，製作一張高質感個人髮型分析圖卡。保留主角原本五官、臉型與真實特徵，透過左右或並排對比方式，展示不同髮型套用在主角身上的效果，清楚區分「最適合」、「普通」與「不建議」髮型，讓人一眼看出哪些髮型最修飾臉型、提升氣質與整體顏值。\n\n可比較長髮、短髮、瀏海、捲髮、直髮、層次剪裁、綁髮造型等。版面設計需乾淨時尚、像專業造型顧問報告，整體以視覺呈現為主，只使用簡短標籤，不要加入長段文字。高解析度，資訊清楚，適合社群分享。",
+      "promptEn": "",
+      "tags": [],
+      "notes": "",
+      "favorite": false,
+      "updated": 1777131098160
     }
   ]
 }
