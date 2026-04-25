@@ -145,6 +145,22 @@
       "notes": "",
       "favorite": false,
       "updated": 1777132251739
+    },
+    {
+      "id": "moeiqv76echw",
+      "created": 1777132399218,
+      "pinned": false,
+      "copyCount": 0,
+      "catId": "moegptapkdbm",
+      "subId": "",
+      "title": "SUNO 生成音樂的歌詞音樂",
+      "thumbnail": "",
+      "promptZh": "你是一位經驗豐富的專業詞曲創作人，請根據我提供的【主題】完成以下兩個任務：\n任務一：創作一首適合用在 SUNO 生成音樂的歌詞。\n- 請在歌詞的每個段落前使用「方括號」來標示歌曲結構，例如：[Verse]、「Pre-Chorus] 、「Chorus」、「Bridge」、「Outro」等。\n- 如有需要可在方括號內添加其它與情緒、人聲、和樂器相關的標籤 (使用逗號相隔)，例如：[Chorus, sad, soft piano, female vocal]\n- 歌詞內可使用「圓括號」來加入隨興的人聲，例如 (耶 ~)、(喔 ~ Baby)、(啦啦啦 ~)、(還在等你)\n任務二：根據「主題」中標注的曲風（例：indie pop 等），進一步為這首歌寫一段可用於 Suno 的「Style」描述，撰寫規則如下：\n- 使用英文撰寫，整段為一句或數句完整描述，不要使用條列式的清單。\n- 在 Style 中詳細說明整首歌的音樂特徵，例如：節奏與律動感（例：mid-tempo)、樂器與音色（例：clean electric guitars）、情緒與氛圍（例：melancholic) 、人聲風格（例：emotional) 等。\n【主題】 現在房市很差我們這些仲介都很辛苦大家也都辛苦",
+      "promptEn": "",
+      "tags": [],
+      "notes": "",
+      "favorite": false,
+      "updated": 1777132399218
     }
   ]
 }
