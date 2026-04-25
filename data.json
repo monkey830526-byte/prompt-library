@@ -1,46 +1,18 @@
 {
   "categories": [
     {
-      "id": "seedance",
-      "name": "Seedance 2.0",
+      "id": "video",
+      "name": "影片",
       "icon": "🎞️",
-      "type": "video",
-      "color": "#8b5cf6"
+      "color": "#8b5cf6",
+      "subs": []
     },
     {
-      "id": "sora",
-      "name": "Sora",
-      "icon": "🎬",
-      "type": "video",
-      "color": "#ef4444"
-    },
-    {
-      "id": "kling",
-      "name": "Kling",
-      "icon": "🎥",
-      "type": "video",
-      "color": "#f97316"
-    },
-    {
-      "id": "midjourney",
-      "name": "Midjourney",
-      "icon": "🎨",
-      "type": "photo",
-      "color": "#3b82f6"
-    },
-    {
-      "id": "flux",
-      "name": "Flux",
-      "icon": "✨",
-      "type": "photo",
-      "color": "#10b981"
-    },
-    {
-      "id": "dalle",
-      "name": "DALL-E 3",
-      "icon": "🖼️",
-      "type": "photo",
-      "color": "#06b6d4"
+      "id": "photo",
+      "name": "照片",
+      "icon": "📷",
+      "color": "#10b981",
+      "subs": []
     }
   ],
   "prompts": [
@@ -56,7 +28,9 @@
       "notes": "",
       "favorite": false,
       "updated": 1777045316586,
-      "categoryId": "midjourney"
+      "categoryId": "midjourney",
+      "catId": "midjourney",
+      "subId": ""
     },
     {
       "id": "mod3tg9o20pbz",
@@ -69,7 +43,9 @@
       "tags": [],
       "notes": "",
       "favorite": false,
-      "updated": 1777046859420
+      "updated": 1777046859420,
+      "catId": "midjourney",
+      "subId": ""
     },
     {
       "id": "mod49luz0huoo",
@@ -82,7 +58,9 @@
       "tags": [],
       "notes": "",
       "favorite": false,
-      "updated": 1777047613163
+      "updated": 1777097930304,
+      "catId": "photo",
+      "subId": ""
     }
   ]
 }
