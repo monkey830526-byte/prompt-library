@@ -183,6 +183,17 @@ button.icon-btn.on{background:#3b82f6;border-color:#3b82f6;color:#fff;}
 .bulk-item:hover{background:var(--bor);}
 .bulk-item.sub{margin-left:20px;font-size:12px;}
 .tpl-fields{display:flex;flex-direction:column;gap:10px;margin-bottom:4px;}
+.media-drop{background:var(--sur2);border:1px dashed var(--bor);border-radius:8px;padding:10px 14px;display:flex;align-items:center;gap:10px;cursor:pointer;transition:all .2s;}
+.media-drop:hover{border-color:#3b82f6;}
+.media-drop.drag{border-color:#3b82f6;background:#1e3a5f;}
+.media-drop.has-file{border-color:#10b981;border-style:solid;}
+.media-drop-icon{font-size:20px;flex-shrink:0;}
+.media-drop-hint{font-size:12px;color:var(--txt3);flex:1;line-height:1.4;}
+.media-drop.has-file .media-drop-hint{color:#10b981;}
+.detail-video{width:100%;border-radius:8px;background:#000;display:block;max-height:320px;}
+.detail-audio{width:100%;border-radius:8px;margin-top:4px;}
+.media-badge{font-size:10px;padding:1px 5px;border-radius:3px;color:#fff;display:inline-flex;align-items:center;gap:2px;}
+.mbv{background:#7c3aed;}.mba{background:#0ea5e9;}
 .emoji-scroll{max-height:180px;overflow-y:auto;border:1px solid var(--bor);border-radius:8px;padding:6px 8px;background:var(--sur2);}
 .emoji-cat-lbl{font-size:10px;color:var(--txt3);text-transform:uppercase;letter-spacing:.05em;padding:4px 2px 2px;display:block;}
 .emoji-row{display:flex;flex-wrap:wrap;gap:2px;margin-bottom:4px;}
@@ -328,6 +339,16 @@ body.editmode .eo{display:inline-flex!important;}
         <div class="detail-prompt en" id="detailEn"></div>
         <button class="detail-copy-btn ghost" id="btnCopyEn">📋 複製英文 Prompt</button>
       </div>
+      <div id="detailVideoWrap" class="detail-section" style="display:none">
+        <div class="detail-label">🎬 影片</div>
+        <video id="detailVideo" class="detail-video" controls preload="none"></video>
+        <a id="detailVideoLink" href="#" target="_blank" style="font-size:11px;color:#60a5fa;display:block;margin-top:4px">↗ 在新分頁開啟</a>
+      </div>
+      <div id="detailAudioWrap" class="detail-section" style="display:none">
+        <div class="detail-label">🎵 音樂</div>
+        <audio id="detailAudio" class="detail-audio" controls preload="none"></audio>
+        <a id="detailAudioLink" href="#" target="_blank" style="font-size:11px;color:#60a5fa;display:block;margin-top:4px">↗ 在新分頁開啟</a>
+      </div>
       <div id="detailNotesWrap" class="detail-section">
         <div class="detail-label">備註 / 參數</div>
         <div class="detail-notes" id="detailNotes"></div>
@@ -374,6 +395,28 @@ body.editmode .eo{display:inline-flex!important;}
           <div class="img-status" id="imgStatus" style="display:none">⏳ 上傳中…</div>
           <input type="hidden" name="thumbnail" id="thumbHidden">
           <input id="thumbUrl" placeholder="或貼上圖片網址…" style="margin-top:6px;width:100%;font-size:12px;padding:7px 10px">
+        </div>
+        <!-- Video upload -->
+        <div class="fg">
+          <label>影片檔案 <span style="color:var(--txt3);font-weight:normal;font-size:10px;text-transform:none">上限 10MB，mp4/mov/webm</span></label>
+          <div class="media-drop" id="videoDrop">
+            <span class="media-drop-icon">🎬</span>
+            <span class="media-drop-hint" id="videoHint">拖曳影片 / 點擊選擇</span>
+            <button type="button" class="sm danger" id="btnRemoveVideo" style="display:none" onclick="event.stopPropagation();removeVideo()">✕</button>
+          </div>
+          <input type="file" id="videoFile" accept="video/*" style="display:none">
+          <input type="hidden" id="videoHidden">
+        </div>
+        <!-- Audio upload -->
+        <div class="fg">
+          <label>音樂檔案 <span style="color:var(--txt3);font-weight:normal;font-size:10px;text-transform:none">上限 5MB，mp3/wav/ogg/aac</span></label>
+          <div class="media-drop" id="audioDrop">
+            <span class="media-drop-icon">🎵</span>
+            <span class="media-drop-hint" id="audioHint">拖曳音樂 / 點擊選擇</span>
+            <button type="button" class="sm danger" id="btnRemoveAudio" style="display:none" onclick="event.stopPropagation();removeAudio()">✕</button>
+          </div>
+          <input type="file" id="audioFile" accept="audio/*" style="display:none">
+          <input type="hidden" id="audioHidden">
         </div>
         <div class="fg">
           <label>中文 Prompt <span style="color:var(--txt3);font-weight:normal;font-size:10px;text-transform:none">支援 {{變數}} 模板</span></label>
@@ -874,6 +917,8 @@ function render(){
           ${sub?`<span class="badge-sub" style="background:${subColor}">${esc(sub.icon||'')} ${esc(sub.name)}</span>`:''}
           ${p.favorite?'<span class="fav-icon">⭐</span>':''}
           ${p.pinned?'<span class="pin-icon">📌</span>':''}
+          ${p.videoUrl?'<span class="media-badge mbv">🎬 影片</span>':''}
+          ${p.audioUrl?'<span class="media-badge mba">🎵 音樂</span>':''}
         </div>
         <div class="card-title">${esc(p.title||'未命名')}</div>
         ${p.promptZh?`<div class="prompt-box pzh">${esc(p.promptZh)}</div>`:''}
@@ -1014,6 +1059,12 @@ function openDetail(p){
   $('detailEnWrap').style.display=p.promptEn?'block':'none';
   $('detailEn').innerHTML=p.promptEn?highlightVars(p.promptEn):'';
   $('charEn').textContent=p.promptEn?`${p.promptEn.length} 字`:'';
+  // video
+  $('detailVideoWrap').style.display=p.videoUrl?'block':'none';
+  if(p.videoUrl){$('detailVideo').src=p.videoUrl;$('detailVideoLink').href=p.videoUrl;}
+  // audio
+  $('detailAudioWrap').style.display=p.audioUrl?'block':'none';
+  if(p.audioUrl){$('detailAudio').src=p.audioUrl;$('detailAudioLink').href=p.audioUrl;}
   // notes
   $('detailNotesWrap').style.display=p.notes?'block':'none';
   $('detailNotes').textContent=p.notes||'';
@@ -1027,8 +1078,14 @@ function openDetail(p){
   $('shareBox').style.display='none';
   $('detailBD').classList.add('open');
 }
-$('btnDetailClose').onclick=()=>{$('detailBD').classList.remove('open');viewPId=null;};
-$('detailBD').onclick=e=>{if(e.target===$('detailBD')){$('detailBD').classList.remove('open');viewPId=null;}};
+function closeDetail(){
+  $('detailBD').classList.remove('open');viewPId=null;
+  // pause media on close
+  const v=$('detailVideo'),a=$('detailAudio');
+  if(v&&!v.paused)v.pause();if(a&&!a.paused)a.pause();
+}
+$('btnDetailClose').onclick=closeDetail;
+$('detailBD').onclick=e=>{if(e.target===$('detailBD'))closeDetail();};
 $('btnCopyZh').onclick=()=>{const p=DB.prompts.find(x=>x.id===viewPId);if(p)triggerCopy(p.promptZh||'',p.id,'zh');};
 $('btnCopyEn').onclick=()=>{const p=DB.prompts.find(x=>x.id===viewPId);if(p)triggerCopy(p.promptEn||'',p.id,'en');};
 $('btnDetailEdit').onclick=()=>{const p=DB.prompts.find(x=>x.id===viewPId);if(p){$('detailBD').classList.remove('open');openPromptModal(p);}};
@@ -1054,6 +1111,66 @@ function dupePrompt(p){
   DB.prompts.push(copy);render();renderMainTabs();sched();toast('已複製一份');
   openPromptModal(copy);
 }
+
+// ── Video / Audio upload ──────────────────────────────────
+const VIDEO_MAX=10*1024*1024, AUDIO_MAX=5*1024*1024;
+let pendingVideoB64=null,pendingVideoName=null;
+let pendingAudioB64=null,pendingAudioName=null;
+
+function setMediaUI(type,filename,size){
+  const hint=$(type+'Hint'),drop=$(type+'Drop'),btn=$('btnRemove'+type.charAt(0).toUpperCase()+type.slice(1));
+  if(filename){
+    hint.textContent=`✅ ${filename} (${(size/1024/1024).toFixed(1)}MB)`;
+    drop.classList.add('has-file');btn.style.display='';
+  }else{
+    hint.textContent=type==='video'?'拖曳影片 / 點擊選擇':'拖曳音樂 / 點擊選擇';
+    drop.classList.remove('has-file');btn.style.display='none';
+  }
+}
+function handleVideoFile(file){
+  if(!file||!file.type.startsWith('video/')){toast('請選擇影片檔案',true);return;}
+  if(file.size>VIDEO_MAX){toast(`影片 ${(file.size/1024/1024).toFixed(1)}MB 超過 10MB 上限，請壓縮`,true);return;}
+  pendingVideoName=`vid_${Date.now()}.${file.name.split('.').pop()||'mp4'}`;
+  const r=new FileReader();
+  r.onload=e=>{pendingVideoB64=e.target.result.split(',')[1];$('videoHidden').value=e.target.result;setMediaUI('video',file.name,file.size);};
+  r.readAsDataURL(file);
+}
+function handleAudioFile(file){
+  if(!file||!file.type.startsWith('audio/')){toast('請選擇音樂檔案',true);return;}
+  if(file.size>AUDIO_MAX){toast(`音樂 ${(file.size/1024/1024).toFixed(1)}MB 超過 5MB 上限`,true);return;}
+  pendingAudioName=`aud_${Date.now()}.${file.name.split('.').pop()||'mp3'}`;
+  const r=new FileReader();
+  r.onload=e=>{pendingAudioB64=e.target.result.split(',')[1];$('audioHidden').value=e.target.result;setMediaUI('audio',file.name,file.size);};
+  r.readAsDataURL(file);
+}
+function removeVideo(){pendingVideoB64=null;pendingVideoName=null;$('videoHidden').value='';setMediaUI('video',null,0);}
+function removeAudio(){pendingAudioB64=null;pendingAudioName=null;$('audioHidden').value='';setMediaUI('audio',null,0);}
+function resetMediaUI(vUrl='',aUrl=''){
+  if(vUrl&&!vUrl.startsWith('data:')){$('videoHidden').value=vUrl;setMediaUI('video','（已上傳）',0);pendingVideoB64=null;pendingVideoName=null;}
+  else{removeVideo();}
+  if(aUrl&&!aUrl.startsWith('data:')){$('audioHidden').value=aUrl;setMediaUI('audio','（已上傳）',0);pendingAudioB64=null;pendingAudioName=null;}
+  else{removeAudio();}
+}
+async function uploadMediaFile(b64,name,folder){
+  const cfg=getCfg(),tok=getTok();if(!tok)return null;
+  const path=`${folder}/${name}`;
+  const r=await fetch(`https://api.github.com/repos/${cfg.owner}/${cfg.repo}/contents/${path}`,{
+    method:'PUT',headers:{Authorization:`Bearer ${tok}`,Accept:'application/vnd.github+json','Content-Type':'application/json'},
+    body:JSON.stringify({message:`Add ${name}`,content:b64,branch:cfg.branch})
+  });
+  if(!r.ok)throw new Error((await r.json().catch(()=>({}))).message||r.status);
+  return `https://raw.githubusercontent.com/${cfg.owner}/${cfg.repo}/${cfg.branch}/${path}`;
+}
+// Wire up video/audio drop zones
+const videoDrop=$('videoDrop'),audioDrop=$('audioDrop');
+videoDrop.onclick=()=>$('videoFile').click();
+audioDrop.onclick=()=>$('audioFile').click();
+$('videoFile').onchange=e=>handleVideoFile(e.target.files[0]);
+$('audioFile').onchange=e=>handleAudioFile(e.target.files[0]);
+['dragover','dragleave','drop'].forEach(ev=>{
+  videoDrop.addEventListener(ev,e=>{e.preventDefault();if(ev==='dragover')videoDrop.classList.add('drag');else videoDrop.classList.remove('drag');if(ev==='drop')handleVideoFile(e.dataTransfer.files[0]);});
+  audioDrop.addEventListener(ev,e=>{e.preventDefault();if(ev==='dragover')audioDrop.classList.add('drag');else audioDrop.classList.remove('drag');if(ev==='drop')handleAudioFile(e.dataTransfer.files[0]);});
+});
 
 // ── Image upload ──────────────────────────────────────────
 const imgArea=$('imgArea'),thumbHidden=$('thumbHidden'),thumbUrl=$('thumbUrl');
@@ -1117,6 +1234,7 @@ function openPromptModal(p=null){
   const defCat=activMain!=='all'&&activMain!=='fav'?activMain:(DB.categories[0]?.id||'');
   populateMainSel(p?.catId||defCat);updateSubSel(p?.subId||'');
   resetImg(p?.thumbnail||'');
+  resetMediaUI(p?.videoUrl||'',p?.audioUrl||'');
   if(p){
     $('promptForm').title.value=p.title||'';
     $('promptForm').promptZh.value=p.promptZh||'';
@@ -1143,12 +1261,36 @@ $('btnPromptSave').onclick=async()=>{
     // keep existing URL (not base64)
     thumb=existingThumb;
   }
+  // Upload video
+  let videoUrl=$('videoHidden').value||'';
+  if(pendingVideoB64){
+    if(!getTok()){toast('⚠️ 需要 Token 才能上傳影片',true);}
+    else{
+      try{$('imgStatus').style.display='block';$('imgStatus').textContent='⏳ 上傳影片中…';
+        const up=await uploadMediaFile(pendingVideoB64,pendingVideoName,'videos');
+        if(up)videoUrl=up;pendingVideoB64=null;pendingVideoName=null;
+      }catch(e){toast('影片上傳失敗：'+e.message,true);videoUrl='';}
+      finally{$('imgStatus').style.display='none';}
+    }
+  }else if(videoUrl.startsWith('data:'))videoUrl=''; // 不存 base64
+  // Upload audio
+  let audioUrl=$('audioHidden').value||'';
+  if(pendingAudioB64){
+    if(!getTok()){toast('⚠️ 需要 Token 才能上傳音樂',true);}
+    else{
+      try{$('imgStatus').style.display='block';$('imgStatus').textContent='⏳ 上傳音樂中…';
+        const up=await uploadMediaFile(pendingAudioB64,pendingAudioName,'audio');
+        if(up)audioUrl=up;pendingAudioB64=null;pendingAudioName=null;
+      }catch(e){toast('音樂上傳失敗：'+e.message,true);audioUrl='';}
+      finally{$('imgStatus').style.display='none';}
+    }
+  }else if(audioUrl.startsWith('data:'))audioUrl='';
   const payload={catId:fd.get('catId'),subId:fd.get('subId')||'',title:fd.get('title'),
-    thumbnail:thumb,promptZh:fd.get('promptZh'),promptEn:fd.get('promptEn'),
+    thumbnail:thumb,videoUrl,audioUrl,promptZh:fd.get('promptZh'),promptEn:fd.get('promptEn'),
     tags:(fd.get('tags')||'').split(',').map(s=>s.trim()).filter(Boolean),
     notes:fd.get('notes'),favorite:fd.get('fav')==='on',updated:now};
   if(editPId){const i=DB.prompts.findIndex(p=>p.id===editPId);if(i>=0)DB.prompts[i]={...DB.prompts[i],...payload};}
-  else DB.prompts.push({id:uid(),created:now,pinned:false,copyCount:0,...payload});
+  else DB.prompts.push({id:uid(),created:now,pinned:false,copyCount:0,videoUrl:'',audioUrl:'',...payload});
   render();renderMainTabs();renderSubTabs();closePromptModal();sched();toast(editPId?'已更新':'已新增');
 };
 
