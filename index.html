@@ -62,6 +62,18 @@ button.icon-btn:hover{background:#334155;color:#e2e8f0;}
 .card:hover{border-color:#475569;}
 .card-thumb{width:100%;height:165px;background:#0f172a;object-fit:cover;display:block;}
 .card-thumb.ph{display:flex;align-items:center;justify-content:center;font-size:42px;color:#334155;}
+
+/* Image uploader */
+.img-upload-area{width:100%;height:160px;background:#0f172a;border:2px dashed #334155;border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;cursor:pointer;transition:all .2s;position:relative;overflow:hidden;}
+.img-upload-area:hover{border-color:#3b82f6;background:#1e293b;}
+.img-upload-area.drag{border-color:#3b82f6;background:#1e3a5f;}
+.img-upload-area img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:6px;}
+.img-upload-area .overlay{position:absolute;inset:0;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;gap:8px;border-radius:6px;flex-direction:column;}
+.img-upload-area:hover .overlay{display:flex;}
+.img-upload-hint{font-size:12px;color:#64748b;text-align:center;line-height:1.6;}
+.img-upload-icon{font-size:28px;}
+.img-actions{display:flex;gap:6px;margin-top:6px;}
+.img-uploading{font-size:12px;color:#60a5fa;}
 .card-body{padding:12px;flex:1;display:flex;flex-direction:column;gap:7px;}
 .card-badges{display:flex;flex-wrap:wrap;gap:5px;align-items:center;}
 .badge-main{display:inline-flex;align-items:center;gap:3px;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600;color:#fff;}
@@ -185,7 +197,22 @@ body.editmode .eo{display:inline-flex!important;}
         </div>
       </div>
       <div class="fg"><label>標題</label><input name="title" required placeholder="例：電影感日落街景"></div>
-      <div class="fg"><label>縮圖網址（選填）</label><input name="thumbnail" placeholder="https://..."></div>
+      <div class="fg">
+        <label>縮圖圖片</label>
+        <div class="img-upload-area" id="imgUploadArea">
+          <div class="img-upload-icon">🖼️</div>
+          <div class="img-upload-hint">點擊上傳 / 拖曳圖片 / Ctrl+V 貼截圖</div>
+          <div class="overlay">
+            <span style="color:#fff;font-size:13px;">🔄 更換圖片</span>
+            <button type="button" class="sm danger" id="btnRemoveImg" onclick="event.stopPropagation();removeImg()">✕ 移除</button>
+          </div>
+        </div>
+        <div class="img-actions">
+          <span class="img-uploading" id="imgUploadStatus" style="display:none">⏳ 上傳中…</span>
+        </div>
+        <input type="hidden" name="thumbnail" id="thumbnailInput">
+        <div class="help">或貼上網址：<input id="thumbUrlInput" placeholder="https://..." style="margin-top:4px;font-size:12px;padding:6px 8px;width:100%"></div>
+      </div>
       <div class="fg"><label>中文 Prompt</label><textarea name="promptZh" placeholder="用中文描述你想要的畫面"></textarea></div>
       <div class="fg"><label>英文 Prompt（給 API）</label><textarea name="promptEn" placeholder="English prompt for API"></textarea></div>
       <div class="fg"><label>標籤（逗號分隔）</label><input name="tags" placeholder="電影感, 夕陽, 街景"></div>
@@ -488,9 +515,9 @@ function openPromptModal(p=null){
   const defCat=activMain!=='all'&&activMain!=='fav'?activMain:(DB.categories[0]?.id||'');
   populateMainSel(p?.catId||defCat);
   updateSubSel(p?.subId||'');
+  resetImgUI(p?.thumbnail||'');
   if(p){
     $('promptForm').title.value=p.title||'';
-    $('promptForm').thumbnail.value=p.thumbnail||'';
     $('promptForm').promptZh.value=p.promptZh||'';
     $('promptForm').promptEn.value=p.promptEn||'';
     $('promptForm').tags.value=(p.tags||[]).join(', ');
@@ -499,14 +526,21 @@ function openPromptModal(p=null){
   }
   $('promptBD').classList.add('open');
 }
-function closePromptModal(){$('promptBD').classList.remove('open');editPId=null;}
+function closePromptModal(){$('promptBD').classList.remove('open');editPId=null;resetImgUI();}
 $('btnPromptCancel').onclick=closePromptModal;
 $('promptBD').onclick=e=>{if(e.target===$('promptBD'))closePromptModal();};
-$('promptForm').onsubmit=e=>{
+$('promptForm').onsubmit=async e=>{
   e.preventDefault();
   const fd=new FormData(e.target),now=Date.now();
+  // upload image if pending
+  let thumb=thumbInput.value||'';
+  if(pendingImgB64){
+    const uploaded=await uploadImgToGitHub();
+    if(uploaded) thumb=uploaded;
+    // if upload failed, keep base64 as fallback
+  }
   const payload={catId:fd.get('catId'),subId:fd.get('subId')||'',title:fd.get('title'),
-    thumbnail:fd.get('thumbnail'),promptZh:fd.get('promptZh'),promptEn:fd.get('promptEn'),
+    thumbnail:thumb,promptZh:fd.get('promptZh'),promptEn:fd.get('promptEn'),
     tags:(fd.get('tags')||'').split(',').map(s=>s.trim()).filter(Boolean),
     notes:fd.get('notes'),favorite:fd.get('fav')==='on',updated:now};
   if(editPId){const i=DB.prompts.findIndex(p=>p.id===editPId);if(i>=0)DB.prompts[i]={...DB.prompts[i],...payload};}
@@ -660,6 +694,93 @@ function updateMode(){
   document.body.classList.toggle('editmode',has);
   $('modeBadge').className='mode-badge '+(has?'edit':'read');
   $('modeBadge').textContent=has?'✏️ 可編輯':'👁️ 唯讀';
+}
+
+// ── Image Upload ─────────────────────────────────────────
+const imgArea=$('imgUploadArea');
+const thumbInput=$('thumbnailInput');
+const thumbUrl=$('thumbUrlInput');
+let pendingImgB64=null, pendingImgName=null;
+
+function setImgPreview(src){
+  // remove old img
+  imgArea.querySelectorAll('img').forEach(e=>e.remove());
+  imgArea.querySelector('.img-upload-icon').style.display=src?'none':'block';
+  imgArea.querySelector('.img-upload-hint').style.display=src?'none':'block';
+  if(src){const i=document.createElement('img');i.src=src;imgArea.insertBefore(i,imgArea.querySelector('.overlay'));}
+}
+function removeImg(){
+  pendingImgB64=null; pendingImgName=null;
+  thumbInput.value=''; thumbUrl.value='';
+  setImgPreview(null);
+}
+thumbUrl.addEventListener('input',()=>{
+  thumbInput.value=thumbUrl.value.trim();
+  setImgPreview(thumbUrl.value.trim()||null);
+  pendingImgB64=null;
+});
+
+async function handleImageFile(file){
+  if(!file||!file.type.startsWith('image/')) return;
+  const ext=file.name.split('.').pop()||'png';
+  pendingImgName=`img_${Date.now()}.${ext}`;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    pendingImgB64=e.target.result.split(',')[1]; // base64 only
+    setImgPreview(e.target.result);
+    thumbInput.value=e.target.result; // temp preview
+    thumbUrl.value='';
+  };
+  reader.readAsDataURL(file);
+}
+
+imgArea.onclick=()=>{
+  const inp=document.createElement('input');
+  inp.type='file'; inp.accept='image/*';
+  inp.onchange=e=>handleImageFile(e.target.files[0]);
+  inp.click();
+};
+
+// Drag & drop
+imgArea.addEventListener('dragover',e=>{e.preventDefault();imgArea.classList.add('drag');});
+imgArea.addEventListener('dragleave',()=>imgArea.classList.remove('drag'));
+imgArea.addEventListener('drop',e=>{
+  e.preventDefault(); imgArea.classList.remove('drag');
+  handleImageFile(e.dataTransfer.files[0]);
+});
+
+// Ctrl+V paste (global, active when prompt modal open)
+document.addEventListener('paste',e=>{
+  if(!$('promptBD').classList.contains('open')) return;
+  const item=Array.from(e.clipboardData.items).find(i=>i.type.startsWith('image/'));
+  if(item) handleImageFile(item.getAsFile());
+});
+
+async function uploadImgToGitHub(){
+  if(!pendingImgB64||!pendingImgName) return null;
+  const cfg=getCfg(), tok=getTok();
+  if(!tok) return null; // no token → keep base64
+  $('imgUploadStatus').style.display='inline';
+  try{
+    const path=`images/${pendingImgName}`;
+    const r=await fetch(`https://api.github.com/repos/${cfg.owner}/${cfg.repo}/contents/${path}`,{
+      method:'PUT',
+      headers:{Authorization:`Bearer ${tok}`,Accept:'application/vnd.github+json','Content-Type':'application/json'},
+      body:JSON.stringify({message:`Add image ${pendingImgName}`,content:pendingImgB64,branch:cfg.branch})
+    });
+    if(!r.ok) throw new Error('上傳失敗');
+    const url=`https://raw.githubusercontent.com/${cfg.owner}/${cfg.repo}/${cfg.branch}/${path}`;
+    pendingImgB64=null; pendingImgName=null;
+    return url;
+  }catch(e){console.error(e);toast('圖片上傳失敗，改用本地預覽',true);return null;}
+  finally{$('imgUploadStatus').style.display='none';}
+}
+
+function resetImgUI(url=''){
+  thumbInput.value=url||'';
+  thumbUrl.value=url&&!url.startsWith('data:')?url:'';
+  setImgPreview(url||null);
+  pendingImgB64=null; pendingImgName=null;
 }
 
 // ── Init ──────────────────────────────────────────────────
