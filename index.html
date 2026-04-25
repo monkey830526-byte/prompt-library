@@ -4,12 +4,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>提詞庫 Prompt Library</title>
+<script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
 body{font-family:-apple-system,"Segoe UI","Microsoft JhengHei",sans-serif;background:#0f172a;color:#e2e8f0;min-height:100vh;padding:20px;}
 .container{max-width:1280px;margin:0 auto;}
 
-/* Header */
+/* ── Header ── */
 header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:10px;}
 h1{font-size:22px;color:#f1f5f9;display:flex;align-items:center;gap:8px;}
 .mode-badge{font-size:11px;padding:2px 8px;border-radius:4px;font-weight:normal;}
@@ -18,121 +19,188 @@ h1{font-size:22px;color:#f1f5f9;display:flex;align-items:center;gap:8px;}
 .sync{font-size:12px;color:#94a3b8;}
 .header-right{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
 
-/* Main tabs */
-.main-tabs{display:flex;align-items:center;gap:6px;margin-bottom:8px;flex-wrap:wrap;}
-.main-tab{padding:8px 16px;background:#1e293b;border:1px solid #334155;border-radius:8px;cursor:pointer;color:#cbd5e1;font-size:13px;font-weight:500;transition:all .15s;white-space:nowrap;}
+/* ── Tabs ── */
+.tabs-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:4px;}
+.main-tabs{display:flex;align-items:center;gap:6px;margin-bottom:8px;min-width:max-content;}
+.main-tab{padding:8px 14px;background:#1e293b;border:1px solid #334155;border-radius:8px;cursor:pointer;color:#cbd5e1;font-size:13px;font-weight:500;transition:all .15s;white-space:nowrap;display:flex;align-items:center;gap:6px;}
 .main-tab:hover{background:#334155;}
 .main-tab.active{background:#3b82f6;border-color:#3b82f6;color:#fff;}
-.tab-add-btn{padding:7px 12px;background:transparent;border:1px dashed #475569;border-radius:8px;cursor:pointer;color:#64748b;font-size:13px;transition:all .15s;}
+.tab-count{background:rgba(255,255,255,.2);padding:1px 6px;border-radius:10px;font-size:11px;}
+.main-tab:not(.active) .tab-count{background:#334155;color:#94a3b8;}
+.tab-add-btn{padding:7px 12px;background:transparent;border:1px dashed #475569;border-radius:8px;cursor:pointer;color:#64748b;font-size:13px;transition:all .15s;white-space:nowrap;}
 .tab-add-btn:hover{border-color:#94a3b8;color:#94a3b8;}
-
-/* Sub tabs */
-.sub-tabs-wrap{min-height:40px;margin-bottom:16px;}
-.sub-tabs{display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
+.sub-tabs-wrap{min-height:36px;margin-bottom:14px;overflow-x:auto;-webkit-overflow-scrolling:touch;}
+.sub-tabs{display:flex;align-items:center;gap:6px;min-width:max-content;}
 .sub-tab{padding:5px 12px;background:#0f172a;border:1px solid #334155;border-radius:6px;cursor:pointer;color:#94a3b8;font-size:12px;transition:all .15s;white-space:nowrap;display:flex;align-items:center;gap:4px;}
 .sub-tab:hover{background:#1e293b;color:#cbd5e1;}
-.sub-tab.active{border-color:transparent;color:#fff;}
+.sub-tab.active{color:#fff;}
 .sub-tab-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;}
-.sub-add-btn{padding:4px 10px;background:transparent;border:1px dashed #334155;border-radius:6px;cursor:pointer;color:#475569;font-size:12px;transition:all .15s;}
+.sub-tab .tab-count{background:rgba(255,255,255,.15);font-size:10px;}
+.sub-tab:not(.active) .tab-count{background:#1e293b;color:#64748b;}
+.sub-add-btn{padding:4px 10px;background:transparent;border:1px dashed #334155;border-radius:6px;cursor:pointer;color:#475569;font-size:12px;transition:all .15s;white-space:nowrap;}
 .sub-add-btn:hover{border-color:#64748b;color:#64748b;}
 
-/* Toolbar */
-.toolbar{display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap;align-items:center;}
-input,textarea,select{background:#1e293b;border:1px solid #334155;border-radius:8px;padding:10px 12px;color:#e2e8f0;font-size:14px;font-family:inherit;}
+/* ── Toolbar ── */
+.toolbar{display:flex;gap:8px;margin-bottom:18px;flex-wrap:wrap;align-items:center;}
+input,textarea,select{background:#1e293b;border:1px solid #334155;border-radius:8px;padding:9px 12px;color:#e2e8f0;font-size:14px;font-family:inherit;}
 input:focus,textarea:focus,select:focus{outline:none;border-color:#3b82f6;}
-.search-wrap{flex:1;min-width:220px;position:relative;}
-.search-wrap input{width:100%;padding-left:36px;}
-.search-icon{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:#64748b;pointer-events:none;}
+.search-wrap{flex:1;min-width:180px;position:relative;}
+.search-wrap input{width:100%;padding-left:34px;}
+.search-icon{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:#64748b;pointer-events:none;font-size:13px;}
+.filter-tag-chip{display:inline-flex;align-items:center;gap:5px;background:#1d4ed8;color:#fff;padding:5px 10px;border-radius:6px;font-size:12px;cursor:pointer;}
+.filter-tag-chip:hover{background:#1e40af;}
 .stats{font-size:12px;color:#64748b;white-space:nowrap;}
+.toolbar-right{display:flex;gap:6px;align-items:center;margin-left:auto;}
+.size-btn{padding:7px 9px;background:#1e293b;border:1px solid #334155;border-radius:7px;cursor:pointer;color:#94a3b8;font-size:14px;transition:all .15s;}
+.size-btn.active,.size-btn:hover{background:#334155;color:#e2e8f0;}
 
-/* Buttons */
-button{background:#3b82f6;border:none;border-radius:8px;padding:10px 16px;color:#fff;cursor:pointer;font-size:14px;font-weight:500;transition:background .15s;display:inline-flex;align-items:center;gap:6px;}
+/* ── Buttons ── */
+button{background:#3b82f6;border:none;border-radius:8px;padding:9px 15px;color:#fff;cursor:pointer;font-size:13px;font-weight:500;transition:background .15s;display:inline-flex;align-items:center;gap:5px;}
 button:hover{background:#2563eb;}
 button.ghost{background:#334155;color:#e2e8f0;}
 button.ghost:hover{background:#475569;}
 button.danger{background:#ef4444;}
 button.danger:hover{background:#dc2626;}
-button.sm{padding:5px 10px;font-size:12px;}
-button.icon-btn{background:transparent;border:1px solid #334155;padding:8px 10px;color:#94a3b8;}
+button.success{background:#10b981;}
+button.success:hover{background:#059669;}
+button.sm{padding:5px 9px;font-size:12px;}
+button.icon-btn{background:transparent;border:1px solid #334155;padding:7px 10px;color:#94a3b8;}
 button.icon-btn:hover{background:#334155;color:#e2e8f0;}
 
-/* Grid */
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;}
-.card{background:#1e293b;border:1px solid #334155;border-radius:12px;overflow:hidden;display:flex;flex-direction:column;transition:border-color .15s;}
-.card:hover{border-color:#475569;}
-.card-thumb{width:100%;height:165px;background:#0f172a;object-fit:cover;display:block;}
-.card-thumb.ph{display:flex;align-items:center;justify-content:center;font-size:42px;color:#334155;}
+/* ── Grid sizes ── */
+.grid{display:grid;gap:14px;}
+.grid.size-sm{grid-template-columns:repeat(auto-fill,minmax(220px,1fr));}
+.grid.size-md{grid-template-columns:repeat(auto-fill,minmax(290px,1fr));}
+.grid.size-lg{grid-template-columns:repeat(auto-fill,minmax(380px,1fr));}
 
-/* Image uploader */
-.img-upload-area{width:100%;height:160px;background:#0f172a;border:2px dashed #334155;border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;cursor:pointer;transition:all .2s;position:relative;overflow:hidden;}
-.img-upload-area:hover{border-color:#3b82f6;background:#1e293b;}
-.img-upload-area.drag{border-color:#3b82f6;background:#1e3a5f;}
-.img-upload-area img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:6px;}
-.img-upload-area .overlay{position:absolute;inset:0;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;gap:8px;border-radius:6px;flex-direction:column;}
-.img-upload-area:hover .overlay{display:flex;}
-.img-upload-hint{font-size:12px;color:#64748b;text-align:center;line-height:1.6;}
-.img-upload-icon{font-size:28px;}
-.img-actions{display:flex;gap:6px;margin-top:6px;}
-.img-uploading{font-size:12px;color:#60a5fa;}
-.card-body{padding:12px;flex:1;display:flex;flex-direction:column;gap:7px;}
-.card-badges{display:flex;flex-wrap:wrap;gap:5px;align-items:center;}
-.badge-main{display:inline-flex;align-items:center;gap:3px;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600;color:#fff;}
-.badge-sub{display:inline-flex;align-items:center;gap:3px;padding:2px 7px;border-radius:4px;font-size:11px;color:#fff;opacity:.85;}
-.fav-icon{color:#f59e0b;font-size:13px;}
-.card-title{font-size:15px;font-weight:600;color:#f1f5f9;line-height:1.3;}
-.prompt-box{background:#0f172a;padding:7px 8px;border-radius:6px;font-size:12px;max-height:54px;overflow-y:auto;white-space:pre-wrap;word-break:break-word;line-height:1.5;}
+/* ── Card ── */
+.card{background:#1e293b;border:1px solid #334155;border-radius:12px;overflow:hidden;display:flex;flex-direction:column;transition:all .2s;cursor:pointer;}
+.card:hover{border-color:#3b82f6;transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.3);}
+.card-thumb{width:100%;background:#0f172a;object-fit:cover;display:block;}
+.size-sm .card-thumb{height:130px;}
+.size-md .card-thumb{height:165px;}
+.size-lg .card-thumb{height:210px;}
+.card-thumb.ph{display:flex;align-items:center;justify-content:center;color:#334155;}
+.size-sm .card-thumb.ph{font-size:32px;}
+.size-md .card-thumb.ph{font-size:40px;}
+.size-lg .card-thumb.ph{font-size:52px;}
+.card-body{padding:12px;flex:1;display:flex;flex-direction:column;gap:6px;}
+.card-badges{display:flex;flex-wrap:wrap;gap:4px;align-items:center;}
+.badge-main{display:inline-flex;align-items:center;gap:3px;padding:2px 7px;border-radius:4px;font-size:11px;font-weight:600;color:#fff;}
+.badge-sub{display:inline-flex;align-items:center;gap:3px;padding:2px 6px;border-radius:4px;font-size:10px;color:#fff;opacity:.85;}
+.fav-icon{color:#f59e0b;font-size:12px;}
+.card-title{font-size:14px;font-weight:600;color:#f1f5f9;line-height:1.3;}
+.size-lg .card-title{font-size:16px;}
+.prompt-box{background:#0f172a;padding:6px 8px;border-radius:5px;font-size:11px;max-height:48px;overflow:hidden;white-space:pre-wrap;word-break:break-word;line-height:1.5;position:relative;}
+.prompt-box::after{content:'';position:absolute;bottom:0;left:0;right:0;height:16px;background:linear-gradient(transparent,#0f172a);}
 .pzh{color:#cbd5e1;} .pen{color:#7dd3fc;}
-.tags{display:flex;flex-wrap:wrap;gap:4px;}
-.tag{background:#0f172a;color:#94a3b8;padding:2px 7px;border-radius:4px;font-size:11px;}
-.card-meta{font-size:11px;color:#475569;}
-.card-actions{display:flex;gap:5px;margin-top:auto;flex-wrap:wrap;}
-.empty{text-align:center;padding:80px 20px;color:#475569;}
-.empty-icon{font-size:56px;margin-bottom:12px;}
+.notes-chip{font-size:10px;color:#64748b;background:#0f172a;padding:2px 7px;border-radius:4px;display:inline-flex;align-items:center;gap:3px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.tags{display:flex;flex-wrap:wrap;gap:3px;}
+.tag{background:#0f172a;color:#94a3b8;padding:2px 6px;border-radius:4px;font-size:10px;cursor:pointer;transition:all .15s;}
+.tag:hover{background:#1e40af;color:#93c5fd;}
+.card-meta{font-size:10px;color:#475569;margin-top:2px;}
+.card-copy-row{display:flex;gap:5px;margin-top:6px;}
+.copy-btn{flex:1;padding:7px 5px;font-size:12px;border-radius:6px;text-align:center;font-weight:500;}
+.card-edit-row{display:flex;gap:5px;margin-top:3px;}
 
-/* Modal */
-.backdrop{position:fixed;inset:0;background:rgba(0,0,0,.75);display:none;align-items:center;justify-content:center;padding:16px;z-index:100;}
+/* ── Empty ── */
+.empty{text-align:center;padding:70px 20px;color:#475569;}
+.empty-icon{font-size:52px;margin-bottom:12px;}
+.empty h3{font-size:16px;margin-bottom:8px;color:#64748b;}
+.empty p{font-size:13px;}
+
+/* ── Detail Modal ── */
+.backdrop{position:fixed;inset:0;background:rgba(0,0,0,.8);display:none;align-items:center;justify-content:center;padding:16px;z-index:100;}
 .backdrop.open{display:flex;}
-.modal{background:#1e293b;border:1px solid #334155;border-radius:14px;padding:24px;width:100%;max-width:560px;max-height:92vh;overflow-y:auto;}
+.modal{background:#1e293b;border:1px solid #334155;border-radius:14px;width:100%;max-width:560px;max-height:92vh;overflow-y:auto;}
+.modal.lg{max-width:780px;}
 .modal.sm{max-width:400px;}
-.modal h2{margin-bottom:18px;font-size:17px;}
-.fg{margin-bottom:14px;}
+.modal-body{padding:22px;}
+.modal h2{margin-bottom:16px;font-size:17px;}
+.detail-img{width:100%;max-height:320px;object-fit:cover;border-radius:12px 12px 0 0;display:block;}
+.detail-img.ph{height:180px;display:flex;align-items:center;justify-content:center;font-size:64px;color:#334155;background:#0f172a;border-radius:12px 12px 0 0;}
+.detail-content{padding:20px;}
+.detail-badges{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;align-items:center;}
+.detail-title{font-size:20px;font-weight:700;color:#f1f5f9;margin-bottom:14px;line-height:1.3;}
+.detail-section{margin-bottom:14px;}
+.detail-label{font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px;}
+.detail-prompt{background:#0f172a;padding:12px;border-radius:8px;font-size:13px;white-space:pre-wrap;word-break:break-word;line-height:1.6;max-height:160px;overflow-y:auto;}
+.detail-prompt.zh{color:#e2e8f0;}
+.detail-prompt.en{color:#7dd3fc;}
+.detail-copy-btn{width:100%;margin-top:6px;padding:8px;font-size:13px;border-radius:6px;}
+.detail-notes{background:#0f172a;padding:10px 12px;border-radius:8px;font-size:12px;color:#94a3b8;white-space:pre-wrap;line-height:1.6;}
+.detail-tags{display:flex;flex-wrap:wrap;gap:5px;}
+.detail-tag{background:#1e293b;border:1px solid #334155;color:#cbd5e1;padding:3px 10px;border-radius:5px;font-size:12px;cursor:pointer;transition:all .15s;}
+.detail-tag:hover{background:#1d4ed8;border-color:#3b82f6;color:#fff;}
+.detail-footer{display:flex;gap:8px;padding:14px 20px;border-top:1px solid #334155;flex-wrap:wrap;}
+
+/* ── Form styles ── */
+.fg{margin-bottom:13px;}
 .fg label{display:block;margin-bottom:5px;font-size:11px;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;}
 .fg input,.fg textarea,.fg select{width:100%;}
-.fg textarea{min-height:76px;resize:vertical;font-family:inherit;line-height:1.5;}
+.fg textarea{min-height:72px;resize:vertical;font-family:inherit;line-height:1.5;}
 .frow{display:flex;gap:10px;}
 .frow .fg{flex:1;}
-.modal-foot{display:flex;gap:8px;justify-content:flex-end;margin-top:20px;flex-wrap:wrap;}
-.help{font-size:12px;color:#64748b;margin-top:5px;line-height:1.5;}
+.modal-foot{display:flex;gap:8px;justify-content:flex-end;padding:14px 22px;border-top:1px solid #334155;flex-wrap:wrap;}
+.help{font-size:11px;color:#64748b;margin-top:4px;line-height:1.5;}
 .help a{color:#60a5fa;}
 
-/* Color picker */
-.colors{display:flex;gap:7px;flex-wrap:wrap;margin-top:5px;}
-.col-dot{width:26px;height:26px;border-radius:50%;cursor:pointer;border:3px solid transparent;transition:border-color .1s;}
+/* ── Image uploader ── */
+.img-upload-area{width:100%;height:150px;background:#0f172a;border:2px dashed #334155;border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;cursor:pointer;transition:all .2s;position:relative;overflow:hidden;}
+.img-upload-area:hover{border-color:#3b82f6;}
+.img-upload-area.drag{border-color:#3b82f6;background:#1e3a5f;}
+.img-upload-area img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:6px;}
+.img-overlay{position:absolute;inset:0;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;gap:8px;border-radius:6px;}
+.img-upload-area:hover .img-overlay{display:flex;}
+.img-hint{font-size:11px;color:#64748b;text-align:center;line-height:1.6;}
+.img-icon{font-size:24px;}
+.img-status{font-size:12px;color:#60a5fa;margin-top:4px;}
+
+/* ── Colors ── */
+.colors{display:flex;gap:6px;flex-wrap:wrap;margin-top:4px;}
+.col-dot{width:24px;height:24px;border-radius:50%;cursor:pointer;border:3px solid transparent;transition:border-color .1s;}
 .col-dot.sel{border-color:#fff;}
 
-/* Cat tree */
-.cat-tree{display:flex;flex-direction:column;gap:12px;margin-bottom:14px;}
+/* ── Cat tree ── */
+.cat-tree{display:flex;flex-direction:column;gap:10px;margin-bottom:14px;}
 .cat-node{background:#0f172a;border:1px solid #334155;border-radius:10px;overflow:hidden;}
-.cat-node-head{display:flex;align-items:center;gap:8px;padding:10px 12px;cursor:pointer;}
-.cat-node-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
-.cat-node-name{flex:1;font-size:14px;font-weight:600;}
-.cat-node-actions{display:flex;gap:5px;}
-.subs-list{padding:0 12px 10px 24px;display:flex;flex-direction:column;gap:6px;}
-.sub-item{display:flex;align-items:center;gap:8px;padding:7px 10px;background:#1e293b;border-radius:7px;}
-.sub-item-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
-.sub-item-name{flex:1;font-size:13px;}
-.sub-item-actions{display:flex;gap:4px;}
-.add-sub-row{padding:4px 12px 10px 24px;}
+.cat-node-head{display:flex;align-items:center;gap:8px;padding:10px 12px;}
+.cat-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+.cat-name{flex:1;font-size:14px;font-weight:600;}
+.cat-acts{display:flex;gap:4px;}
+.subs-list{padding:0 12px 10px 28px;display:flex;flex-direction:column;gap:5px;}
+.sub-item{display:flex;align-items:center;gap:7px;padding:6px 9px;background:#1e293b;border-radius:7px;}
+.sub-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+.sub-name{flex:1;font-size:13px;}
+.sub-acts{display:flex;gap:4px;}
+.add-sub-row{padding:3px 12px 10px 28px;}
 
-/* Toast */
-.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#10b981;color:#fff;padding:10px 20px;border-radius:8px;opacity:0;transition:opacity .2s;pointer-events:none;z-index:300;white-space:nowrap;}
+/* ── Toast ── */
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#10b981;color:#fff;padding:10px 18px;border-radius:8px;opacity:0;transition:opacity .2s;pointer-events:none;z-index:400;white-space:nowrap;font-size:13px;}
 .toast.show{opacity:1;}
 .toast.err{background:#ef4444;}
 
+/* ── Util ── */
 .spin{display:inline-block;animation:spin 1s linear infinite;}
 @keyframes spin{to{transform:rotate(360deg);}}
 .eo{display:none!important;}
 body.editmode .eo{display:inline-flex!important;}
+.divider{width:1px;height:20px;background:#334155;margin:0 2px;}
+
+/* ── Mobile ── */
+@media(max-width:640px){
+  body{padding:12px;}
+  header{gap:8px;}
+  h1{font-size:18px;}
+  .grid.size-sm,.grid.size-md,.grid.size-lg{grid-template-columns:1fr 1fr;}
+  .toolbar{gap:6px;}
+  .toolbar-right{margin-left:0;}
+  .modal.lg{max-width:100%;}
+  .detail-footer{padding:12px;}
+}
+@media(max-width:400px){
+  .grid.size-sm,.grid.size-md,.grid.size-lg{grid-template-columns:1fr;}
+}
 </style>
 </head>
 <body>
@@ -141,21 +209,30 @@ body.editmode .eo{display:inline-flex!important;}
     <h1>🎬 提詞庫 <span class="mode-badge read" id="modeBadge">👁️ 唯讀</span></h1>
     <div class="header-right">
       <span class="sync" id="syncEl"></span>
-      <button class="eo" id="btnAdd">＋ 新增提詞</button>
-      <button class="ghost eo" id="btnExport">匯出</button>
+      <button class="eo" id="btnAdd">＋ 新增</button>
+      <button class="ghost" id="btnExportMenu">匯出 ▾</button>
+      <button class="ghost eo" id="btnImport">匯入</button>
+      <input type="file" id="fileImport" accept="application/json" style="display:none">
       <button class="icon-btn" id="btnSettings">⚙️</button>
     </div>
   </header>
 
-  <!-- 主分類 tabs -->
-  <div class="main-tabs" id="mainTabs">
-    <div class="main-tab active" data-main="all">全部</div>
-    <div class="main-tab" data-main="fav">⭐ 收藏</div>
-    <!-- dynamic -->
-    <div class="tab-add-btn eo" id="btnAddMain">＋ 新增大主題</div>
+  <!-- Export dropdown -->
+  <div id="exportDropdown" style="display:none;position:fixed;z-index:200;background:#1e293b;border:1px solid #334155;border-radius:10px;padding:6px;min-width:150px;box-shadow:0 8px 24px rgba(0,0,0,.4);">
+    <div class="export-item" id="expJson" style="padding:8px 12px;cursor:pointer;border-radius:6px;font-size:13px;display:flex;align-items:center;gap:8px;">📄 匯出 JSON</div>
+    <div class="export-item" id="expXlsx" style="padding:8px 12px;cursor:pointer;border-radius:6px;font-size:13px;display:flex;align-items:center;gap:8px;">📊 匯出 Excel</div>
   </div>
 
-  <!-- 小分類 tabs -->
+  <!-- Main tabs -->
+  <div class="tabs-scroll">
+    <div class="main-tabs" id="mainTabs">
+      <div class="main-tab active" data-main="all">全部 <span class="tab-count" id="countAll">0</span></div>
+      <div class="main-tab" data-main="fav">⭐ 收藏 <span class="tab-count" id="countFav">0</span></div>
+      <div class="tab-add-btn eo" id="btnAddMain">＋ 大主題</div>
+    </div>
+  </div>
+
+  <!-- Sub tabs -->
   <div class="sub-tabs-wrap" id="subTabsWrap" style="display:none">
     <div class="sub-tabs" id="subTabs"></div>
   </div>
@@ -171,87 +248,129 @@ body.editmode .eo{display:inline-flex!important;}
       <option value="created">建立時間</option>
       <option value="title">標題 A-Z</option>
     </select>
+    <span id="tagFilterChip" style="display:none"></span>
     <span class="stats" id="statsEl"></span>
+    <div class="toolbar-right">
+      <span class="size-btn active" id="szSm" title="小格">⊞</span>
+      <span class="size-btn" id="szMd" title="中格">▦</span>
+      <span class="size-btn" id="szLg" title="大格">▣</span>
+    </div>
   </div>
 
-  <div class="grid" id="grid"></div>
+  <div class="grid size-md" id="grid"></div>
   <div class="empty" id="emptyEl" style="display:none">
     <div class="empty-icon">📭</div>
-    <div>沒有符合的提詞</div>
+    <h3 id="emptyTitle">沒有提詞</h3>
+    <p id="emptyDesc">點右上「＋ 新增」開始建立</p>
   </div>
 </div>
 
-<!-- ========== 提詞 Modal ========== -->
+<!-- ══════ 詳細預覽 Modal ══════ -->
+<div class="backdrop" id="detailBD">
+  <div class="modal lg">
+    <div id="detailImgWrap"></div>
+    <div class="detail-content">
+      <div class="detail-badges" id="detailBadges"></div>
+      <div class="detail-title" id="detailTitle"></div>
+      <div id="detailZhWrap" class="detail-section">
+        <div class="detail-label">中文 Prompt</div>
+        <div class="detail-prompt zh" id="detailZh"></div>
+        <button class="detail-copy-btn ghost" id="btnCopyZh">📋 複製中文 Prompt</button>
+      </div>
+      <div id="detailEnWrap" class="detail-section">
+        <div class="detail-label">英文 Prompt</div>
+        <div class="detail-prompt en" id="detailEn"></div>
+        <button class="detail-copy-btn ghost" id="btnCopyEn">📋 複製英文 Prompt</button>
+      </div>
+      <div id="detailNotesWrap" class="detail-section">
+        <div class="detail-label">備註 / 參數</div>
+        <div class="detail-notes" id="detailNotes"></div>
+      </div>
+      <div id="detailTagsWrap" class="detail-section">
+        <div class="detail-label">標籤</div>
+        <div class="detail-tags" id="detailTags"></div>
+      </div>
+      <div style="font-size:11px;color:#475569;margin-top:8px" id="detailMeta"></div>
+    </div>
+    <div class="detail-footer">
+      <button class="ghost" id="btnDetailClose">關閉</button>
+      <button class="ghost eo" id="btnDetailDupe">複製一份</button>
+      <button class="ghost eo" id="btnDetailFav">收藏</button>
+      <button class="eo" id="btnDetailEdit">✏️ 編輯</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════ 提詞 Modal ══════ -->
 <div class="backdrop" id="promptBD">
   <div class="modal">
-    <h2 id="promptTitle">新增提詞</h2>
-    <form id="promptForm">
-      <div class="frow">
-        <div class="fg">
-          <label>大主題</label>
-          <select id="mainSel" name="catId" required></select>
-        </div>
-        <div class="fg">
-          <label>小主題</label>
-          <select id="subSel" name="subId"></select>
-        </div>
-      </div>
-      <div class="fg"><label>標題</label><input name="title" required placeholder="例：電影感日落街景"></div>
-      <div class="fg">
-        <label>縮圖圖片</label>
-        <div class="img-upload-area" id="imgUploadArea">
-          <div class="img-upload-icon">🖼️</div>
-          <div class="img-upload-hint">點擊上傳 / 拖曳圖片 / Ctrl+V 貼截圖</div>
-          <div class="overlay">
-            <span style="color:#fff;font-size:13px;">🔄 更換圖片</span>
-            <button type="button" class="sm danger" id="btnRemoveImg" onclick="event.stopPropagation();removeImg()">✕ 移除</button>
+    <div class="modal-body">
+      <h2 id="promptTitle">新增提詞</h2>
+      <form id="promptForm">
+        <div class="frow">
+          <div class="fg">
+            <label>大主題</label>
+            <select id="mainSel" name="catId" required></select>
+          </div>
+          <div class="fg">
+            <label>小主題</label>
+            <select id="subSel" name="subId"></select>
           </div>
         </div>
-        <div class="img-actions">
-          <span class="img-uploading" id="imgUploadStatus" style="display:none">⏳ 上傳中…</span>
+        <div class="fg"><label>標題</label><input name="title" required placeholder="例：電影感日落街景"></div>
+        <div class="fg">
+          <label>縮圖圖片</label>
+          <div class="img-upload-area" id="imgArea">
+            <div class="img-icon">🖼️</div>
+            <div class="img-hint">點擊上傳 / 拖曳 / Ctrl+V 貼截圖</div>
+            <div class="img-overlay" id="imgOverlay">
+              <span style="color:#fff;font-size:12px">🔄 更換</span>
+              <button type="button" class="sm danger" onclick="event.stopPropagation();removeImg()">✕</button>
+            </div>
+          </div>
+          <div class="img-status" id="imgStatus" style="display:none">⏳ 上傳中…</div>
+          <input type="hidden" name="thumbnail" id="thumbHidden">
+          <input id="thumbUrl" placeholder="或貼上圖片網址…" style="margin-top:6px;width:100%;font-size:12px;padding:7px 10px">
         </div>
-        <input type="hidden" name="thumbnail" id="thumbnailInput">
-        <div class="help">或貼上網址：<input id="thumbUrlInput" placeholder="https://..." style="margin-top:4px;font-size:12px;padding:6px 8px;width:100%"></div>
-      </div>
-      <div class="fg"><label>中文 Prompt</label><textarea name="promptZh" placeholder="用中文描述你想要的畫面"></textarea></div>
-      <div class="fg"><label>英文 Prompt（給 API）</label><textarea name="promptEn" placeholder="English prompt for API"></textarea></div>
-      <div class="fg"><label>標籤（逗號分隔）</label><input name="tags" placeholder="電影感, 夕陽, 街景"></div>
-      <div class="fg"><label>備註 / 參數</label><textarea name="notes" placeholder="ratio 16:9, duration 5s…"></textarea></div>
-      <div class="fg"><label><input type="checkbox" name="fav" style="width:auto;margin-right:6px">加入收藏</label></div>
-      <div class="modal-foot">
-        <button type="button" class="ghost" id="btnPromptCancel">取消</button>
-        <button type="submit">儲存</button>
-      </div>
-    </form>
+        <div class="fg"><label>中文 Prompt</label><textarea name="promptZh" placeholder="用中文描述你想要的畫面"></textarea></div>
+        <div class="fg"><label>英文 Prompt（給 API）</label><textarea name="promptEn" placeholder="English prompt for API"></textarea></div>
+        <div class="fg"><label>標籤（逗號分隔）</label><input name="tags" placeholder="電影感, 夕陽, 街景"></div>
+        <div class="fg"><label>備註 / 參數</label><textarea name="notes" placeholder="ratio 16:9, duration 5s, model: pro…"></textarea></div>
+        <div class="fg"><label><input type="checkbox" name="fav" style="width:auto;margin-right:6px">⭐ 加入收藏</label></div>
+      </form>
+    </div>
+    <div class="modal-foot">
+      <button type="button" class="ghost" id="btnPromptCancel">取消</button>
+      <button type="button" id="btnPromptSave">儲存</button>
+    </div>
   </div>
 </div>
 
-<!-- ========== 分類 Modal（新增/編輯大or小）========== -->
+<!-- ══════ 分類 Modal ══════ -->
 <div class="backdrop" id="catBD">
   <div class="modal sm">
-    <h2 id="catTitle">新增大主題</h2>
-    <form id="catForm">
-      <div class="fg"><label>名稱</label><input name="name" required placeholder="例：影片、Seedance 2.0"></div>
-      <div class="frow">
-        <div class="fg"><label>圖示 Emoji</label><input name="icon" placeholder="🎞️" maxlength="4" style="font-size:18px"></div>
-      </div>
-      <div class="fg">
-        <label>顏色</label>
-        <div class="colors" id="colorPicker"></div>
-      </div>
-      <div class="modal-foot">
-        <button type="button" class="ghost" id="btnCatCancel">取消</button>
-        <button type="submit">儲存</button>
-      </div>
-    </form>
+    <div class="modal-body">
+      <h2 id="catTitle">新增大主題</h2>
+      <form id="catForm">
+        <div class="fg"><label>名稱</label><input name="name" required placeholder="例：影片 / Seedance 2.0"></div>
+        <div class="fg"><label>圖示 Emoji</label><input name="icon" placeholder="🎞️" maxlength="4" style="font-size:18px;width:80px"></div>
+        <div class="fg"><label>顏色</label><div class="colors" id="colorPicker"></div></div>
+      </form>
+    </div>
+    <div class="modal-foot">
+      <button class="ghost" id="btnCatCancel">取消</button>
+      <button id="btnCatSave">儲存</button>
+    </div>
   </div>
 </div>
 
-<!-- ========== 管理分類 Modal ========== -->
+<!-- ══════ 管理分類 Modal ══════ -->
 <div class="backdrop" id="mgrBD">
   <div class="modal">
-    <h2>📂 管理分類</h2>
-    <div class="cat-tree" id="catTree"></div>
+    <div class="modal-body">
+      <h2>📂 管理分類</h2>
+      <div class="cat-tree" id="catTree"></div>
+    </div>
     <div class="modal-foot">
       <button class="ghost" id="btnMgrClose">關閉</button>
       <button class="eo" id="btnMgrAddMain">＋ 新增大主題</button>
@@ -259,19 +378,21 @@ body.editmode .eo{display:inline-flex!important;}
   </div>
 </div>
 
-<!-- ========== 設定 Modal ========== -->
+<!-- ══════ 設定 Modal ══════ -->
 <div class="backdrop" id="settingsBD">
   <div class="modal sm">
-    <h2>⚙️ 設定</h2>
-    <div class="fg">
-      <label>GitHub Personal Access Token</label>
-      <input type="password" id="tokenInput" placeholder="github_pat_...">
-      <div class="help">Token 存在本機，不外洩。<a href="https://github.com/settings/tokens?type=beta" target="_blank">前往建立 Token</a></div>
+    <div class="modal-body">
+      <h2>⚙️ 設定</h2>
+      <div class="fg">
+        <label>GitHub Personal Access Token</label>
+        <input type="password" id="tokenInput" placeholder="github_pat_...">
+        <div class="help">Token 存在本機，不外洩。<a href="https://github.com/settings/tokens?type=beta" target="_blank">前往建立</a></div>
+      </div>
+      <div class="fg"><label>GitHub 用戶名</label><input id="ownerInput"></div>
+      <div class="fg"><label>Repo 名稱</label><input id="repoInput"></div>
+      <div class="fg"><label>資料檔</label><input id="pathInput" value="data.json"></div>
+      <div class="fg"><label>分支</label><input id="branchInput" value="main"></div>
     </div>
-    <div class="fg"><label>GitHub 用戶名</label><input id="ownerInput"></div>
-    <div class="fg"><label>Repo 名稱</label><input id="repoInput"></div>
-    <div class="fg"><label>資料檔</label><input id="pathInput" value="data.json"></div>
-    <div class="fg"><label>分支</label><input id="branchInput" value="main"></div>
     <div class="modal-foot">
       <button class="danger sm" id="btnMgr">管理分類</button>
       <button class="danger sm" id="btnLogout">登出</button>
@@ -283,9 +404,13 @@ body.editmode .eo{display:inline-flex!important;}
 
 <div class="toast" id="toastEl"></div>
 
+<style>
+.export-item:hover{background:#334155;}
+</style>
+
 <script>
-// ── Config ──────────────────────────────────────────────
-const CFG_KEY='plib_cfg', TOK_KEY='plib_tok', LOCAL_KEY='plib_data_v3';
+// ── Config ────────────────────────────────────────────────
+const CFG_KEY='plib_cfg',TOK_KEY='plib_tok',LOCAL_KEY='plib_data_v3',SIZE_KEY='plib_size';
 const DEF_CFG={owner:'monkey830526-byte',repo:'prompt-library',path:'data.json',branch:'main'};
 const COLORS=['#8b5cf6','#3b82f6','#10b981','#f59e0b','#ef4444','#06b6d4','#ec4899','#f97316','#84cc16','#6366f1'];
 const DEF_CATS=[
@@ -298,26 +423,31 @@ const setCfg=c=>localStorage.setItem(CFG_KEY,JSON.stringify(c));
 const getTok=()=>localStorage.getItem(TOK_KEY)||'';
 const setTok=t=>t?localStorage.setItem(TOK_KEY,t):localStorage.removeItem(TOK_KEY);
 
-// ── State ────────────────────────────────────────────────
+// ── State ─────────────────────────────────────────────────
 let DB={categories:[],prompts:[]};
 let sha=null;
-let activMain='all', activSub='all';
-let editPId=null, editCMode=null, editCId=null, editCParent=null;
+let activMain='all',activSub='all',activTag='';
+let editPId=null,viewPId=null;
+let editCMode=null,editCId=null,editCParent=null;
 let selColor=COLORS[0];
-let saveTimer=null, saving=false;
+let saveTimer=null,saving=false;
+let gridSize=localStorage.getItem(SIZE_KEY)||'md';
 
 const $=id=>document.getElementById(id);
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const fmt=ts=>{if(!ts)return'';const d=new Date(ts);return`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;};
+const getCat=id=>DB.categories.find(c=>c.id===id)||null;
+const getSub=(cId,sId)=>getCat(cId)?.subs.find(s=>s.id===sId)||null;
 
-// ── Toast ────────────────────────────────────────────────
-function toast(msg,err=false){const t=$('toastEl');t.textContent=msg;t.className='toast show'+(err?' err':'');setTimeout(()=>t.classList.remove('show'),2000);}
-
-// ── Sync status ──────────────────────────────────────────
+// ── Toast ─────────────────────────────────────────────────
+function toast(msg,err=false){
+  const t=$('toastEl');t.textContent=msg;t.className='toast show'+(err?' err':'');
+  clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),2200);
+}
 function setSync(txt,spin=false){$('syncEl').innerHTML=spin?`<span class="spin">⏳</span> ${txt}`:txt;}
 
-// ── GitHub API ───────────────────────────────────────────
+// ── GitHub API ────────────────────────────────────────────
 async function fetchDB(){
   const cfg=getCfg(),tok=getTok();
   setSync('載入中…',true);
@@ -325,13 +455,13 @@ async function fetchDB(){
     if(tok){
       const r=await fetch(`https://api.github.com/repos/${cfg.owner}/${cfg.repo}/contents/${cfg.path}?ref=${cfg.branch}`,
         {headers:{Authorization:`Bearer ${tok}`,Accept:'application/vnd.github+json'}});
-      if(r.status===404){DB={categories:DEF_CATS.map(c=>({...c,subs:[...c.subs]})),prompts:[]};sha=null;setSync('（空白，尚未同步）');return;}
+      if(r.status===404){initEmpty();setSync('（空白庫）');return;}
       if(!r.ok)throw new Error(`API ${r.status}`);
       const j=await r.json();sha=j.sha;
       DB=migrate(JSON.parse(decodeURIComponent(escape(atob(j.content.replace(/\n/g,''))))||'{}'));
     }else{
       const r=await fetch(`https://raw.githubusercontent.com/${cfg.owner}/${cfg.repo}/${cfg.branch}/${cfg.path}?t=${Date.now()}`);
-      if(!r.ok){if(r.status===404){DB={categories:DEF_CATS.map(c=>({...c,subs:[...c.subs]})),prompts:[]};setSync('（尚未有資料）');return;}throw new Error(r.status);}
+      if(!r.ok){if(r.status===404){initEmpty();setSync('（尚未有資料）');return;}throw new Error(r.status);}
       DB=migrate(await r.json());
     }
     setSync(`✓ 已同步 · ${DB.prompts.length} 筆`);
@@ -340,22 +470,17 @@ async function fetchDB(){
     try{const l=localStorage.getItem(LOCAL_KEY);if(l){DB=JSON.parse(l);setSync('（離線模式）');}}catch{}
   }
 }
-
+function initEmpty(){DB={categories:DEF_CATS.map(c=>({...c,subs:[...c.subs]})),prompts:[]};sha=null;}
 function migrate(raw){
-  // old: array
-  if(Array.isArray(raw)) return{categories:DEF_CATS.map(c=>({...c,subs:[...c.subs]})),prompts:raw.map(p=>({...p,catId:p.type==='video'?'video':'photo',subId:''}))};
-  // old v2: flat categories
+  if(Array.isArray(raw))return{categories:DEF_CATS.map(c=>({...c,subs:[...c.subs]})),prompts:raw.map(p=>({...p,catId:p.type==='video'?'video':'photo',subId:''}))};
   if(raw.categories&&raw.categories[0]&&!Array.isArray(raw.categories[0].subs)){
-    const cats=DEF_CATS.map(c=>({...c,subs:[...c.subs]}));
-    return{categories:cats,prompts:(raw.prompts||[]).map(p=>({...p,catId:p.catId||p.categoryId||'video',subId:''}))};
+    return{categories:DEF_CATS.map(c=>({...c,subs:[...c.subs]})),prompts:(raw.prompts||[]).map(p=>({...p,catId:p.catId||p.categoryId||'video',subId:''}))};
   }
   return{categories:(raw.categories&&raw.categories.length)?raw.categories:DEF_CATS.map(c=>({...c,subs:[...c.subs]})),prompts:raw.prompts||[]};
 }
-
 async function saveDB(){
   const cfg=getCfg(),tok=getTok();
-  if(!tok){toast('未登入',true);return;}
-  if(saving)return;
+  if(!tok)return;if(saving)return;
   saving=true;setSync('儲存中…',true);
   localStorage.setItem(LOCAL_KEY,JSON.stringify(DB));
   try{
@@ -371,151 +496,294 @@ async function saveDB(){
 }
 function sched(){if(!getTok())return;clearTimeout(saveTimer);setSync('待儲存…');saveTimer=setTimeout(saveDB,1200);}
 
-// ── Lookup helpers ───────────────────────────────────────
-const getCat=id=>DB.categories.find(c=>c.id===id)||null;
-const getSub=(catId,subId)=>getCat(catId)?.subs.find(s=>s.id===subId)||null;
+// ── Counts ────────────────────────────────────────────────
+function getCounts(){
+  const total=DB.prompts.length,fav=DB.prompts.filter(p=>p.favorite).length;
+  const byCat={},bySub={};
+  DB.prompts.forEach(p=>{
+    byCat[p.catId]=(byCat[p.catId]||0)+1;
+    if(p.subId)bySub[p.subId]=(bySub[p.subId]||0)+1;
+  });
+  return{total,fav,byCat,bySub};
+}
 
-// ── Render main tabs ─────────────────────────────────────
+// ── Tabs ──────────────────────────────────────────────────
 function renderMainTabs(){
-  const wrap=$('mainTabs');
-  // remove dynamic
+  const wrap=$('mainTabs'),addBtn=$('btnAddMain');
+  const counts=getCounts();
+  $('countAll').textContent=counts.total;
+  $('countFav').textContent=counts.fav;
   Array.from(wrap.children).forEach(el=>{if(el.dataset.dyn)el.remove();});
-  const addBtn=$('btnAddMain');
   DB.categories.forEach(cat=>{
     const el=document.createElement('div');
     el.className='main-tab'+(activMain===cat.id?' active':'');
-    el.dataset.main=cat.id; el.dataset.dyn='1';
-    el.innerHTML=`${esc(cat.icon||'')} ${esc(cat.name)}`;
+    el.dataset.main=cat.id;el.dataset.dyn='1';
+    const cnt=counts.byCat[cat.id]||0;
+    el.innerHTML=`${esc(cat.icon||'')} ${esc(cat.name)} <span class="tab-count">${cnt}</span>`;
     el.onclick=()=>setMain(cat.id);
     wrap.insertBefore(el,addBtn);
   });
   wrap.querySelector('[data-main="all"]').className='main-tab'+(activMain==='all'?' active':'');
   wrap.querySelector('[data-main="fav"]').className='main-tab'+(activMain==='fav'?' active':'');
 }
-
-// ── Render sub tabs ──────────────────────────────────────
 function renderSubTabs(){
-  const wrap=$('subTabsWrap'), row=$('subTabs');
+  const wrap=$('subTabsWrap'),row=$('subTabs');
   const cat=getCat(activMain);
-  if(!cat||activMain==='all'||activMain==='fav'){wrap.style.display='none';return;}
-  wrap.style.display='block';
-  row.innerHTML='';
-
-  // "全部" sub
-  const all=document.createElement('div');
-  all.className='sub-tab'+(activSub==='all'?' active':'');
-  if(activSub==='all') all.style.background=cat.color;
-  all.textContent='全部';
-  all.onclick=()=>setSub('all');
-  row.appendChild(all);
-
+  if(!cat){wrap.style.display='none';return;}
+  wrap.style.display='block';row.innerHTML='';
+  const counts=getCounts();
+  const allEl=document.createElement('div');
+  allEl.className='sub-tab'+(activSub==='all'?' active':'');
+  if(activSub==='all')allEl.style.background=cat.color;
+  const allCnt=counts.byCat[cat.id]||0;
+  allEl.innerHTML=`全部 <span class="tab-count">${allCnt}</span>`;
+  allEl.onclick=()=>setSub('all');
+  row.appendChild(allEl);
   cat.subs.forEach(s=>{
     const el=document.createElement('div');
     el.className='sub-tab'+(activSub===s.id?' active':'');
-    if(activSub===s.id) el.style.background=s.color||cat.color;
-    el.innerHTML=`<span class="sub-tab-dot" style="background:${s.color||cat.color}"></span>${esc(s.icon||'')} ${esc(s.name)}`;
+    if(activSub===s.id)el.style.background=s.color||cat.color;
+    const cnt=counts.bySub[s.id]||0;
+    el.innerHTML=`<span class="sub-tab-dot" style="background:${s.color||cat.color}"></span>${esc(s.icon||'')} ${esc(s.name)} <span class="tab-count">${cnt}</span>`;
     el.onclick=()=>setSub(s.id);
     row.appendChild(el);
   });
-
-  // add sub button (edit mode only)
   const addSub=document.createElement('div');
   addSub.className='sub-add-btn eo';
-  addSub.textContent='＋ 新增小主題';
+  addSub.textContent='＋ 小主題';
   addSub.onclick=()=>openCatModal('sub',null,activMain);
+  if(document.body.classList.contains('editmode'))addSub.style.display='flex';
   row.appendChild(addSub);
-  if(document.body.classList.contains('editmode')) addSub.style.display='flex';
+}
+function setMain(m){activMain=m;activSub='all';activTag='';renderMainTabs();renderSubTabs();render();}
+function setSub(s){activSub=s;activTag='';renderSubTabs();render();}
+
+// ── Tag filter ────────────────────────────────────────────
+function setTagFilter(tag){
+  activTag=tag;
+  const chip=$('tagFilterChip');
+  if(tag){
+    chip.style.display='inline-flex';
+    chip.innerHTML=`<span class="filter-tag-chip"># ${esc(tag)} <span style="margin-left:4px;opacity:.7">✕</span></span>`;
+    chip.querySelector('.filter-tag-chip').onclick=()=>setTagFilter('');
+  }else{chip.style.display='none';}
+  render();
 }
 
-function setMain(m){activMain=m;activSub='all';renderMainTabs();renderSubTabs();render();}
-function setSub(s){activSub=s;renderSubTabs();render();}
+// ── Grid size ─────────────────────────────────────────────
+function setGridSize(s){
+  gridSize=s;localStorage.setItem(SIZE_KEY,s);
+  $('grid').className=`grid size-${s}`;
+  ['Sm','Md','Lg'].forEach(x=>$('sz'+x).classList.remove('active'));
+  $('sz'+s.charAt(0).toUpperCase()+s.slice(1)).classList.add('active');
+}
+$('szSm').onclick=()=>setGridSize('sm');
+$('szMd').onclick=()=>setGridSize('md');
+$('szLg').onclick=()=>setGridSize('lg');
 
-// ── Render grid ──────────────────────────────────────────
+// ── Render grid ───────────────────────────────────────────
 function render(){
   const q=$('search').value.trim().toLowerCase();
   const sort=$('sortBy').value;
   let list=DB.prompts.slice();
-
-  if(activMain==='fav') list=list.filter(p=>p.favorite);
+  if(activMain==='fav')list=list.filter(p=>p.favorite);
   else if(activMain!=='all'){
     list=list.filter(p=>p.catId===activMain);
-    if(activSub!=='all') list=list.filter(p=>p.subId===activSub);
+    if(activSub!=='all')list=list.filter(p=>p.subId===activSub);
   }
-
-  if(q){
-    list=list.filter(p=>{
-      const cat=getCat(p.catId), sub=getSub(p.catId,p.subId);
-      return(p.title||'').toLowerCase().includes(q)||
-        (p.promptZh||'').toLowerCase().includes(q)||(p.promptEn||'').toLowerCase().includes(q)||
-        (p.notes||'').toLowerCase().includes(q)||
-        (p.tags||[]).some(t=>t.toLowerCase().includes(q))||
-        (cat?.name||'').toLowerCase().includes(q)||(sub?.name||'').toLowerCase().includes(q);
-    });
-  }
-
-  if(sort==='title') list.sort((a,b)=>(a.title||'').localeCompare(b.title||''));
-  else if(sort==='created') list.sort((a,b)=>b.created-a.created);
+  if(activTag)list=list.filter(p=>(p.tags||[]).includes(activTag));
+  if(q)list=list.filter(p=>{
+    const cat=getCat(p.catId),sub=getSub(p.catId,p.subId);
+    return(p.title||'').toLowerCase().includes(q)||(p.promptZh||'').toLowerCase().includes(q)||
+      (p.promptEn||'').toLowerCase().includes(q)||(p.notes||'').toLowerCase().includes(q)||
+      (p.tags||[]).some(t=>t.toLowerCase().includes(q))||
+      (cat?.name||'').toLowerCase().includes(q)||(sub?.name||'').toLowerCase().includes(q);
+  });
+  if(sort==='title')list.sort((a,b)=>(a.title||'').localeCompare(b.title||''));
+  else if(sort==='created')list.sort((a,b)=>b.created-a.created);
   else list.sort((a,b)=>b.updated-a.updated);
 
   $('statsEl').textContent=`${list.length} / ${DB.prompts.length} 筆`;
-  const grid=$('grid');
-  grid.innerHTML='';
-  $('emptyEl').style.display=list.length===0?'block':'none';
+  const grid=$('grid');grid.innerHTML='';
+  const empty=$('emptyEl');empty.style.display=list.length===0?'block':'none';
+  if(list.length===0){
+    const isEdit=document.body.classList.contains('editmode');
+    $('emptyTitle').textContent=activMain==='fav'?'尚無收藏':q||activTag?'沒有符合的提詞':'這裡還沒有提詞';
+    $('emptyDesc').textContent=isEdit&&!q&&!activTag?'點右上「＋ 新增」開始建立':'試試調整搜尋條件';
+    return;
+  }
 
   list.forEach(p=>{
-    const cat=getCat(p.catId), sub=getSub(p.catId,p.subId);
+    const cat=getCat(p.catId),sub=getSub(p.catId,p.subId);
+    const isEdit=document.body.classList.contains('editmode');
+    const catColor=cat?.color||'#475569';
+    const subColor=sub?.color||catColor;
     const thumb=p.thumbnail
-      ?`<img class="card-thumb" src="${esc(p.thumbnail)}" onerror="this.outerHTML='<div class=\\'card-thumb ph\\'>${esc(cat?.icon||'📄')}</div>'">`
+      ?`<img class="card-thumb" src="${esc(p.thumbnail)}" onerror="this.outerHTML='<div class=\\'card-thumb ph\\'>${esc(cat?.icon||'📄')}</div>'" loading="lazy">`
       :`<div class="card-thumb ph">${esc(cat?.icon||'📄')}</div>`;
-    const catBadge=cat?`<span class="badge-main" style="background:${cat.color}">${esc(cat.icon||'')} ${esc(cat.name)}</span>`:'';
-    const subBadge=sub?`<span class="badge-sub" style="background:${sub.color||cat?.color||'#475569'}">${esc(sub.icon||'')} ${esc(sub.name)}</span>`:'';
-    const favBadge=p.favorite?`<span class="fav-icon">⭐</span>`:'';
-    const tags=(p.tags||[]).map(t=>`<span class="tag">${esc(t)}</span>`).join('');
+    const catBadge=cat?`<span class="badge-main" style="background:${catColor}">${esc(cat.icon||'')} ${esc(cat.name)}</span>`:'';
+    const subBadge=sub?`<span class="badge-sub" style="background:${subColor}">${esc(sub.icon||'')} ${esc(sub.name)}</span>`:'';
+    const tags=(p.tags||[]).map(t=>`<span class="tag" data-tag="${esc(t)}">#${esc(t)}</span>`).join('');
     const card=document.createElement('div');
     card.className='card';
+    card.dataset.pid=p.id;
     card.innerHTML=`
       ${thumb}
       <div class="card-body">
-        <div class="card-badges">${catBadge}${subBadge}${favBadge}</div>
+        <div class="card-badges">${catBadge}${subBadge}${p.favorite?'<span class="fav-icon">⭐</span>':''}</div>
         <div class="card-title">${esc(p.title||'未命名')}</div>
         ${p.promptZh?`<div class="prompt-box pzh">${esc(p.promptZh)}</div>`:''}
         ${p.promptEn?`<div class="prompt-box pen">${esc(p.promptEn)}</div>`:''}
+        ${p.notes?`<span class="notes-chip">📝 ${esc(p.notes)}</span>`:''}
         ${tags?`<div class="tags">${tags}</div>`:''}
         <div class="card-meta">更新 ${fmt(p.updated)}</div>
-        <div class="card-actions">
-          ${p.promptZh?`<button class="sm" data-cpzh="${p.id}">複製中文</button>`:''}
-          ${p.promptEn?`<button class="sm ghost" data-cpen="${p.id}">複製英文</button>`:''}
-          <button class="sm ghost eo" data-edit="${p.id}">編輯</button>
-          <button class="sm ghost eo" data-fav="${p.id}">${p.favorite?'取消收藏':'收藏'}</button>
-          <button class="sm danger eo" data-del="${p.id}">刪除</button>
+        <div class="card-copy-row">
+          ${p.promptZh?`<button class="copy-btn" data-cpzh="${p.id}" onclick="event.stopPropagation()">📋 中文</button>`:''}
+          ${p.promptEn?`<button class="copy-btn ghost" data-cpen="${p.id}" onclick="event.stopPropagation()">📋 英文</button>`:''}
         </div>
+        ${isEdit?`<div class="card-edit-row">
+          <button class="sm ghost eo" data-edit="${p.id}" onclick="event.stopPropagation()">✏️</button>
+          <button class="sm ghost eo" data-dupe="${p.id}" onclick="event.stopPropagation()">⧉</button>
+          <button class="sm ghost eo" data-fav="${p.id}" onclick="event.stopPropagation()">${p.favorite?'★':'☆'}</button>
+          <button class="sm danger eo" data-del="${p.id}" onclick="event.stopPropagation()">✕</button>
+        </div>`:''}
       </div>`;
     grid.appendChild(card);
   });
 }
 
-// ── Prompt form helpers ──────────────────────────────────
+// ── Grid events ───────────────────────────────────────────
+$('grid').addEventListener('click',async e=>{
+  const b=e.target.closest('button[data-cpzh],button[data-cpen],button[data-edit],button[data-del],button[data-fav],button[data-dupe]');
+  const tagEl=e.target.closest('.tag');
+  const card=e.target.closest('.card');
+  if(tagEl){setTagFilter(tagEl.dataset.tag);return;}
+  if(b){
+    const id=b.dataset.cpzh||b.dataset.cpen||b.dataset.edit||b.dataset.del||b.dataset.fav||b.dataset.dupe;
+    const p=DB.prompts.find(x=>x.id===id);if(!p)return;
+    if(b.dataset.cpzh){await navigator.clipboard.writeText(p.promptZh||'');toast('已複製中文 Prompt');}
+    else if(b.dataset.cpen){await navigator.clipboard.writeText(p.promptEn||'');toast('已複製英文 Prompt');}
+    else if(b.dataset.edit)openPromptModal(p);
+    else if(b.dataset.fav){p.favorite=!p.favorite;p.updated=Date.now();render();renderMainTabs();sched();}
+    else if(b.dataset.dupe)dupePrompt(p);
+    else if(b.dataset.del){if(confirm(`刪除「${p.title}」？`)){DB.prompts=DB.prompts.filter(x=>x.id!==id);render();renderMainTabs();sched();toast('已刪除');}}
+    return;
+  }
+  if(card){const p=DB.prompts.find(x=>x.id===card.dataset.pid);if(p)openDetail(p);}
+});
+
+// ── Detail modal ──────────────────────────────────────────
+function openDetail(p){
+  viewPId=p.id;
+  const cat=getCat(p.catId),sub=getSub(p.catId,p.subId);
+  // image
+  const imgWrap=$('detailImgWrap');
+  if(p.thumbnail)imgWrap.innerHTML=`<img class="detail-img" src="${esc(p.thumbnail)}" onerror="this.className='detail-img ph';this.textContent='${esc(cat?.icon||'📄')}'">`;
+  else imgWrap.innerHTML=`<div class="detail-img ph">${esc(cat?.icon||'📄')}</div>`;
+  // badges
+  const catColor=cat?.color||'#475569';
+  const subColor=sub?.color||catColor;
+  $('detailBadges').innerHTML=
+    (cat?`<span class="badge-main" style="background:${catColor}">${esc(cat.icon||'')} ${esc(cat.name)}</span>`:'')+
+    (sub?`<span class="badge-sub" style="background:${subColor}">${esc(sub.icon||'')} ${esc(sub.name)}</span>`:'')+
+    (p.favorite?'<span class="fav-icon" style="font-size:16px">⭐</span>':'');
+  $('detailTitle').textContent=p.title||'未命名';
+  // zh
+  const zhWrap=$('detailZhWrap');zhWrap.style.display=p.promptZh?'block':'none';
+  $('detailZh').textContent=p.promptZh||'';
+  // en
+  const enWrap=$('detailEnWrap');enWrap.style.display=p.promptEn?'block':'none';
+  $('detailEn').textContent=p.promptEn||'';
+  // notes
+  const notesWrap=$('detailNotesWrap');notesWrap.style.display=p.notes?'block':'none';
+  $('detailNotes').textContent=p.notes||'';
+  // tags
+  const tagsWrap=$('detailTagsWrap');tagsWrap.style.display=(p.tags&&p.tags.length)?'block':'none';
+  $('detailTags').innerHTML=(p.tags||[]).map(t=>`<span class="detail-tag" data-tag="${esc(t)}">#${esc(t)}</span>`).join('');
+  $('detailMeta').textContent=`建立 ${fmt(p.created)}　更新 ${fmt(p.updated)}`;
+  $('btnDetailFav').textContent=p.favorite?'取消收藏':'⭐ 收藏';
+  $('detailBD').classList.add('open');
+}
+$('btnDetailClose').onclick=()=>{$('detailBD').classList.remove('open');viewPId=null;};
+$('detailBD').onclick=e=>{if(e.target===$('detailBD')){$('detailBD').classList.remove('open');viewPId=null;}};
+$('btnCopyZh').onclick=async()=>{const p=DB.prompts.find(x=>x.id===viewPId);if(p){await navigator.clipboard.writeText(p.promptZh||'');toast('已複製中文 Prompt');}};
+$('btnCopyEn').onclick=async()=>{const p=DB.prompts.find(x=>x.id===viewPId);if(p){await navigator.clipboard.writeText(p.promptEn||'');toast('已複製英文 Prompt');}};
+$('btnDetailEdit').onclick=()=>{const p=DB.prompts.find(x=>x.id===viewPId);if(p){$('detailBD').classList.remove('open');openPromptModal(p);}};
+$('btnDetailFav').onclick=()=>{const p=DB.prompts.find(x=>x.id===viewPId);if(!p)return;p.favorite=!p.favorite;p.updated=Date.now();openDetail(p);render();renderMainTabs();sched();};
+$('btnDetailDupe').onclick=()=>{const p=DB.prompts.find(x=>x.id===viewPId);if(p){$('detailBD').classList.remove('open');dupePrompt(p);}};
+$('detailTags').addEventListener('click',e=>{const t=e.target.closest('.detail-tag');if(t){$('detailBD').classList.remove('open');viewPId=null;setTagFilter(t.dataset.tag);}});
+
+// ── Duplicate ─────────────────────────────────────────────
+function dupePrompt(p){
+  const now=Date.now();
+  const copy={...p,id:uid(),title:(p.title||'')+'（複製）',created:now,updated:now};
+  DB.prompts.push(copy);render();renderMainTabs();sched();toast('已複製一份，可開始編輯');
+  openPromptModal(copy);
+}
+
+// ── Image upload ──────────────────────────────────────────
+const imgArea=$('imgArea'),thumbHidden=$('thumbHidden'),thumbUrl=$('thumbUrl');
+let pendingB64=null,pendingName=null;
+function setImgPreview(src){
+  imgArea.querySelectorAll('img').forEach(e=>e.remove());
+  imgArea.querySelector('.img-icon').style.display=src?'none':'block';
+  imgArea.querySelector('.img-hint').style.display=src?'none':'block';
+  if(src){const i=document.createElement('img');i.src=src;imgArea.insertBefore(i,imgArea.querySelector('.img-overlay'));}
+}
+function removeImg(){pendingB64=null;pendingName=null;thumbHidden.value='';thumbUrl.value='';setImgPreview(null);}
+thumbUrl.addEventListener('input',()=>{thumbHidden.value=thumbUrl.value.trim();setImgPreview(thumbUrl.value.trim()||null);pendingB64=null;});
+function handleImgFile(file){
+  if(!file||!file.type.startsWith('image/'))return;
+  const ext=file.name?.split('.').pop()||'png';
+  pendingName=`img_${Date.now()}.${ext}`;
+  const r=new FileReader();
+  r.onload=e=>{pendingB64=e.target.result.split(',')[1];setImgPreview(e.target.result);thumbHidden.value=e.target.result;thumbUrl.value='';};
+  r.readAsDataURL(file);
+}
+imgArea.onclick=()=>{const inp=document.createElement('input');inp.type='file';inp.accept='image/*';inp.onchange=e=>handleImgFile(e.target.files[0]);inp.click();};
+imgArea.addEventListener('dragover',e=>{e.preventDefault();imgArea.classList.add('drag');});
+imgArea.addEventListener('dragleave',()=>imgArea.classList.remove('drag'));
+imgArea.addEventListener('drop',e=>{e.preventDefault();imgArea.classList.remove('drag');handleImgFile(e.dataTransfer.files[0]);});
+document.addEventListener('paste',e=>{
+  if(!$('promptBD').classList.contains('open'))return;
+  const item=Array.from(e.clipboardData.items).find(i=>i.type.startsWith('image/'));
+  if(item)handleImgFile(item.getAsFile());
+});
+async function uploadImg(){
+  if(!pendingB64||!pendingName)return null;
+  const cfg=getCfg(),tok=getTok();if(!tok)return null;
+  $('imgStatus').style.display='block';
+  try{
+    const path=`images/${pendingName}`;
+    const r=await fetch(`https://api.github.com/repos/${cfg.owner}/${cfg.repo}/contents/${path}`,{
+      method:'PUT',headers:{Authorization:`Bearer ${tok}`,Accept:'application/vnd.github+json','Content-Type':'application/json'},
+      body:JSON.stringify({message:`Add ${pendingName}`,content:pendingB64,branch:cfg.branch})
+    });
+    if(!r.ok)throw new Error('上傳失敗');
+    const url=`https://raw.githubusercontent.com/${cfg.owner}/${cfg.repo}/${cfg.branch}/${path}`;
+    pendingB64=null;pendingName=null;return url;
+  }catch(e){console.error(e);toast('圖片上傳失敗',true);return null;}
+  finally{$('imgStatus').style.display='none';}
+}
+function resetImg(url=''){thumbHidden.value=url;thumbUrl.value=url&&!url.startsWith('data:')?url:'';setImgPreview(url||null);pendingB64=null;pendingName=null;}
+
+// ── Prompt form ───────────────────────────────────────────
 function populateMainSel(selId){
   $('mainSel').innerHTML=DB.categories.map(c=>`<option value="${c.id}"${c.id===selId?' selected':''}>${esc(c.icon||'')} ${esc(c.name)}</option>`).join('');
   updateSubSel();
 }
 function updateSubSel(selId=''){
-  const catId=$('mainSel').value;
-  const cat=getCat(catId);
-  const subs=cat?.subs||[];
-  $('subSel').innerHTML=`<option value="">（無小主題）</option>`+subs.map(s=>`<option value="${s.id}"${s.id===selId?' selected':''}>${esc(s.icon||'')} ${esc(s.name)}</option>`).join('');
+  const cat=getCat($('mainSel').value);
+  $('subSel').innerHTML=`<option value="">（無小主題）</option>`+(cat?.subs||[]).map(s=>`<option value="${s.id}"${s.id===selId?' selected':''}>${esc(s.icon||'')} ${esc(s.name)}</option>`).join('');
 }
 $('mainSel').onchange=()=>updateSubSel();
-
-// ── Prompt modal ─────────────────────────────────────────
 function openPromptModal(p=null){
   editPId=p?p.id:null;
   $('promptTitle').textContent=p?'編輯提詞':'新增提詞';
   $('promptForm').reset();
   const defCat=activMain!=='all'&&activMain!=='fav'?activMain:(DB.categories[0]?.id||'');
-  populateMainSel(p?.catId||defCat);
-  updateSubSel(p?.subId||'');
-  resetImgUI(p?.thumbnail||'');
+  populateMainSel(p?.catId||defCat);updateSubSel(p?.subId||'');
+  resetImg(p?.thumbnail||'');
   if(p){
     $('promptForm').title.value=p.title||'';
     $('promptForm').promptZh.value=p.promptZh||'';
@@ -526,39 +794,32 @@ function openPromptModal(p=null){
   }
   $('promptBD').classList.add('open');
 }
-function closePromptModal(){$('promptBD').classList.remove('open');editPId=null;resetImgUI();}
+function closePromptModal(){$('promptBD').classList.remove('open');editPId=null;resetImg();}
 $('btnPromptCancel').onclick=closePromptModal;
 $('promptBD').onclick=e=>{if(e.target===$('promptBD'))closePromptModal();};
-$('promptForm').onsubmit=async e=>{
-  e.preventDefault();
-  const fd=new FormData(e.target),now=Date.now();
-  // upload image if pending
-  let thumb=thumbInput.value||'';
-  if(pendingImgB64){
-    const uploaded=await uploadImgToGitHub();
-    if(uploaded) thumb=uploaded;
-    // if upload failed, keep base64 as fallback
-  }
+$('btnPromptSave').onclick=async()=>{
+  if(!$('promptForm').checkValidity()){$('promptForm').reportValidity();return;}
+  const fd=new FormData($('promptForm')),now=Date.now();
+  let thumb=thumbHidden.value||'';
+  if(pendingB64){const up=await uploadImg();if(up)thumb=up;}
   const payload={catId:fd.get('catId'),subId:fd.get('subId')||'',title:fd.get('title'),
     thumbnail:thumb,promptZh:fd.get('promptZh'),promptEn:fd.get('promptEn'),
     tags:(fd.get('tags')||'').split(',').map(s=>s.trim()).filter(Boolean),
     notes:fd.get('notes'),favorite:fd.get('fav')==='on',updated:now};
   if(editPId){const i=DB.prompts.findIndex(p=>p.id===editPId);if(i>=0)DB.prompts[i]={...DB.prompts[i],...payload};}
   else DB.prompts.push({id:uid(),created:now,...payload});
-  render();closePromptModal();sched();toast(editPId?'已更新':'已新增');
+  render();renderMainTabs();renderSubTabs();closePromptModal();sched();toast(editPId?'已更新':'已新增');
 };
 
-// ── Color picker ─────────────────────────────────────────
+// ── Cat modal ─────────────────────────────────────────────
+let selColor=COLORS[0];
 function renderColors(cur){
   selColor=cur||COLORS[0];
   $('colorPicker').innerHTML=COLORS.map(c=>`<div class="col-dot${c===selColor?' sel':''}" style="background:${c}" data-c="${c}"></div>`).join('');
   $('colorPicker').querySelectorAll('.col-dot').forEach(el=>el.onclick=()=>{selColor=el.dataset.c;renderColors(selColor);});
 }
-
-// ── Category modal ───────────────────────────────────────
-// mode: 'main' | 'sub'
 function openCatModal(mode,cat=null,parentId=null){
-  editCMode=mode; editCId=cat?cat.id:null; editCParent=parentId;
+  editCMode=mode;editCId=cat?cat.id:null;editCParent=parentId;
   const isSub=mode==='sub';
   $('catTitle').textContent=cat?(isSub?'編輯小主題':'編輯大主題'):(isSub?'新增小主題':'新增大主題');
   $('catForm').reset();
@@ -567,126 +828,157 @@ function openCatModal(mode,cat=null,parentId=null){
   $('catBD').classList.add('open');
 }
 function closeCatModal(){$('catBD').classList.remove('open');editCMode=editCId=editCParent=null;}
-$('btnCatCancel').onclick=closeCatModal;
-$('catBD').onclick=e=>{if(e.target===$('catBD'))closeCatModal();};
-$('catForm').onsubmit=e=>{
-  e.preventDefault();
-  const fd=new FormData(e.target);
-  const payload={name:fd.get('name'),icon:fd.get('icon')||'',color:selColor};
+$('btnCatCancel').onclick=closeCatModal;$('catBD').onclick=e=>{if(e.target===$('catBD'))closeCatModal();};
+$('btnCatSave').onclick=()=>{
+  const f=$('catForm');if(!f.reportValidity())return;
+  const payload={name:f.name.value,icon:f.icon.value||'',color:selColor};
   if(editCMode==='main'){
     if(editCId){const i=DB.categories.findIndex(c=>c.id===editCId);if(i>=0)Object.assign(DB.categories[i],payload);}
     else DB.categories.push({id:uid(),subs:[],...payload});
-  } else {
-    const cat=getCat(editCParent);
-    if(!cat)return;
+  }else{
+    const cat=getCat(editCParent);if(!cat)return;
     if(editCId){const i=cat.subs.findIndex(s=>s.id===editCId);if(i>=0)Object.assign(cat.subs[i],payload);}
     else cat.subs.push({id:uid(),...payload});
   }
-  renderMainTabs();renderSubTabs();render();renderCatTree();
-  closeCatModal();sched();toast(editCId?'已更新':'已新增');
+  renderMainTabs();renderSubTabs();render();renderCatTree();closeCatModal();sched();toast(editCId?'已更新':'已新增');
 };
 
-// ── Category manager ─────────────────────────────────────
+// ── Cat manager ───────────────────────────────────────────
 function openMgr(){renderCatTree();$('mgrBD').classList.add('open');}
 function closeMgr(){$('mgrBD').classList.remove('open');}
 function renderCatTree(){
+  const isEdit=document.body.classList.contains('editmode');
   $('catTree').innerHTML=DB.categories.map(cat=>`
     <div class="cat-node">
       <div class="cat-node-head">
-        <div class="cat-node-dot" style="background:${cat.color}"></div>
-        <div class="cat-node-name">${esc(cat.icon||'')} ${esc(cat.name)}</div>
-        <div class="cat-node-actions">
-          <button class="sm ghost eo" data-emain="${cat.id}">編輯</button>
-          <button class="sm danger eo" data-dmain="${cat.id}">刪除</button>
-        </div>
+        <div class="cat-dot" style="background:${cat.color}"></div>
+        <div class="cat-name">${esc(cat.icon||'')} ${esc(cat.name)}</div>
+        ${isEdit?`<div class="cat-acts">
+          <button class="sm ghost" data-emain="${cat.id}">編輯</button>
+          <button class="sm danger" data-dmain="${cat.id}">刪除</button>
+        </div>`:''}
       </div>
       <div class="subs-list">
         ${cat.subs.map(s=>`
           <div class="sub-item">
-            <div class="sub-item-dot" style="background:${s.color||cat.color}"></div>
-            <div class="sub-item-name">${esc(s.icon||'')} ${esc(s.name)}</div>
-            <div class="sub-item-actions">
-              <button class="sm ghost eo" data-esub="${s.id}" data-sparent="${cat.id}">編輯</button>
-              <button class="sm danger eo" data-dsub="${s.id}" data-sparent="${cat.id}">刪除</button>
-            </div>
+            <div class="sub-dot" style="background:${s.color||cat.color}"></div>
+            <div class="sub-name">${esc(s.icon||'')} ${esc(s.name)}</div>
+            ${isEdit?`<div class="sub-acts">
+              <button class="sm ghost" data-esub="${s.id}" data-sp="${cat.id}">編輯</button>
+              <button class="sm danger" data-dsub="${s.id}" data-sp="${cat.id}">刪除</button>
+            </div>`:''}
           </div>`).join('')}
       </div>
-      <div class="add-sub-row eo" style="display:${document.body.classList.contains('editmode')?'block':'none'}">
-        <button class="sm ghost" data-addsub="${cat.id}">＋ 新增小主題</button>
-      </div>
+      ${isEdit?`<div class="add-sub-row"><button class="sm ghost" data-addsub="${cat.id}">＋ 新增小主題</button></div>`:''}
     </div>`).join('');
 }
 $('catTree').addEventListener('click',e=>{
   const b=e.target.closest('button');if(!b)return;
-  if(b.dataset.emain){const c=getCat(b.dataset.emain);openCatModal('main',c);}
+  if(b.dataset.emain)openCatModal('main',getCat(b.dataset.emain));
   else if(b.dataset.dmain){
-    const c=getCat(b.dataset.dmain);
-    const used=DB.prompts.filter(p=>p.catId===b.dataset.dmain).length;
-    if(!confirm(`刪除大主題「${c?.name}」？${used?`\n（${used} 筆提詞會受影響）`:''}`))return;
+    const c=getCat(b.dataset.dmain),used=DB.prompts.filter(p=>p.catId===b.dataset.dmain).length;
+    if(!confirm(`刪除「${c?.name}」？${used?`\n（${used} 筆提詞受影響）`:''}`))return;
     DB.categories=DB.categories.filter(c=>c.id!==b.dataset.dmain);
     if(activMain===b.dataset.dmain)activMain='all';
     renderMainTabs();renderSubTabs();render();renderCatTree();sched();toast('已刪除');
-  } else if(b.dataset.esub){
-    const s=getSub(b.dataset.sparent,b.dataset.esub);openCatModal('sub',s,b.dataset.sparent);
-  } else if(b.dataset.dsub){
-    const s=getSub(b.dataset.sparent,b.dataset.dsub);
-    if(!confirm(`刪除小主題「${s?.name}」？`))return;
-    const cat=getCat(b.dataset.sparent);if(!cat)return;
+  }else if(b.dataset.esub)openCatModal('sub',getSub(b.dataset.sp,b.dataset.esub),b.dataset.sp);
+  else if(b.dataset.dsub){
+    const s=getSub(b.dataset.sp,b.dataset.dsub);
+    if(!confirm(`刪除「${s?.name}」？`))return;
+    const cat=getCat(b.dataset.sp);if(!cat)return;
     cat.subs=cat.subs.filter(x=>x.id!==b.dataset.dsub);
     if(activSub===b.dataset.dsub)activSub='all';
     renderSubTabs();render();renderCatTree();sched();toast('已刪除');
-  } else if(b.dataset.addsub){openCatModal('sub',null,b.dataset.addsub);}
+  }else if(b.dataset.addsub)openCatModal('sub',null,b.dataset.addsub);
 });
 $('btnMgrClose').onclick=closeMgr;$('mgrBD').onclick=e=>{if(e.target===$('mgrBD'))closeMgr();};
 $('btnMgrAddMain').onclick=()=>openCatModal('main');
 
-// ── Settings ─────────────────────────────────────────────
+// ── Export ────────────────────────────────────────────────
+const expDD=$('exportDropdown');
+$('btnExportMenu').onclick=e=>{
+  e.stopPropagation();
+  const r=$('btnExportMenu').getBoundingClientRect();
+  expDD.style.top=(r.bottom+6)+'px';expDD.style.left=r.left+'px';
+  expDD.style.display=expDD.style.display==='block'?'none':'block';
+};
+document.addEventListener('click',()=>expDD.style.display='none');
+$('expJson').onclick=()=>{
+  const b=new Blob([JSON.stringify(DB,null,2)],{type:'application/json'});
+  const u=URL.createObjectURL(b),a=document.createElement('a');
+  a.href=u;a.download=`prompts-${new Date().toISOString().slice(0,10)}.json`;a.click();URL.revokeObjectURL(u);toast('已匯出 JSON');
+};
+$('expXlsx').onclick=()=>{
+  const rows=DB.prompts.map(p=>{
+    const cat=getCat(p.catId),sub=getSub(p.catId,p.subId);
+    return{'大主題':cat?.name||'','小主題':sub?.name||'','標題':p.title||'',
+      '中文 Prompt':p.promptZh||'','英文 Prompt':p.promptEn||'',
+      '標籤':(p.tags||[]).join(', '),'備註/參數':p.notes||'',
+      '收藏':p.favorite?'⭐':'','建立日期':fmt(p.created),'更新日期':fmt(p.updated)};
+  });
+  const ws=XLSX.utils.json_to_sheet(rows);
+  // column widths
+  ws['!cols']=[{wch:12},{wch:16},{wch:24},{wch:50},{wch:50},{wch:20},{wch:30},{wch:6},{wch:12},{wch:12}];
+  const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'提詞庫');
+  XLSX.writeFile(wb,`提詞庫-${new Date().toISOString().slice(0,10)}.xlsx`);
+  toast('已匯出 Excel');
+};
+
+// ── Import ────────────────────────────────────────────────
+$('btnImport').onclick=()=>$('fileImport').click();
+$('fileImport').onchange=async e=>{
+  const file=e.target.files[0];if(!file)return;
+  try{
+    const raw=JSON.parse(await file.text());
+    const imported=migrate(raw);
+    const mode=confirm(`匯入 ${imported.prompts.length} 筆提詞？\n\n確定 → 合併（保留現有）\n取消 → 取消匯入`);
+    if(!mode){e.target.value='';return;}
+    // merge prompts
+    const existIds=new Set(DB.prompts.map(p=>p.id));
+    imported.prompts.forEach(p=>{if(!existIds.has(p.id))DB.prompts.push(p);});
+    // merge categories
+    const existCatIds=new Set(DB.categories.map(c=>c.id));
+    imported.categories.forEach(c=>{if(!existCatIds.has(c.id))DB.categories.push(c);});
+    render();renderMainTabs();renderSubTabs();sched();
+    toast(`已匯入 ${imported.prompts.length} 筆`);
+  }catch(err){toast('匯入失敗：'+err.message,true);}
+  e.target.value='';
+};
+
+// ── Settings ──────────────────────────────────────────────
 function openSettings(){
   const cfg=getCfg();
-  $('tokenInput').value=getTok();
-  $('ownerInput').value=cfg.owner;
-  $('repoInput').value=cfg.repo;
-  $('pathInput').value=cfg.path;
-  $('branchInput').value=cfg.branch;
+  $('tokenInput').value=getTok();$('ownerInput').value=cfg.owner;$('repoInput').value=cfg.repo;
+  $('pathInput').value=cfg.path;$('branchInput').value=cfg.branch;
   $('settingsBD').classList.add('open');
 }
-function closeSettings(){$('settingsBD').classList.remove('open');}
 $('btnSettings').onclick=openSettings;
-$('btnSettingsClose').onclick=closeSettings;
-$('settingsBD').onclick=e=>{if(e.target===$('settingsBD'))closeSettings();};
-$('btnLogout').onclick=()=>{if(!confirm('登出？'))return;setTok('');updateMode();closeSettings();fetchDB().then(()=>{renderMainTabs();renderSubTabs();render();});toast('已登出');};
+$('btnSettingsClose').onclick=()=>$('settingsBD').classList.remove('open');
+$('settingsBD').onclick=e=>{if(e.target===$('settingsBD'))$('settingsBD').classList.remove('open');};
+$('btnLogout').onclick=()=>{if(!confirm('登出？'))return;setTok('');updateMode();$('settingsBD').classList.remove('open');fetchDB().then(()=>{renderMainTabs();renderSubTabs();render();});toast('已登出');};
 $('btnSettingsSave').onclick=async()=>{
   setTok($('tokenInput').value.trim());
   setCfg({owner:$('ownerInput').value.trim()||DEF_CFG.owner,repo:$('repoInput').value.trim()||DEF_CFG.repo,
     path:$('pathInput').value.trim()||'data.json',branch:$('branchInput').value.trim()||'main'});
-  closeSettings();updateMode();await fetchDB();renderMainTabs();renderSubTabs();render();toast('設定已儲存');
+  $('settingsBD').classList.remove('open');updateMode();
+  await fetchDB();renderMainTabs();renderSubTabs();render();toast('設定已儲存');
 };
-$('btnMgr').onclick=()=>{closeSettings();openMgr();};
+$('btnMgr').onclick=()=>{$('settingsBD').classList.remove('open');openMgr();};
 
-// ── Grid actions ─────────────────────────────────────────
-$('grid').onclick=async e=>{
-  const b=e.target.closest('button');if(!b)return;
-  const id=b.dataset.cpzh||b.dataset.cpen||b.dataset.edit||b.dataset.del||b.dataset.fav;
-  const p=DB.prompts.find(x=>x.id===id);if(!p)return;
-  if(b.dataset.cpzh){await navigator.clipboard.writeText(p.promptZh||'');toast('已複製中文 Prompt');}
-  else if(b.dataset.cpen){await navigator.clipboard.writeText(p.promptEn||'');toast('已複製英文 Prompt');}
-  else if(b.dataset.edit)openPromptModal(p);
-  else if(b.dataset.fav){p.favorite=!p.favorite;p.updated=Date.now();render();sched();}
-  else if(b.dataset.del){if(confirm(`刪除「${p.title}」？`)){DB.prompts=DB.prompts.filter(x=>x.id!==id);render();sched();toast('已刪除');}}
-};
-
-// ── Static tab events ─────────────────────────────────────
+// ── Static events ─────────────────────────────────────────
 $('mainTabs').querySelector('[data-main="all"]').onclick=()=>setMain('all');
 $('mainTabs').querySelector('[data-main="fav"]').onclick=()=>setMain('fav');
 $('btnAddMain').onclick=()=>openCatModal('main');
 $('btnAdd').onclick=()=>openPromptModal();
 $('search').oninput=render;
 $('sortBy').onchange=render;
-$('btnExport').onclick=()=>{
-  const b=new Blob([JSON.stringify(DB,null,2)],{type:'application/json'});
-  const u=URL.createObjectURL(b),a=document.createElement('a');
-  a.href=u;a.download=`prompts-${new Date().toISOString().slice(0,10)}.json`;a.click();URL.revokeObjectURL(u);toast('已匯出');
-};
+// keyboard shortcut: N = new prompt
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape'){document.querySelectorAll('.backdrop.open').forEach(b=>b.classList.remove('open'));}
+  if(e.key==='n'&&!e.ctrlKey&&!e.metaKey&&document.activeElement.tagName!=='INPUT'&&document.activeElement.tagName!=='TEXTAREA'){
+    if(document.body.classList.contains('editmode'))openPromptModal();
+  }
+});
 
 // ── Mode ──────────────────────────────────────────────────
 function updateMode(){
@@ -696,94 +988,8 @@ function updateMode(){
   $('modeBadge').textContent=has?'✏️ 可編輯':'👁️ 唯讀';
 }
 
-// ── Image Upload ─────────────────────────────────────────
-const imgArea=$('imgUploadArea');
-const thumbInput=$('thumbnailInput');
-const thumbUrl=$('thumbUrlInput');
-let pendingImgB64=null, pendingImgName=null;
-
-function setImgPreview(src){
-  // remove old img
-  imgArea.querySelectorAll('img').forEach(e=>e.remove());
-  imgArea.querySelector('.img-upload-icon').style.display=src?'none':'block';
-  imgArea.querySelector('.img-upload-hint').style.display=src?'none':'block';
-  if(src){const i=document.createElement('img');i.src=src;imgArea.insertBefore(i,imgArea.querySelector('.overlay'));}
-}
-function removeImg(){
-  pendingImgB64=null; pendingImgName=null;
-  thumbInput.value=''; thumbUrl.value='';
-  setImgPreview(null);
-}
-thumbUrl.addEventListener('input',()=>{
-  thumbInput.value=thumbUrl.value.trim();
-  setImgPreview(thumbUrl.value.trim()||null);
-  pendingImgB64=null;
-});
-
-async function handleImageFile(file){
-  if(!file||!file.type.startsWith('image/')) return;
-  const ext=file.name.split('.').pop()||'png';
-  pendingImgName=`img_${Date.now()}.${ext}`;
-  const reader=new FileReader();
-  reader.onload=e=>{
-    pendingImgB64=e.target.result.split(',')[1]; // base64 only
-    setImgPreview(e.target.result);
-    thumbInput.value=e.target.result; // temp preview
-    thumbUrl.value='';
-  };
-  reader.readAsDataURL(file);
-}
-
-imgArea.onclick=()=>{
-  const inp=document.createElement('input');
-  inp.type='file'; inp.accept='image/*';
-  inp.onchange=e=>handleImageFile(e.target.files[0]);
-  inp.click();
-};
-
-// Drag & drop
-imgArea.addEventListener('dragover',e=>{e.preventDefault();imgArea.classList.add('drag');});
-imgArea.addEventListener('dragleave',()=>imgArea.classList.remove('drag'));
-imgArea.addEventListener('drop',e=>{
-  e.preventDefault(); imgArea.classList.remove('drag');
-  handleImageFile(e.dataTransfer.files[0]);
-});
-
-// Ctrl+V paste (global, active when prompt modal open)
-document.addEventListener('paste',e=>{
-  if(!$('promptBD').classList.contains('open')) return;
-  const item=Array.from(e.clipboardData.items).find(i=>i.type.startsWith('image/'));
-  if(item) handleImageFile(item.getAsFile());
-});
-
-async function uploadImgToGitHub(){
-  if(!pendingImgB64||!pendingImgName) return null;
-  const cfg=getCfg(), tok=getTok();
-  if(!tok) return null; // no token → keep base64
-  $('imgUploadStatus').style.display='inline';
-  try{
-    const path=`images/${pendingImgName}`;
-    const r=await fetch(`https://api.github.com/repos/${cfg.owner}/${cfg.repo}/contents/${path}`,{
-      method:'PUT',
-      headers:{Authorization:`Bearer ${tok}`,Accept:'application/vnd.github+json','Content-Type':'application/json'},
-      body:JSON.stringify({message:`Add image ${pendingImgName}`,content:pendingImgB64,branch:cfg.branch})
-    });
-    if(!r.ok) throw new Error('上傳失敗');
-    const url=`https://raw.githubusercontent.com/${cfg.owner}/${cfg.repo}/${cfg.branch}/${path}`;
-    pendingImgB64=null; pendingImgName=null;
-    return url;
-  }catch(e){console.error(e);toast('圖片上傳失敗，改用本地預覽',true);return null;}
-  finally{$('imgUploadStatus').style.display='none';}
-}
-
-function resetImgUI(url=''){
-  thumbInput.value=url||'';
-  thumbUrl.value=url&&!url.startsWith('data:')?url:'';
-  setImgPreview(url||null);
-  pendingImgB64=null; pendingImgName=null;
-}
-
 // ── Init ──────────────────────────────────────────────────
+setGridSize(gridSize);
 updateMode();
 fetchDB().then(()=>{renderMainTabs();renderSubTabs();render();});
 </script>
