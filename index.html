@@ -214,6 +214,7 @@ body.editmode .eo{display:inline-flex!important;}
       <button class="icon-btn" id="btnTheme" title="切換主題">☀️</button>
       <button class="icon-btn eo" id="btnBatch" title="批次操作">☑️</button>
       <button class="icon-btn" id="btnRecent" title="最近複製">🕐</button>
+      <button class="icon-btn eo" id="btnForceSave" title="立即儲存">💾</button>
       <button class="eo" id="btnAdd">＋ 新增</button>
       <button class="ghost" id="btnExportMenu">匯出 ▾</button>
       <button class="ghost eo" id="btnImport">匯入</button>
@@ -586,17 +587,44 @@ async function saveDB(){
   saving=true;setSync('儲存中…',true);
   localStorage.setItem(LOCAL_KEY,JSON.stringify(DB));
   try{
-    const body={message:`Update (${DB.prompts.length} prompts)`,content:btoa(unescape(encodeURIComponent(JSON.stringify(DB,null,2)))),branch:cfg.branch};
+    // If sha is missing, fetch it first
+    if(!sha){
+      const r=await fetch(`https://api.github.com/repos/${cfg.owner}/${cfg.repo}/contents/${cfg.path}?ref=${cfg.branch}`,
+        {headers:{Authorization:`Bearer ${tok}`,Accept:'application/vnd.github+json'}});
+      if(r.ok){const j=await r.json();sha=j.sha;}
+    }
+    const content=btoa(unescape(encodeURIComponent(JSON.stringify(DB,null,2))));
+    const body={message:`Update (${DB.prompts.length} prompts)`,content,branch:cfg.branch};
     if(sha)body.sha=sha;
-    const r=await fetch(`https://api.github.com/repos/${cfg.owner}/${cfg.repo}/contents/${cfg.path}`,
+    let r=await fetch(`https://api.github.com/repos/${cfg.owner}/${cfg.repo}/contents/${cfg.path}`,
       {method:'PUT',headers:{Authorization:`Bearer ${tok}`,Accept:'application/vnd.github+json','Content-Type':'application/json'},body:JSON.stringify(body)});
+    // 409 = SHA conflict: refetch sha and retry once
+    if(r.status===409){
+      const r2=await fetch(`https://api.github.com/repos/${cfg.owner}/${cfg.repo}/contents/${cfg.path}?ref=${cfg.branch}`,
+        {headers:{Authorization:`Bearer ${tok}`,Accept:'application/vnd.github+json'}});
+      if(r2.ok){const j=await r2.json();sha=j.sha;body.sha=sha;}
+      r=await fetch(`https://api.github.com/repos/${cfg.owner}/${cfg.repo}/contents/${cfg.path}`,
+        {method:'PUT',headers:{Authorization:`Bearer ${tok}`,Accept:'application/vnd.github+json','Content-Type':'application/json'},body:JSON.stringify(body)});
+    }
     if(!r.ok){const e=await r.json().catch(()=>({}));throw new Error(e.message||r.status);}
     sha=(await r.json()).content.sha;
     setSync(`✓ 已同步 · ${DB.prompts.length} 筆`);
-  }catch(e){console.error(e);setSync('⚠️ 儲存失敗');toast('儲存失敗：'+e.message,true);}
+  }catch(e){
+    console.error(e);
+    setSync('⚠️ 儲存失敗 — 點此重試');
+    $('syncEl').style.cursor='pointer';
+    $('syncEl').onclick=()=>{$('syncEl').onclick=null;$('syncEl').style.cursor='';saveDB();};
+    toast('儲存失敗：'+e.message,true);
+  }
   finally{saving=false;}
 }
 function sched(){if(!getTok())return;clearTimeout(saveTimer);setSync('待儲存…');saveTimer=setTimeout(saveDB,1200);}
+// Manual force-save button
+document.addEventListener('DOMContentLoaded',()=>{
+  const btn=$('btnForceSave');if(btn)btn.onclick=()=>{clearTimeout(saveTimer);saveDB();};
+});
+// Also wire it up after DOM is ready (in case DOMContentLoaded already fired)
+setTimeout(()=>{const btn=$('btnForceSave');if(btn)btn.onclick=()=>{clearTimeout(saveTimer);saveDB();};},0);
 
 // ── Counts ────────────────────────────────────────────────
 function getCounts(){
@@ -1019,8 +1047,16 @@ $('promptBD').onclick=e=>{if(e.target===$('promptBD'))closePromptModal();};
 $('btnPromptSave').onclick=async()=>{
   if(!$('promptForm').checkValidity()){$('promptForm').reportValidity();return;}
   const fd=new FormData($('promptForm')),now=Date.now();
-  let thumb=thumbHidden.value||'';
-  if(pendingB64){const up=await uploadImg();if(up)thumb=up;}
+  let thumb='';
+  const existingThumb=thumbHidden.value||'';
+  if(pendingB64){
+    // Try to upload image to GitHub; if no token, warn and skip (don't store base64 in JSON)
+    if(!getTok()){toast('⚠️ 需要設定 Token 才能上傳圖片，已略過圖片',true);}
+    else{const up=await uploadImg();if(up)thumb=up;else toast('⚠️ 圖片上傳失敗，已略過圖片',true);}
+  }else if(existingThumb&&!existingThumb.startsWith('data:')){
+    // keep existing URL (not base64)
+    thumb=existingThumb;
+  }
   const payload={catId:fd.get('catId'),subId:fd.get('subId')||'',title:fd.get('title'),
     thumbnail:thumb,promptZh:fd.get('promptZh'),promptEn:fd.get('promptEn'),
     tags:(fd.get('tags')||'').split(',').map(s=>s.trim()).filter(Boolean),
