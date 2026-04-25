@@ -179,6 +179,12 @@ button.icon-btn.on{background:#3b82f6;border-color:#3b82f6;color:#fff;}
 .bulk-item:hover{background:var(--bor);}
 .bulk-item.sub{margin-left:20px;font-size:12px;}
 .tpl-fields{display:flex;flex-direction:column;gap:10px;margin-bottom:4px;}
+.emoji-scroll{max-height:180px;overflow-y:auto;border:1px solid var(--bor);border-radius:8px;padding:6px 8px;background:var(--sur2);}
+.emoji-cat-lbl{font-size:10px;color:var(--txt3);text-transform:uppercase;letter-spacing:.05em;padding:4px 2px 2px;display:block;}
+.emoji-row{display:flex;flex-wrap:wrap;gap:2px;margin-bottom:4px;}
+.e-btn{font-size:20px;padding:3px 5px;border-radius:6px;cursor:pointer;background:transparent;border:none;line-height:1.3;transition:background .1s;}
+.e-btn:hover{background:var(--bor);}
+.e-btn.sel{background:#3b82f6;}
 .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#10b981;color:#fff;padding:10px 18px;border-radius:8px;opacity:0;transition:opacity .2s;pointer-events:none;z-index:400;white-space:nowrap;font-size:13px;}
 .toast.show{opacity:1;}
 .toast.err{background:#ef4444;}
@@ -410,15 +416,18 @@ body.editmode .eo{display:inline-flex!important;}
   <div class="modal sm">
     <div class="modal-body">
       <h2 id="catTitle">新增大主題</h2>
-      <form id="catForm">
-        <div class="fg"><label>名稱</label><input name="name" required placeholder="例：影片 / Seedance 2.0"></div>
-        <div class="fg"><label>圖示 Emoji</label><input name="icon" placeholder="🎞️" maxlength="4" style="font-size:18px;width:80px"></div>
+      <form id="catForm" onsubmit="return false">
+        <div class="fg"><label>名稱</label><input id="catName" required placeholder="例：影片 / Seedance 2.0"></div>
+        <div class="fg">
+          <label>圖示 <span id="iconPreview" style="font-size:20px;margin-left:6px"></span></label>
+          <div class="emoji-scroll" id="emojiPicker"></div>
+        </div>
         <div class="fg"><label>顏色</label><div class="colors" id="colorPicker"></div></div>
       </form>
     </div>
     <div class="modal-foot">
-      <button class="ghost" id="btnCatCancel">取消</button>
-      <button id="btnCatSave">儲存</button>
+      <button type="button" class="ghost" id="btnCatCancel">取消</button>
+      <button type="button" id="btnCatSave">儲存</button>
     </div>
   </div>
 </div>
@@ -574,11 +583,12 @@ async function fetchDB(){
 }
 function initEmpty(){DB={categories:DEF_CATS.map(c=>({...c,subs:[...c.subs]})),prompts:[]};sha=null;}
 function migrate(raw){
-  const fixP=p=>({pinned:false,copyCount:0,...p,catId:p.catId||p.type==='video'?'video':'photo',subId:p.subId||''});
-  if(Array.isArray(raw))return{categories:DEF_CATS.map(c=>({...c,subs:[...c.subs]})),prompts:raw.map(fixP)};
+  const fixP=p=>({pinned:false,copyCount:0,...p,catId:p.catId||(p.type==='video'?'video':'photo'),subId:p.subId||''});
+  const fixC=c=>({subs:[],...c,subs:Array.isArray(c.subs)?c.subs:[]});  // always ensure subs
+  if(Array.isArray(raw))return{categories:DEF_CATS.map(fixC),prompts:raw.map(fixP)};
   if(raw.categories&&raw.categories[0]&&!Array.isArray(raw.categories[0].subs))
-    return{categories:DEF_CATS.map(c=>({...c,subs:[...c.subs]})),prompts:(raw.prompts||[]).map(fixP)};
-  const cats=(raw.categories?.length)?raw.categories:DEF_CATS.map(c=>({...c,subs:[...c.subs]}));
+    return{categories:DEF_CATS.map(fixC),prompts:(raw.prompts||[]).map(fixP)};
+  const cats=(raw.categories?.length)?raw.categories.map(fixC):DEF_CATS.map(fixC);
   return{categories:cats,prompts:(raw.prompts||[]).map(p=>({pinned:false,copyCount:0,...p}))};
 }
 async function saveDB(){
@@ -1066,6 +1076,34 @@ $('btnPromptSave').onclick=async()=>{
   render();renderMainTabs();renderSubTabs();closePromptModal();sched();toast(editPId?'已更新':'已新增');
 };
 
+// ── Emoji picker ──────────────────────────────────────────
+const EMOJIS={
+  '影片 / 動畫':['🎬','🎥','📽️','🎦','📹','🎞️','📺','🎭','🎪','🎠','🎡','🎢'],
+  '音樂':['🎵','🎶','🎸','🎹','🎤','🎧','🎼','🎷','🎺','🪗','🥁','🎻','🎙️','🎚️','🎛️','🪘'],
+  '照片 / 設計':['📷','📸','🖼️','🎨','✏️','🖌️','📐','📏','🖊️','🖍️','🎭','🖼'],
+  '程式 / 科技':['💻','🖥️','⌨️','📱','🤖','🔧','⚙️','🛠️','🔌','💾','🖱️','🧑‍💻','📡','🔬','🧪','⚡'],
+  '文字 / 閱讀':['📝','📄','📃','📋','📑','✍️','📖','📚','🗒️','📰','🗞️','📜','🔖'],
+  '商業 / 分析':['💼','📊','📈','📉','🏢','💡','🔮','🎯','📌','🗂️','💰','🏦','📣','📢'],
+  '星等 / 特效':['⭐','🌟','💫','✨','🔥','❄️','🌈','💎','🏆','🎖️','🥇','🎁','🎀','🎊'],
+  '生活 / 場景':['🏠','🏙️','🌆','🌃','🚗','✈️','🚀','🏖️','🏔️','🌸','🌿','🍕','☕','🍜'],
+  '人物 / 角色':['👤','👥','🧑','👩','👨','🧑‍🎨','🧑‍💼','🧑‍🔬','🦸','🧙','🧝','👾','🤖'],
+  '抽象 / 符號':['🧠','❤️','💬','🔑','🔓','🌐','🗺️','📍','🔍','💥','🌀','♾️','☯️'],
+};
+let selIcon='';
+function renderEmojiPicker(cur=''){
+  selIcon=cur||'';
+  $('iconPreview').textContent=selIcon;
+  const picker=$('emojiPicker');
+  picker.innerHTML=Object.entries(EMOJIS).map(([cat,emojis])=>
+    `<span class="emoji-cat-lbl">${cat}</span><div class="emoji-row">${emojis.map(e=>`<button type="button" class="e-btn${e===selIcon?' sel':''}" data-e="${e}">${e}</button>`).join('')}</div>`
+  ).join('');
+  picker.querySelectorAll('.e-btn').forEach(btn=>btn.onclick=()=>{
+    selIcon=btn.dataset.e;
+    $('iconPreview').textContent=selIcon;
+    picker.querySelectorAll('.e-btn').forEach(b=>b.classList.toggle('sel',b.dataset.e===selIcon));
+  });
+}
+
 // ── Cat modal ─────────────────────────────────────────────
 function renderColors(cur){
   selColor=cur||COLORS[0];
@@ -1075,8 +1113,8 @@ function renderColors(cur){
 function openCatModal(mode,cat=null,parentId=null){
   editCMode=mode;editCId=cat?cat.id:null;editCParent=parentId;
   $('catTitle').textContent=cat?(mode==='sub'?'編輯小主題':'編輯大主題'):(mode==='sub'?'新增小主題':'新增大主題');
-  $('catForm').reset();
-  if(cat){$('catForm').name.value=cat.name;$('catForm').icon.value=cat.icon||'';}
+  $('catName').value=cat?cat.name:'';
+  renderEmojiPicker(cat?.icon||'');
   renderColors(cat?.color);
   $('catBD').classList.add('open');
 }
@@ -1084,17 +1122,23 @@ function closeCatModal(){$('catBD').classList.remove('open');editCMode=editCId=e
 $('btnCatCancel').onclick=closeCatModal;
 $('catBD').onclick=e=>{if(e.target===$('catBD'))closeCatModal();};
 $('btnCatSave').onclick=()=>{
-  const f=$('catForm');if(!f.reportValidity())return;
-  const payload={name:f.name.value,icon:f.icon.value||'',color:selColor};
-  if(editCMode==='main'){
-    if(editCId){const i=DB.categories.findIndex(c=>c.id===editCId);if(i>=0)Object.assign(DB.categories[i],payload);}
-    else DB.categories.push({id:uid(),subs:[],...payload});
-  }else{
-    const cat=getCat(editCParent);if(!cat)return;
-    if(editCId){const i=cat.subs.findIndex(s=>s.id===editCId);if(i>=0)Object.assign(cat.subs[i],payload);}
-    else cat.subs.push({id:uid(),...payload});
-  }
-  renderMainTabs();renderSubTabs();render();renderCatTree();closeCatModal();sched();toast(editCId?'已更新':'已新增');
+  const name=$('catName').value.trim();
+  if(!name){$('catName').focus();toast('請輸入名稱',true);return;}
+  const payload={name,icon:selIcon,color:selColor};
+  try{
+    if(editCMode==='main'){
+      if(editCId){const i=DB.categories.findIndex(c=>c.id===editCId);if(i>=0)Object.assign(DB.categories[i],payload);}
+      else DB.categories.push({id:uid(),subs:[],...payload});
+    }else{
+      const cat=getCat(editCParent);if(!cat){toast('找不到上層分類',true);return;}
+      if(editCId){const i=cat.subs.findIndex(s=>s.id===editCId);if(i>=0)Object.assign(cat.subs[i],payload);}
+      else cat.subs.push({id:uid(),...payload});
+    }
+    closeCatModal();
+    renderMainTabs();renderSubTabs();render();
+    try{renderCatTree();}catch(e){console.warn('renderCatTree',e);}
+    sched();toast(editCId?'已更新':'已新增');
+  }catch(e){console.error(e);toast('儲存失敗：'+e.message,true);}
 };
 
 // ── Cat manager ───────────────────────────────────────────
@@ -1102,7 +1146,7 @@ function openMgr(){renderCatTree();$('mgrBD').classList.add('open');}
 function closeMgr(){$('mgrBD').classList.remove('open');}
 function renderCatTree(){
   const isEdit=document.body.classList.contains('editmode');
-  $('catTree').innerHTML=DB.categories.map(cat=>`
+  $('catTree').innerHTML=DB.categories.map(cat=>{const subs=cat.subs||[];return`
     <div class="cat-node">
       <div class="cat-node-head">
         <div class="cat-dot" style="background:${cat.color}"></div>
@@ -1112,7 +1156,7 @@ function renderCatTree(){
           <button class="sm danger" data-dmain="${cat.id}">刪除</button>
         </div>`:''}
       </div>
-      <div class="subs-list">${cat.subs.map(s=>`
+      <div class="subs-list">${subs.map(s=>`
         <div class="sub-item">
           <div class="sub-dot" style="background:${s.color||cat.color}"></div>
           <div class="sub-name">${esc(s.icon||'')} ${esc(s.name)}</div>
@@ -1123,7 +1167,7 @@ function renderCatTree(){
         </div>`).join('')}
       </div>
       ${isEdit?`<div class="add-sub-row"><button class="sm ghost" data-addsub="${cat.id}">＋ 新增小主題</button></div>`:''}
-    </div>`).join('');
+    </div>`;}).join('');
 }
 $('catTree').addEventListener('click',e=>{
   const b=e.target.closest('button');if(!b)return;
