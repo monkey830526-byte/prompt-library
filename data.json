@@ -17,6 +17,8 @@
   ],
   "prompts": [
     {
+      "pinned": false,
+      "copyCount": 0,
       "id": "mod2wdt64ejzw",
       "created": 1777045316586,
       "type": "photo",
@@ -33,6 +35,8 @@
       "subId": ""
     },
     {
+      "pinned": false,
+      "copyCount": 0,
       "id": "mod3tg9o20pbz",
       "created": 1777046859420,
       "categoryId": "midjourney",
@@ -43,11 +47,13 @@
       "tags": [],
       "notes": "",
       "favorite": false,
-      "updated": 1777097934728,
+      "updated": 1777127564745,
       "catId": "photo",
       "subId": ""
     },
     {
+      "pinned": false,
+      "copyCount": 0,
       "id": "mod49luz0huoo",
       "created": 1777047613163,
       "categoryId": "midjourney",
