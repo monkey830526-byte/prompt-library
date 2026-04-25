@@ -6,81 +6,75 @@
 <title>提詞庫 Prompt Library</title>
 <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
 <style>
+:root{--bg:#0f172a;--sur:#1e293b;--sur2:#0f172a;--bor:#334155;--txt:#e2e8f0;--txt2:#94a3b8;--txt3:#64748b;--txt4:#475569;}
+body.light{--bg:#f1f5f9;--sur:#ffffff;--sur2:#f8fafc;--bor:#e2e8f0;--txt:#0f172a;--txt2:#334155;--txt3:#64748b;--txt4:#94a3b8;}
 *{box-sizing:border-box;margin:0;padding:0;}
-body{font-family:-apple-system,"Segoe UI","Microsoft JhengHei",sans-serif;background:#0f172a;color:#e2e8f0;min-height:100vh;padding:20px;}
+body{font-family:-apple-system,"Segoe UI","Microsoft JhengHei",sans-serif;background:var(--bg);color:var(--txt);min-height:100vh;padding:20px;transition:background .2s,color .2s;}
 .container{max-width:1280px;margin:0 auto;}
-
-/* ── Header ── */
 header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:10px;}
-h1{font-size:22px;color:#f1f5f9;display:flex;align-items:center;gap:8px;}
+h1{font-size:22px;color:var(--txt);display:flex;align-items:center;gap:8px;}
 .mode-badge{font-size:11px;padding:2px 8px;border-radius:4px;font-weight:normal;}
-.mode-badge.read{background:#334155;color:#94a3b8;}
+.mode-badge.read{background:var(--bor);color:var(--txt2);}
 .mode-badge.edit{background:#10b981;color:#fff;}
-.sync{font-size:12px;color:#94a3b8;}
-.header-right{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
-
-/* ── Tabs ── */
+.sync{font-size:12px;color:var(--txt3);}
+.header-right{display:flex;gap:6px;align-items:center;flex-wrap:wrap;}
 .tabs-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:4px;}
 .main-tabs{display:flex;align-items:center;gap:6px;margin-bottom:8px;min-width:max-content;}
-.main-tab{padding:8px 14px;background:#1e293b;border:1px solid #334155;border-radius:8px;cursor:pointer;color:#cbd5e1;font-size:13px;font-weight:500;transition:all .15s;white-space:nowrap;display:flex;align-items:center;gap:6px;}
-.main-tab:hover{background:#334155;}
+.main-tab{padding:8px 14px;background:var(--sur);border:1px solid var(--bor);border-radius:8px;cursor:pointer;color:var(--txt2);font-size:13px;font-weight:500;transition:all .15s;white-space:nowrap;display:flex;align-items:center;gap:6px;}
+.main-tab:hover{background:var(--bor);}
 .main-tab.active{background:#3b82f6;border-color:#3b82f6;color:#fff;}
 .tab-count{background:rgba(255,255,255,.2);padding:1px 6px;border-radius:10px;font-size:11px;}
-.main-tab:not(.active) .tab-count{background:#334155;color:#94a3b8;}
-.tab-add-btn{padding:7px 12px;background:transparent;border:1px dashed #475569;border-radius:8px;cursor:pointer;color:#64748b;font-size:13px;transition:all .15s;white-space:nowrap;}
-.tab-add-btn:hover{border-color:#94a3b8;color:#94a3b8;}
+.main-tab:not(.active) .tab-count{background:var(--bor);color:var(--txt3);}
+.tab-add-btn{padding:7px 12px;background:transparent;border:1px dashed var(--txt4);border-radius:8px;cursor:pointer;color:var(--txt3);font-size:13px;transition:all .15s;white-space:nowrap;}
+.tab-add-btn:hover{border-color:var(--txt2);color:var(--txt2);}
 .sub-tabs-wrap{min-height:36px;margin-bottom:14px;overflow-x:auto;-webkit-overflow-scrolling:touch;}
 .sub-tabs{display:flex;align-items:center;gap:6px;min-width:max-content;}
-.sub-tab{padding:5px 12px;background:#0f172a;border:1px solid #334155;border-radius:6px;cursor:pointer;color:#94a3b8;font-size:12px;transition:all .15s;white-space:nowrap;display:flex;align-items:center;gap:4px;}
-.sub-tab:hover{background:#1e293b;color:#cbd5e1;}
+.sub-tab{padding:5px 12px;background:var(--bg);border:1px solid var(--bor);border-radius:6px;cursor:pointer;color:var(--txt2);font-size:12px;transition:all .15s;white-space:nowrap;display:flex;align-items:center;gap:4px;}
+.sub-tab:hover{background:var(--sur);color:var(--txt);}
 .sub-tab.active{color:#fff;}
 .sub-tab-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;}
 .sub-tab .tab-count{background:rgba(255,255,255,.15);font-size:10px;}
-.sub-tab:not(.active) .tab-count{background:#1e293b;color:#64748b;}
-.sub-add-btn{padding:4px 10px;background:transparent;border:1px dashed #334155;border-radius:6px;cursor:pointer;color:#475569;font-size:12px;transition:all .15s;white-space:nowrap;}
-.sub-add-btn:hover{border-color:#64748b;color:#64748b;}
-
-/* ── Toolbar ── */
+.sub-tab:not(.active) .tab-count{background:var(--sur);color:var(--txt3);}
+.sub-add-btn{padding:4px 10px;background:transparent;border:1px dashed var(--bor);border-radius:6px;cursor:pointer;color:var(--txt4);font-size:12px;transition:all .15s;white-space:nowrap;}
+.sub-add-btn:hover{border-color:var(--txt3);color:var(--txt3);}
 .toolbar{display:flex;gap:8px;margin-bottom:18px;flex-wrap:wrap;align-items:center;}
-input,textarea,select{background:#1e293b;border:1px solid #334155;border-radius:8px;padding:9px 12px;color:#e2e8f0;font-size:14px;font-family:inherit;}
+input,textarea,select{background:var(--sur);border:1px solid var(--bor);border-radius:8px;padding:9px 12px;color:var(--txt);font-size:14px;font-family:inherit;}
 input:focus,textarea:focus,select:focus{outline:none;border-color:#3b82f6;}
 .search-wrap{flex:1;min-width:180px;position:relative;}
 .search-wrap input{width:100%;padding-left:34px;}
-.search-icon{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:#64748b;pointer-events:none;font-size:13px;}
+.search-icon{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--txt3);pointer-events:none;font-size:13px;}
 .filter-tag-chip{display:inline-flex;align-items:center;gap:5px;background:#1d4ed8;color:#fff;padding:5px 10px;border-radius:6px;font-size:12px;cursor:pointer;}
 .filter-tag-chip:hover{background:#1e40af;}
-.stats{font-size:12px;color:#64748b;white-space:nowrap;}
+.stats{font-size:12px;color:var(--txt3);white-space:nowrap;}
 .toolbar-right{display:flex;gap:6px;align-items:center;margin-left:auto;}
-.size-btn{padding:7px 9px;background:#1e293b;border:1px solid #334155;border-radius:7px;cursor:pointer;color:#94a3b8;font-size:14px;transition:all .15s;}
-.size-btn.active,.size-btn:hover{background:#334155;color:#e2e8f0;}
-
-/* ── Buttons ── */
+.size-btn{padding:7px 9px;background:var(--sur);border:1px solid var(--bor);border-radius:7px;cursor:pointer;color:var(--txt2);font-size:14px;transition:all .15s;}
+.size-btn.active,.size-btn:hover{background:var(--bor);color:var(--txt);}
 button{background:#3b82f6;border:none;border-radius:8px;padding:9px 15px;color:#fff;cursor:pointer;font-size:13px;font-weight:500;transition:background .15s;display:inline-flex;align-items:center;gap:5px;}
 button:hover{background:#2563eb;}
-button.ghost{background:#334155;color:#e2e8f0;}
-button.ghost:hover{background:#475569;}
+button.ghost{background:var(--bor);color:var(--txt);}
+button.ghost:hover{background:var(--txt4);}
 button.danger{background:#ef4444;}
 button.danger:hover{background:#dc2626;}
-button.success{background:#10b981;}
-button.success:hover{background:#059669;}
 button.sm{padding:5px 9px;font-size:12px;}
-button.icon-btn{background:transparent;border:1px solid #334155;padding:7px 10px;color:#94a3b8;}
-button.icon-btn:hover{background:#334155;color:#e2e8f0;}
-
-/* ── Grid sizes ── */
+button.icon-btn{background:transparent;border:1px solid var(--bor);padding:7px 10px;color:var(--txt2);}
+button.icon-btn:hover{background:var(--bor);color:var(--txt);}
+button.icon-btn.on{background:#3b82f6;border-color:#3b82f6;color:#fff;}
 .grid{display:grid;gap:14px;}
 .grid.size-sm{grid-template-columns:repeat(auto-fill,minmax(220px,1fr));}
 .grid.size-md{grid-template-columns:repeat(auto-fill,minmax(290px,1fr));}
 .grid.size-lg{grid-template-columns:repeat(auto-fill,minmax(380px,1fr));}
-
-/* ── Card ── */
-.card{background:#1e293b;border:1px solid #334155;border-radius:12px;overflow:hidden;display:flex;flex-direction:column;transition:all .2s;cursor:pointer;}
+.card{background:var(--sur);border:1px solid var(--bor);border-radius:12px;overflow:hidden;display:flex;flex-direction:column;transition:all .2s;cursor:pointer;position:relative;}
 .card:hover{border-color:#3b82f6;transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.3);}
-.card-thumb{width:100%;background:#0f172a;object-fit:cover;display:block;}
+.card.drag-over{border-color:#f59e0b;border-style:dashed;transform:none;}
+.card.drag-src{opacity:.4;}
+.card.selected{border-color:#3b82f6;box-shadow:0 0 0 2px rgba(59,130,246,.4);}
+.card-chk{position:absolute;top:8px;left:8px;width:18px;height:18px;display:none;z-index:5;accent-color:#3b82f6;cursor:pointer;}
+.batch-mode .card-chk{display:block;}
+.card-thumb{width:100%;background:var(--sur2);object-fit:cover;display:block;}
 .size-sm .card-thumb{height:130px;}
 .size-md .card-thumb{height:165px;}
 .size-lg .card-thumb{height:210px;}
-.card-thumb.ph{display:flex;align-items:center;justify-content:center;color:#334155;}
+.card-thumb.ph{display:flex;align-items:center;justify-content:center;color:var(--bor);}
 .size-sm .card-thumb.ph{font-size:32px;}
 .size-md .card-thumb.ph{font-size:40px;}
 .size-lg .card-thumb.ph{font-size:52px;}
@@ -89,114 +83,122 @@ button.icon-btn:hover{background:#334155;color:#e2e8f0;}
 .badge-main{display:inline-flex;align-items:center;gap:3px;padding:2px 7px;border-radius:4px;font-size:11px;font-weight:600;color:#fff;}
 .badge-sub{display:inline-flex;align-items:center;gap:3px;padding:2px 6px;border-radius:4px;font-size:10px;color:#fff;opacity:.85;}
 .fav-icon{color:#f59e0b;font-size:12px;}
-.card-title{font-size:14px;font-weight:600;color:#f1f5f9;line-height:1.3;}
+.pin-icon{color:#e879f9;font-size:11px;}
+.card-title{font-size:14px;font-weight:600;color:var(--txt);line-height:1.3;}
 .size-lg .card-title{font-size:16px;}
-.prompt-box{background:#0f172a;padding:6px 8px;border-radius:5px;font-size:11px;max-height:48px;overflow:hidden;white-space:pre-wrap;word-break:break-word;line-height:1.5;position:relative;}
-.prompt-box::after{content:'';position:absolute;bottom:0;left:0;right:0;height:16px;background:linear-gradient(transparent,#0f172a);}
-.pzh{color:#cbd5e1;} .pen{color:#7dd3fc;}
-.notes-chip{font-size:10px;color:#64748b;background:#0f172a;padding:2px 7px;border-radius:4px;display:inline-flex;align-items:center;gap:3px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.prompt-box{background:var(--sur2);padding:6px 8px;border-radius:5px;font-size:11px;max-height:48px;overflow:hidden;white-space:pre-wrap;word-break:break-word;line-height:1.5;position:relative;}
+.prompt-box::after{content:'';position:absolute;bottom:0;left:0;right:0;height:16px;background:linear-gradient(transparent,var(--sur2));}
+.pzh{color:var(--txt2);}
+.pen{color:#7dd3fc;}
+.notes-chip{font-size:10px;color:var(--txt3);background:var(--sur2);padding:2px 7px;border-radius:4px;display:inline-flex;align-items:center;gap:3px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .tags{display:flex;flex-wrap:wrap;gap:3px;}
-.tag{background:#0f172a;color:#94a3b8;padding:2px 6px;border-radius:4px;font-size:10px;cursor:pointer;transition:all .15s;}
+.tag{background:var(--sur2);color:var(--txt2);padding:2px 6px;border-radius:4px;font-size:10px;cursor:pointer;transition:all .15s;}
 .tag:hover{background:#1e40af;color:#93c5fd;}
-.card-meta{font-size:10px;color:#475569;margin-top:2px;}
+.card-meta{font-size:10px;color:var(--txt4);margin-top:2px;}
 .card-copy-row{display:flex;gap:5px;margin-top:6px;}
 .copy-btn{flex:1;padding:7px 5px;font-size:12px;border-radius:6px;text-align:center;font-weight:500;}
 .card-edit-row{display:flex;gap:5px;margin-top:3px;}
-
-/* ── Empty ── */
-.empty{text-align:center;padding:70px 20px;color:#475569;}
+.batch-bar{display:none;position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1e293b;border:1px solid #334155;border-radius:12px;padding:10px 16px;z-index:150;align-items:center;gap:10px;box-shadow:0 8px 32px rgba(0,0,0,.5);white-space:nowrap;}
+.batch-bar.show{display:flex;}
+.batch-cnt{font-size:13px;color:#e2e8f0;font-weight:600;}
+.empty{text-align:center;padding:70px 20px;color:var(--txt4);}
 .empty-icon{font-size:52px;margin-bottom:12px;}
-.empty h3{font-size:16px;margin-bottom:8px;color:#64748b;}
+.empty h3{font-size:16px;margin-bottom:8px;color:var(--txt3);}
 .empty p{font-size:13px;}
-
-/* ── Detail Modal ── */
 .backdrop{position:fixed;inset:0;background:rgba(0,0,0,.8);display:none;align-items:center;justify-content:center;padding:16px;z-index:100;}
 .backdrop.open{display:flex;}
-.modal{background:#1e293b;border:1px solid #334155;border-radius:14px;width:100%;max-width:560px;max-height:92vh;overflow-y:auto;}
+.modal{background:var(--sur);border:1px solid var(--bor);border-radius:14px;width:100%;max-width:560px;max-height:92vh;overflow-y:auto;}
 .modal.lg{max-width:780px;}
-.modal.sm{max-width:400px;}
+.modal.sm{max-width:420px;}
 .modal-body{padding:22px;}
 .modal h2{margin-bottom:16px;font-size:17px;}
-.detail-img{width:100%;max-height:320px;object-fit:cover;border-radius:12px 12px 0 0;display:block;}
-.detail-img.ph{height:180px;display:flex;align-items:center;justify-content:center;font-size:64px;color:#334155;background:#0f172a;border-radius:12px 12px 0 0;}
+.detail-img{width:100%;max-height:320px;object-fit:cover;border-radius:12px 12px 0 0;display:block;cursor:zoom-in;}
+.detail-img.ph{height:180px;display:flex;align-items:center;justify-content:center;font-size:64px;color:var(--bor);background:var(--sur2);border-radius:12px 12px 0 0;cursor:default;}
 .detail-content{padding:20px;}
 .detail-badges{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;align-items:center;}
-.detail-title{font-size:20px;font-weight:700;color:#f1f5f9;margin-bottom:14px;line-height:1.3;}
+.detail-title{font-size:20px;font-weight:700;color:var(--txt);margin-bottom:14px;line-height:1.3;}
 .detail-section{margin-bottom:14px;}
-.detail-label{font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px;}
-.detail-prompt{background:#0f172a;padding:12px;border-radius:8px;font-size:13px;white-space:pre-wrap;word-break:break-word;line-height:1.6;max-height:160px;overflow-y:auto;}
-.detail-prompt.zh{color:#e2e8f0;}
+.detail-label{font-size:11px;color:var(--txt3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px;display:flex;justify-content:space-between;align-items:center;}
+.char-count{font-size:10px;color:var(--txt3);text-transform:none;letter-spacing:0;}
+.detail-prompt{background:var(--sur2);padding:12px;border-radius:8px;font-size:13px;white-space:pre-wrap;word-break:break-word;line-height:1.6;max-height:160px;overflow-y:auto;}
+.detail-prompt.zh{color:var(--txt);}
 .detail-prompt.en{color:#7dd3fc;}
+.tpl-var{background:#1d4ed8;color:#fff;padding:1px 4px;border-radius:3px;font-size:12px;}
 .detail-copy-btn{width:100%;margin-top:6px;padding:8px;font-size:13px;border-radius:6px;}
-.detail-notes{background:#0f172a;padding:10px 12px;border-radius:8px;font-size:12px;color:#94a3b8;white-space:pre-wrap;line-height:1.6;}
+.detail-notes{background:var(--sur2);padding:10px 12px;border-radius:8px;font-size:12px;color:var(--txt2);white-space:pre-wrap;line-height:1.6;}
 .detail-tags{display:flex;flex-wrap:wrap;gap:5px;}
-.detail-tag{background:#1e293b;border:1px solid #334155;color:#cbd5e1;padding:3px 10px;border-radius:5px;font-size:12px;cursor:pointer;transition:all .15s;}
+.detail-tag{background:var(--sur);border:1px solid var(--bor);color:var(--txt2);padding:3px 10px;border-radius:5px;font-size:12px;cursor:pointer;transition:all .15s;}
 .detail-tag:hover{background:#1d4ed8;border-color:#3b82f6;color:#fff;}
-.detail-footer{display:flex;gap:8px;padding:14px 20px;border-top:1px solid #334155;flex-wrap:wrap;}
-
-/* ── Form styles ── */
+.detail-footer{display:flex;gap:8px;padding:14px 20px;border-top:1px solid var(--bor);flex-wrap:wrap;}
+.share-box{margin:0 20px 12px;padding:8px 12px;background:var(--sur2);border:1px solid var(--bor);border-radius:8px;font-size:11px;color:var(--txt3);word-break:break-all;display:none;}
+.fullscreen-bd{position:fixed;inset:0;background:rgba(0,0,0,.95);display:none;align-items:center;justify-content:center;z-index:500;cursor:zoom-out;}
+.fullscreen-bd.open{display:flex;}
+.fullscreen-bd img{max-width:95vw;max-height:95vh;object-fit:contain;border-radius:8px;}
+.recent-panel{position:fixed;z-index:200;background:var(--sur);border:1px solid var(--bor);border-radius:10px;padding:6px;min-width:220px;box-shadow:0 8px 24px rgba(0,0,0,.4);display:none;}
+.recent-panel.open{display:block;}
+.recent-hdr{padding:4px 10px 6px;font-size:11px;color:var(--txt3);text-transform:uppercase;letter-spacing:.05em;}
+.recent-item{padding:7px 10px;cursor:pointer;border-radius:6px;font-size:12px;color:var(--txt);display:flex;align-items:center;gap:6px;}
+.recent-item:hover{background:var(--bor);}
+.ri-title{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.ri-time{font-size:10px;color:var(--txt3);flex-shrink:0;}
 .fg{margin-bottom:13px;}
-.fg label{display:block;margin-bottom:5px;font-size:11px;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;}
+.fg label{display:block;margin-bottom:5px;font-size:11px;color:var(--txt2);text-transform:uppercase;letter-spacing:.05em;}
 .fg input,.fg textarea,.fg select{width:100%;}
 .fg textarea{min-height:72px;resize:vertical;font-family:inherit;line-height:1.5;}
 .frow{display:flex;gap:10px;}
 .frow .fg{flex:1;}
-.modal-foot{display:flex;gap:8px;justify-content:flex-end;padding:14px 22px;border-top:1px solid #334155;flex-wrap:wrap;}
-.help{font-size:11px;color:#64748b;margin-top:4px;line-height:1.5;}
+.modal-foot{display:flex;gap:8px;justify-content:flex-end;padding:14px 22px;border-top:1px solid var(--bor);flex-wrap:wrap;}
+.help{font-size:11px;color:var(--txt3);margin-top:4px;line-height:1.5;}
 .help a{color:#60a5fa;}
-
-/* ── Image uploader ── */
-.img-upload-area{width:100%;height:150px;background:#0f172a;border:2px dashed #334155;border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;cursor:pointer;transition:all .2s;position:relative;overflow:hidden;}
+.img-upload-area{width:100%;height:150px;background:var(--sur2);border:2px dashed var(--bor);border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;cursor:pointer;transition:all .2s;position:relative;overflow:hidden;}
 .img-upload-area:hover{border-color:#3b82f6;}
 .img-upload-area.drag{border-color:#3b82f6;background:#1e3a5f;}
 .img-upload-area img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:6px;}
 .img-overlay{position:absolute;inset:0;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;gap:8px;border-radius:6px;}
 .img-upload-area:hover .img-overlay{display:flex;}
-.img-hint{font-size:11px;color:#64748b;text-align:center;line-height:1.6;}
+.img-hint{font-size:11px;color:var(--txt3);text-align:center;line-height:1.6;}
 .img-icon{font-size:24px;}
 .img-status{font-size:12px;color:#60a5fa;margin-top:4px;}
-
-/* ── Colors ── */
 .colors{display:flex;gap:6px;flex-wrap:wrap;margin-top:4px;}
 .col-dot{width:24px;height:24px;border-radius:50%;cursor:pointer;border:3px solid transparent;transition:border-color .1s;}
 .col-dot.sel{border-color:#fff;}
-
-/* ── Cat tree ── */
 .cat-tree{display:flex;flex-direction:column;gap:10px;margin-bottom:14px;}
-.cat-node{background:#0f172a;border:1px solid #334155;border-radius:10px;overflow:hidden;}
+.cat-node{background:var(--sur2);border:1px solid var(--bor);border-radius:10px;overflow:hidden;}
 .cat-node-head{display:flex;align-items:center;gap:8px;padding:10px 12px;}
 .cat-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
 .cat-name{flex:1;font-size:14px;font-weight:600;}
 .cat-acts{display:flex;gap:4px;}
 .subs-list{padding:0 12px 10px 28px;display:flex;flex-direction:column;gap:5px;}
-.sub-item{display:flex;align-items:center;gap:7px;padding:6px 9px;background:#1e293b;border-radius:7px;}
+.sub-item{display:flex;align-items:center;gap:7px;padding:6px 9px;background:var(--sur);border-radius:7px;}
 .sub-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
 .sub-name{flex:1;font-size:13px;}
 .sub-acts{display:flex;gap:4px;}
 .add-sub-row{padding:3px 12px 10px 28px;}
-
-/* ── Toast ── */
+.bulk-list{display:flex;flex-direction:column;gap:6px;max-height:50vh;overflow-y:auto;}
+.bulk-item{padding:10px 14px;background:var(--sur2);border:1px solid var(--bor);border-radius:8px;cursor:pointer;font-size:13px;display:flex;align-items:center;gap:8px;transition:background .15s;}
+.bulk-item:hover{background:var(--bor);}
+.bulk-item.sub{margin-left:20px;font-size:12px;}
+.tpl-fields{display:flex;flex-direction:column;gap:10px;margin-bottom:4px;}
 .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#10b981;color:#fff;padding:10px 18px;border-radius:8px;opacity:0;transition:opacity .2s;pointer-events:none;z-index:400;white-space:nowrap;font-size:13px;}
 .toast.show{opacity:1;}
 .toast.err{background:#ef4444;}
-
-/* ── Util ── */
 .spin{display:inline-block;animation:spin 1s linear infinite;}
 @keyframes spin{to{transform:rotate(360deg);}}
 .eo{display:none!important;}
 body.editmode .eo{display:inline-flex!important;}
-.divider{width:1px;height:20px;background:#334155;margin:0 2px;}
-
-/* ── Mobile ── */
+.dd-menu{position:fixed;z-index:200;background:var(--sur);border:1px solid var(--bor);border-radius:10px;padding:6px;min-width:150px;box-shadow:0 8px 24px rgba(0,0,0,.4);display:none;}
+.dd-menu.open{display:block;}
+.dd-item{padding:8px 12px;cursor:pointer;border-radius:6px;font-size:13px;display:flex;align-items:center;gap:8px;color:var(--txt);}
+.dd-item:hover{background:var(--bor);}
 @media(max-width:640px){
   body{padding:12px;}
-  header{gap:8px;}
   h1{font-size:18px;}
   .grid.size-sm,.grid.size-md,.grid.size-lg{grid-template-columns:1fr 1fr;}
   .toolbar{gap:6px;}
   .toolbar-right{margin-left:0;}
   .modal.lg{max-width:100%;}
   .detail-footer{padding:12px;}
+  .header-right{gap:4px;}
 }
 @media(max-width:400px){
   .grid.size-sm,.grid.size-md,.grid.size-lg{grid-template-columns:1fr;}
@@ -209,6 +211,9 @@ body.editmode .eo{display:inline-flex!important;}
     <h1>🎬 提詞庫 <span class="mode-badge read" id="modeBadge">👁️ 唯讀</span></h1>
     <div class="header-right">
       <span class="sync" id="syncEl"></span>
+      <button class="icon-btn" id="btnTheme" title="切換主題">☀️</button>
+      <button class="icon-btn eo" id="btnBatch" title="批次操作">☑️</button>
+      <button class="icon-btn" id="btnRecent" title="最近複製">🕐</button>
       <button class="eo" id="btnAdd">＋ 新增</button>
       <button class="ghost" id="btnExportMenu">匯出 ▾</button>
       <button class="ghost eo" id="btnImport">匯入</button>
@@ -218,9 +223,15 @@ body.editmode .eo{display:inline-flex!important;}
   </header>
 
   <!-- Export dropdown -->
-  <div id="exportDropdown" style="display:none;position:fixed;z-index:200;background:#1e293b;border:1px solid #334155;border-radius:10px;padding:6px;min-width:150px;box-shadow:0 8px 24px rgba(0,0,0,.4);">
-    <div class="export-item" id="expJson" style="padding:8px 12px;cursor:pointer;border-radius:6px;font-size:13px;display:flex;align-items:center;gap:8px;">📄 匯出 JSON</div>
-    <div class="export-item" id="expXlsx" style="padding:8px 12px;cursor:pointer;border-radius:6px;font-size:13px;display:flex;align-items:center;gap:8px;">📊 匯出 Excel</div>
+  <div class="dd-menu" id="expDD">
+    <div class="dd-item" id="expJson">📄 匯出 JSON</div>
+    <div class="dd-item" id="expXlsx">📊 匯出 Excel</div>
+  </div>
+
+  <!-- Recent panel -->
+  <div class="recent-panel" id="recentPanel">
+    <div class="recent-hdr">最近複製</div>
+    <div id="recentList"></div>
   </div>
 
   <!-- Main tabs -->
@@ -247,6 +258,8 @@ body.editmode .eo{display:inline-flex!important;}
       <option value="updated">最近更新</option>
       <option value="created">建立時間</option>
       <option value="title">標題 A-Z</option>
+      <option value="hottest">最熱門</option>
+      <option value="fav_first">收藏優先</option>
     </select>
     <span id="tagFilterChip" style="display:none"></span>
     <span class="stats" id="statsEl"></span>
@@ -265,7 +278,21 @@ body.editmode .eo{display:inline-flex!important;}
   </div>
 </div>
 
-<!-- ══════ 詳細預覽 Modal ══════ -->
+<!-- Batch toolbar -->
+<div class="batch-bar" id="batchBar">
+  <span class="batch-cnt" id="batchCnt">已選 0 筆</span>
+  <button class="sm ghost" id="btnBatchAll">全選</button>
+  <button class="sm ghost" id="btnBatchMove">移動分類</button>
+  <button class="sm danger" id="btnBatchDel">🗑️ 刪除</button>
+  <button class="sm ghost" id="btnBatchCancel">✕</button>
+</div>
+
+<!-- Fullscreen viewer -->
+<div class="fullscreen-bd" id="fsBD">
+  <img id="fsImg" src="" alt="">
+</div>
+
+<!-- ══ Detail Modal ══ -->
 <div class="backdrop" id="detailBD">
   <div class="modal lg">
     <div id="detailImgWrap"></div>
@@ -273,12 +300,12 @@ body.editmode .eo{display:inline-flex!important;}
       <div class="detail-badges" id="detailBadges"></div>
       <div class="detail-title" id="detailTitle"></div>
       <div id="detailZhWrap" class="detail-section">
-        <div class="detail-label">中文 Prompt</div>
+        <div class="detail-label">中文 Prompt <span class="char-count" id="charZh"></span></div>
         <div class="detail-prompt zh" id="detailZh"></div>
         <button class="detail-copy-btn ghost" id="btnCopyZh">📋 複製中文 Prompt</button>
       </div>
       <div id="detailEnWrap" class="detail-section">
-        <div class="detail-label">英文 Prompt</div>
+        <div class="detail-label">英文 Prompt <span class="char-count" id="charEn"></span></div>
         <div class="detail-prompt en" id="detailEn"></div>
         <button class="detail-copy-btn ghost" id="btnCopyEn">📋 複製英文 Prompt</button>
       </div>
@@ -290,32 +317,29 @@ body.editmode .eo{display:inline-flex!important;}
         <div class="detail-label">標籤</div>
         <div class="detail-tags" id="detailTags"></div>
       </div>
-      <div style="font-size:11px;color:#475569;margin-top:8px" id="detailMeta"></div>
+      <div style="font-size:11px;color:var(--txt4);margin-top:8px" id="detailMeta"></div>
     </div>
+    <div class="share-box" id="shareBox"></div>
     <div class="detail-footer">
       <button class="ghost" id="btnDetailClose">關閉</button>
       <button class="ghost eo" id="btnDetailDupe">複製一份</button>
       <button class="ghost eo" id="btnDetailFav">收藏</button>
+      <button class="ghost eo" id="btnDetailPin">📌 釘選</button>
+      <button class="ghost" id="btnShare">🔗 分享</button>
       <button class="eo" id="btnDetailEdit">✏️ 編輯</button>
     </div>
   </div>
 </div>
 
-<!-- ══════ 提詞 Modal ══════ -->
+<!-- ══ Prompt Modal ══ -->
 <div class="backdrop" id="promptBD">
   <div class="modal">
     <div class="modal-body">
       <h2 id="promptTitle">新增提詞</h2>
       <form id="promptForm">
         <div class="frow">
-          <div class="fg">
-            <label>大主題</label>
-            <select id="mainSel" name="catId" required></select>
-          </div>
-          <div class="fg">
-            <label>小主題</label>
-            <select id="subSel" name="subId"></select>
-          </div>
+          <div class="fg"><label>大主題</label><select id="mainSel" name="catId" required></select></div>
+          <div class="fg"><label>小主題</label><select id="subSel" name="subId"></select></div>
         </div>
         <div class="fg"><label>標題</label><input name="title" required placeholder="例：電影感日落街景"></div>
         <div class="fg">
@@ -332,10 +356,16 @@ body.editmode .eo{display:inline-flex!important;}
           <input type="hidden" name="thumbnail" id="thumbHidden">
           <input id="thumbUrl" placeholder="或貼上圖片網址…" style="margin-top:6px;width:100%;font-size:12px;padding:7px 10px">
         </div>
-        <div class="fg"><label>中文 Prompt</label><textarea name="promptZh" placeholder="用中文描述你想要的畫面"></textarea></div>
-        <div class="fg"><label>英文 Prompt（給 API）</label><textarea name="promptEn" placeholder="English prompt for API"></textarea></div>
+        <div class="fg">
+          <label>中文 Prompt <span style="color:var(--txt3);font-weight:normal;font-size:10px;text-transform:none">支援 {{變數}} 模板</span></label>
+          <textarea name="promptZh" placeholder="用中文描述你想要的畫面，用 {{人物}} {{場景}} 建立模板"></textarea>
+        </div>
+        <div class="fg">
+          <label>英文 Prompt <span style="color:var(--txt3);font-weight:normal;font-size:10px;text-transform:none">支援 {{variable}}</span></label>
+          <textarea name="promptEn" placeholder="English prompt, use {{subject}} for template vars"></textarea>
+        </div>
         <div class="fg"><label>標籤（逗號分隔）</label><input name="tags" placeholder="電影感, 夕陽, 街景"></div>
-        <div class="fg"><label>備註 / 參數</label><textarea name="notes" placeholder="ratio 16:9, duration 5s, model: pro…"></textarea></div>
+        <div class="fg"><label>備註 / 參數</label><textarea name="notes" placeholder="ratio 16:9, duration 5s…"></textarea></div>
         <div class="fg"><label><input type="checkbox" name="fav" style="width:auto;margin-right:6px">⭐ 加入收藏</label></div>
       </form>
     </div>
@@ -346,7 +376,35 @@ body.editmode .eo{display:inline-flex!important;}
   </div>
 </div>
 
-<!-- ══════ 分類 Modal ══════ -->
+<!-- ══ Template Fill Modal ══ -->
+<div class="backdrop" id="tplBD">
+  <div class="modal sm">
+    <div class="modal-body">
+      <h2>🧩 填入模板變數</h2>
+      <p style="font-size:12px;color:var(--txt3);margin-bottom:14px">填入後自動複製到剪貼簿</p>
+      <div class="tpl-fields" id="tplFields"></div>
+    </div>
+    <div class="modal-foot">
+      <button class="ghost" id="btnTplCancel">取消</button>
+      <button id="btnTplCopy">📋 填入並複製</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ Bulk Move Modal ══ -->
+<div class="backdrop" id="bulkBD">
+  <div class="modal sm">
+    <div class="modal-body">
+      <h2>移動到分類</h2>
+      <div class="bulk-list" id="bulkList"></div>
+    </div>
+    <div class="modal-foot">
+      <button class="ghost" id="btnBulkClose">取消</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ Cat Modal ══ -->
 <div class="backdrop" id="catBD">
   <div class="modal sm">
     <div class="modal-body">
@@ -364,7 +422,7 @@ body.editmode .eo{display:inline-flex!important;}
   </div>
 </div>
 
-<!-- ══════ 管理分類 Modal ══════ -->
+<!-- ══ Manage Cats Modal ══ -->
 <div class="backdrop" id="mgrBD">
   <div class="modal">
     <div class="modal-body">
@@ -378,7 +436,7 @@ body.editmode .eo{display:inline-flex!important;}
   </div>
 </div>
 
-<!-- ══════ 設定 Modal ══════ -->
+<!-- ══ Settings Modal ══ -->
 <div class="backdrop" id="settingsBD">
   <div class="modal sm">
     <div class="modal-body">
@@ -404,19 +462,13 @@ body.editmode .eo{display:inline-flex!important;}
 
 <div class="toast" id="toastEl"></div>
 
-<style>
-.export-item:hover{background:#334155;}
-</style>
-
 <script>
-// ── Config ────────────────────────────────────────────────
-const CFG_KEY='plib_cfg',TOK_KEY='plib_tok',LOCAL_KEY='plib_data_v3',SIZE_KEY='plib_size';
+// ── Constants ─────────────────────────────────────────────
+const CFG_KEY='plib_cfg', TOK_KEY='plib_tok', LOCAL_KEY='plib_data_v3',
+      SIZE_KEY='plib_size', THEME_KEY='plib_theme', RECENT_KEY='plib_recent';
 const DEF_CFG={owner:'monkey830526-byte',repo:'prompt-library',path:'data.json',branch:'main'};
 const COLORS=['#8b5cf6','#3b82f6','#10b981','#f59e0b','#ef4444','#06b6d4','#ec4899','#f97316','#84cc16','#6366f1'];
-const DEF_CATS=[
-  {id:'video',name:'影片',icon:'🎞️',color:'#8b5cf6',subs:[]},
-  {id:'photo',name:'照片',icon:'📷',color:'#10b981',subs:[]}
-];
+const DEF_CATS=[{id:'video',name:'影片',icon:'🎞️',color:'#8b5cf6',subs:[]},{id:'photo',name:'照片',icon:'📷',color:'#10b981',subs:[]}];
 
 const getCfg=()=>{try{return{...DEF_CFG,...JSON.parse(localStorage.getItem(CFG_KEY)||'{}')};}catch{return{...DEF_CFG};}};
 const setCfg=c=>localStorage.setItem(CFG_KEY,JSON.stringify(c));
@@ -424,14 +476,16 @@ const getTok=()=>localStorage.getItem(TOK_KEY)||'';
 const setTok=t=>t?localStorage.setItem(TOK_KEY,t):localStorage.removeItem(TOK_KEY);
 
 // ── State ─────────────────────────────────────────────────
-let DB={categories:[],prompts:[]};
-let sha=null;
-let activMain='all',activSub='all',activTag='';
-let editPId=null,viewPId=null;
-let editCMode=null,editCId=null,editCParent=null;
+let DB={categories:[],prompts:[]}, sha=null;
+let activMain='all', activSub='all', activTag='';
+let editPId=null, viewPId=null;
+let editCMode=null, editCId=null, editCParent=null;
 let selColor=COLORS[0];
-let saveTimer=null,saving=false;
+let saveTimer=null, saving=false;
 let gridSize=localStorage.getItem(SIZE_KEY)||'md';
+let batchMode=false, selectedIds=new Set();
+let dragSrcId=null;
+let tplCopyData=null; // {text, pid, lang}
 
 const $=id=>document.getElementById(id);
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
@@ -439,13 +493,60 @@ const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'
 const fmt=ts=>{if(!ts)return'';const d=new Date(ts);return`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;};
 const getCat=id=>DB.categories.find(c=>c.id===id)||null;
 const getSub=(cId,sId)=>getCat(cId)?.subs.find(s=>s.id===sId)||null;
+const pageUrl=id=>{const u=new URL(location.href);u.searchParams.set('id',id);return u.href;};
 
-// ── Toast ─────────────────────────────────────────────────
+// ── Theme ─────────────────────────────────────────────────
+function applyTheme(){
+  const t=localStorage.getItem(THEME_KEY)||'dark';
+  document.body.classList.toggle('light',t==='light');
+  $('btnTheme').textContent=t==='light'?'🌙':'☀️';
+  $('btnTheme').title=t==='light'?'切換深色':'切換淺色';
+}
+$('btnTheme').onclick=()=>{
+  const cur=localStorage.getItem(THEME_KEY)||'dark';
+  localStorage.setItem(THEME_KEY,cur==='light'?'dark':'light');
+  applyTheme();
+};
+applyTheme();
+
+// ── Toast & Sync ──────────────────────────────────────────
 function toast(msg,err=false){
   const t=$('toastEl');t.textContent=msg;t.className='toast show'+(err?' err':'');
   clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),2200);
 }
 function setSync(txt,spin=false){$('syncEl').innerHTML=spin?`<span class="spin">⏳</span> ${txt}`:txt;}
+
+// ── Recent Copies ─────────────────────────────────────────
+function getRecent(){try{return JSON.parse(localStorage.getItem(RECENT_KEY)||'[]');}catch{return[];}}
+function addRecent(p){
+  let r=getRecent().filter(x=>x.id!==p.id);
+  r.unshift({id:p.id,title:p.title||'未命名',ts:Date.now()});
+  localStorage.setItem(RECENT_KEY,JSON.stringify(r.slice(0,10)));
+}
+function renderRecent(){
+  const r=getRecent();
+  if(!r.length){$('recentList').innerHTML='<div style="padding:10px;font-size:12px;color:var(--txt3)">尚無記錄</div>';return;}
+  const rel=ts=>{const s=Math.floor((Date.now()-ts)/1000);return s<60?'剛剛':s<3600?Math.floor(s/60)+'分前':s<86400?Math.floor(s/3600)+'時前':Math.floor(s/86400)+'天前';};
+  $('recentList').innerHTML=r.map(x=>`<div class="recent-item" data-rid="${esc(x.id)}"><span>📋</span><span class="ri-title">${esc(x.title)}</span><span class="ri-time">${rel(x.ts)}</span></div>`).join('');
+}
+$('recentList').addEventListener('click',e=>{
+  const item=e.target.closest('[data-rid]');if(!item)return;
+  const p=DB.prompts.find(x=>x.id===item.dataset.rid);
+  if(p){$('recentPanel').classList.remove('open');openDetail(p);}
+});
+$('btnRecent').onclick=e=>{
+  e.stopPropagation();renderRecent();
+  const r=e.currentTarget.getBoundingClientRect();
+  const panel=$('recentPanel');
+  panel.style.top=(r.bottom+6)+'px';
+  panel.style.right=(window.innerWidth-r.right)+'px';
+  panel.style.left='auto';
+  panel.classList.toggle('open');
+};
+document.addEventListener('click',e=>{
+  if(!$('recentPanel').contains(e.target)&&e.target!==$('btnRecent'))
+    $('recentPanel').classList.remove('open');
+});
 
 // ── GitHub API ────────────────────────────────────────────
 async function fetchDB(){
@@ -472,15 +573,16 @@ async function fetchDB(){
 }
 function initEmpty(){DB={categories:DEF_CATS.map(c=>({...c,subs:[...c.subs]})),prompts:[]};sha=null;}
 function migrate(raw){
-  if(Array.isArray(raw))return{categories:DEF_CATS.map(c=>({...c,subs:[...c.subs]})),prompts:raw.map(p=>({...p,catId:p.type==='video'?'video':'photo',subId:''}))};
-  if(raw.categories&&raw.categories[0]&&!Array.isArray(raw.categories[0].subs)){
-    return{categories:DEF_CATS.map(c=>({...c,subs:[...c.subs]})),prompts:(raw.prompts||[]).map(p=>({...p,catId:p.catId||p.categoryId||'video',subId:''}))};
-  }
-  return{categories:(raw.categories&&raw.categories.length)?raw.categories:DEF_CATS.map(c=>({...c,subs:[...c.subs]})),prompts:raw.prompts||[]};
+  const fixP=p=>({pinned:false,copyCount:0,...p,catId:p.catId||p.type==='video'?'video':'photo',subId:p.subId||''});
+  if(Array.isArray(raw))return{categories:DEF_CATS.map(c=>({...c,subs:[...c.subs]})),prompts:raw.map(fixP)};
+  if(raw.categories&&raw.categories[0]&&!Array.isArray(raw.categories[0].subs))
+    return{categories:DEF_CATS.map(c=>({...c,subs:[...c.subs]})),prompts:(raw.prompts||[]).map(fixP)};
+  const cats=(raw.categories?.length)?raw.categories:DEF_CATS.map(c=>({...c,subs:[...c.subs]}));
+  return{categories:cats,prompts:(raw.prompts||[]).map(p=>({pinned:false,copyCount:0,...p}))};
 }
 async function saveDB(){
   const cfg=getCfg(),tok=getTok();
-  if(!tok)return;if(saving)return;
+  if(!tok||saving)return;
   saving=true;setSync('儲存中…',true);
   localStorage.setItem(LOCAL_KEY,JSON.stringify(DB));
   try{
@@ -498,28 +600,21 @@ function sched(){if(!getTok())return;clearTimeout(saveTimer);setSync('待儲存�
 
 // ── Counts ────────────────────────────────────────────────
 function getCounts(){
-  const total=DB.prompts.length,fav=DB.prompts.filter(p=>p.favorite).length;
   const byCat={},bySub={};
-  DB.prompts.forEach(p=>{
-    byCat[p.catId]=(byCat[p.catId]||0)+1;
-    if(p.subId)bySub[p.subId]=(bySub[p.subId]||0)+1;
-  });
-  return{total,fav,byCat,bySub};
+  DB.prompts.forEach(p=>{byCat[p.catId]=(byCat[p.catId]||0)+1;if(p.subId)bySub[p.subId]=(bySub[p.subId]||0)+1;});
+  return{total:DB.prompts.length,fav:DB.prompts.filter(p=>p.favorite).length,byCat,bySub};
 }
 
 // ── Tabs ──────────────────────────────────────────────────
 function renderMainTabs(){
-  const wrap=$('mainTabs'),addBtn=$('btnAddMain');
-  const counts=getCounts();
-  $('countAll').textContent=counts.total;
-  $('countFav').textContent=counts.fav;
+  const wrap=$('mainTabs'),addBtn=$('btnAddMain'),counts=getCounts();
+  $('countAll').textContent=counts.total;$('countFav').textContent=counts.fav;
   Array.from(wrap.children).forEach(el=>{if(el.dataset.dyn)el.remove();});
   DB.categories.forEach(cat=>{
     const el=document.createElement('div');
     el.className='main-tab'+(activMain===cat.id?' active':'');
     el.dataset.main=cat.id;el.dataset.dyn='1';
-    const cnt=counts.byCat[cat.id]||0;
-    el.innerHTML=`${esc(cat.icon||'')} ${esc(cat.name)} <span class="tab-count">${cnt}</span>`;
+    el.innerHTML=`${esc(cat.icon||'')} ${esc(cat.name)} <span class="tab-count">${counts.byCat[cat.id]||0}</span>`;
     el.onclick=()=>setMain(cat.id);
     wrap.insertBefore(el,addBtn);
   });
@@ -527,30 +622,24 @@ function renderMainTabs(){
   wrap.querySelector('[data-main="fav"]').className='main-tab'+(activMain==='fav'?' active':'');
 }
 function renderSubTabs(){
-  const wrap=$('subTabsWrap'),row=$('subTabs');
-  const cat=getCat(activMain);
+  const wrap=$('subTabsWrap'),row=$('subTabs'),cat=getCat(activMain);
   if(!cat){wrap.style.display='none';return;}
   wrap.style.display='block';row.innerHTML='';
   const counts=getCounts();
   const allEl=document.createElement('div');
   allEl.className='sub-tab'+(activSub==='all'?' active':'');
   if(activSub==='all')allEl.style.background=cat.color;
-  const allCnt=counts.byCat[cat.id]||0;
-  allEl.innerHTML=`全部 <span class="tab-count">${allCnt}</span>`;
-  allEl.onclick=()=>setSub('all');
-  row.appendChild(allEl);
+  allEl.innerHTML=`全部 <span class="tab-count">${counts.byCat[cat.id]||0}</span>`;
+  allEl.onclick=()=>setSub('all');row.appendChild(allEl);
   cat.subs.forEach(s=>{
     const el=document.createElement('div');
     el.className='sub-tab'+(activSub===s.id?' active':'');
     if(activSub===s.id)el.style.background=s.color||cat.color;
-    const cnt=counts.bySub[s.id]||0;
-    el.innerHTML=`<span class="sub-tab-dot" style="background:${s.color||cat.color}"></span>${esc(s.icon||'')} ${esc(s.name)} <span class="tab-count">${cnt}</span>`;
-    el.onclick=()=>setSub(s.id);
-    row.appendChild(el);
+    el.innerHTML=`<span class="sub-tab-dot" style="background:${s.color||cat.color}"></span>${esc(s.icon||'')} ${esc(s.name)} <span class="tab-count">${counts.bySub[s.id]||0}</span>`;
+    el.onclick=()=>setSub(s.id);row.appendChild(el);
   });
   const addSub=document.createElement('div');
-  addSub.className='sub-add-btn eo';
-  addSub.textContent='＋ 小主題';
+  addSub.className='sub-add-btn eo';addSub.textContent='＋ 小主題';
   addSub.onclick=()=>openCatModal('sub',null,activMain);
   if(document.body.classList.contains('editmode'))addSub.style.display='flex';
   row.appendChild(addSub);
@@ -566,7 +655,7 @@ function setTagFilter(tag){
     chip.style.display='inline-flex';
     chip.innerHTML=`<span class="filter-tag-chip"># ${esc(tag)} <span style="margin-left:4px;opacity:.7">✕</span></span>`;
     chip.querySelector('.filter-tag-chip').onclick=()=>setTagFilter('');
-  }else{chip.style.display='none';}
+  }else chip.style.display='none';
   render();
 }
 
@@ -575,11 +664,44 @@ function setGridSize(s){
   gridSize=s;localStorage.setItem(SIZE_KEY,s);
   $('grid').className=`grid size-${s}`;
   ['Sm','Md','Lg'].forEach(x=>$('sz'+x).classList.remove('active'));
-  $('sz'+s.charAt(0).toUpperCase()+s.slice(1)).classList.add('active');
+  $('sz'+s[0].toUpperCase()+s.slice(1)).classList.add('active');
 }
 $('szSm').onclick=()=>setGridSize('sm');
 $('szMd').onclick=()=>setGridSize('md');
 $('szLg').onclick=()=>setGridSize('lg');
+
+// ── Template vars ─────────────────────────────────────────
+function extractVars(text){return[...new Set([...text.matchAll(/\{\{([^}]+)\}\}/g)].map(m=>m[1].trim()))];}
+function highlightVars(text){return esc(text).replace(/\{\{([^}]+)\}\}/g,'<span class="tpl-var">{{$1}}</span>');}
+
+async function doCopy(text,pid,lang){
+  await navigator.clipboard.writeText(text);
+  const p=DB.prompts.find(x=>x.id===pid);
+  if(p){p.copyCount=(p.copyCount||0)+1;addRecent(p);sched();}
+  toast('已複製'+(lang==='zh'?'中文':'英文')+' Prompt');
+}
+function triggerCopy(text,pid,lang){
+  const vars=extractVars(text);
+  if(!vars.length){doCopy(text,pid,lang);return;}
+  tplCopyData={text,pid,lang};
+  $('tplFields').innerHTML=vars.map(v=>`<div class="fg"><label>${esc(v)}</label><input data-var="${esc(v)}" placeholder="${esc(v)}…"></div>`).join('');
+  $('tplBD').classList.add('open');
+  $('tplBD').querySelector('input')?.focus();
+}
+$('btnTplCancel').onclick=()=>$('tplBD').classList.remove('open');
+$('tplBD').onclick=e=>{if(e.target===$('tplBD'))$('tplBD').classList.remove('open');};
+$('btnTplCopy').onclick=async()=>{
+  let result=tplCopyData.text;
+  $('tplFields').querySelectorAll('[data-var]').forEach(inp=>{
+    const v=inp.dataset.var,val=inp.value||`{{${v}}}`;
+    result=result.replace(new RegExp('\\{\\{'+v.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'\\}\\}','g'),val);
+  });
+  await navigator.clipboard.writeText(result);
+  const p=DB.prompts.find(x=>x.id===tplCopyData.pid);
+  if(p){p.copyCount=(p.copyCount||0)+1;addRecent(p);sched();}
+  toast('已複製'+(tplCopyData.lang==='zh'?'中文':'英文')+' Prompt（已填入變數）');
+  $('tplBD').classList.remove('open');
+};
 
 // ── Render grid ───────────────────────────────────────────
 function render(){
@@ -601,7 +723,10 @@ function render(){
   });
   if(sort==='title')list.sort((a,b)=>(a.title||'').localeCompare(b.title||''));
   else if(sort==='created')list.sort((a,b)=>b.created-a.created);
+  else if(sort==='hottest')list.sort((a,b)=>(b.copyCount||0)-(a.copyCount||0));
+  else if(sort==='fav_first')list.sort((a,b)=>(b.favorite?1:0)-(a.favorite?1:0));
   else list.sort((a,b)=>b.updated-a.updated);
+  list.sort((a,b)=>(b.pinned?1:0)-(a.pinned?1:0)); // pinned always on top
 
   $('statsEl').textContent=`${list.length} / ${DB.prompts.length} 筆`;
   const grid=$('grid');grid.innerHTML='';
@@ -612,31 +737,36 @@ function render(){
     $('emptyDesc').textContent=isEdit&&!q&&!activTag?'點右上「＋ 新增」開始建立':'試試調整搜尋條件';
     return;
   }
+  const isEdit=document.body.classList.contains('editmode');
+  grid.classList.toggle('batch-mode',batchMode);
 
   list.forEach(p=>{
     const cat=getCat(p.catId),sub=getSub(p.catId,p.subId);
-    const isEdit=document.body.classList.contains('editmode');
-    const catColor=cat?.color||'#475569';
-    const subColor=sub?.color||catColor;
+    const catColor=cat?.color||'#475569',subColor=sub?.color||catColor;
     const thumb=p.thumbnail
       ?`<img class="card-thumb" src="${esc(p.thumbnail)}" onerror="this.outerHTML='<div class=\\'card-thumb ph\\'>${esc(cat?.icon||'📄')}</div>'" loading="lazy">`
       :`<div class="card-thumb ph">${esc(cat?.icon||'📄')}</div>`;
-    const catBadge=cat?`<span class="badge-main" style="background:${catColor}">${esc(cat.icon||'')} ${esc(cat.name)}</span>`:'';
-    const subBadge=sub?`<span class="badge-sub" style="background:${subColor}">${esc(sub.icon||'')} ${esc(sub.name)}</span>`:'';
     const tags=(p.tags||[]).map(t=>`<span class="tag" data-tag="${esc(t)}">#${esc(t)}</span>`).join('');
     const card=document.createElement('div');
-    card.className='card';
+    card.className='card'+(selectedIds.has(p.id)?' selected':'');
     card.dataset.pid=p.id;
+    if(isEdit)card.draggable=true;
     card.innerHTML=`
+      <input type="checkbox" class="card-chk" ${selectedIds.has(p.id)?'checked':''} onclick="event.stopPropagation();toggleSel('${p.id}')">
       ${thumb}
       <div class="card-body">
-        <div class="card-badges">${catBadge}${subBadge}${p.favorite?'<span class="fav-icon">⭐</span>':''}</div>
+        <div class="card-badges">
+          ${cat?`<span class="badge-main" style="background:${catColor}">${esc(cat.icon||'')} ${esc(cat.name)}</span>`:''}
+          ${sub?`<span class="badge-sub" style="background:${subColor}">${esc(sub.icon||'')} ${esc(sub.name)}</span>`:''}
+          ${p.favorite?'<span class="fav-icon">⭐</span>':''}
+          ${p.pinned?'<span class="pin-icon">📌</span>':''}
+        </div>
         <div class="card-title">${esc(p.title||'未命名')}</div>
         ${p.promptZh?`<div class="prompt-box pzh">${esc(p.promptZh)}</div>`:''}
         ${p.promptEn?`<div class="prompt-box pen">${esc(p.promptEn)}</div>`:''}
         ${p.notes?`<span class="notes-chip">📝 ${esc(p.notes)}</span>`:''}
         ${tags?`<div class="tags">${tags}</div>`:''}
-        <div class="card-meta">更新 ${fmt(p.updated)}</div>
+        <div class="card-meta">更新 ${fmt(p.updated)}${p.copyCount?` · 📋 ${p.copyCount}次`:''}</div>
         <div class="card-copy-row">
           ${p.promptZh?`<button class="copy-btn" data-cpzh="${p.id}" onclick="event.stopPropagation()">📋 中文</button>`:''}
           ${p.promptEn?`<button class="copy-btn ghost" data-cpen="${p.id}" onclick="event.stopPropagation()">📋 英文</button>`:''}
@@ -644,27 +774,45 @@ function render(){
         ${isEdit?`<div class="card-edit-row">
           <button class="sm ghost eo" data-edit="${p.id}" onclick="event.stopPropagation()">✏️</button>
           <button class="sm ghost eo" data-dupe="${p.id}" onclick="event.stopPropagation()">⧉</button>
+          <button class="sm ghost eo" data-pin="${p.id}" onclick="event.stopPropagation()" title="${p.pinned?'取消釘選':'釘選'}">${p.pinned?'📌':'📍'}</button>
           <button class="sm ghost eo" data-fav="${p.id}" onclick="event.stopPropagation()">${p.favorite?'★':'☆'}</button>
           <button class="sm danger eo" data-del="${p.id}" onclick="event.stopPropagation()">✕</button>
         </div>`:''}
       </div>`;
+    // Drag & drop (edit mode only)
+    if(isEdit){
+      card.addEventListener('dragstart',e=>{dragSrcId=p.id;card.classList.add('drag-src');e.dataTransfer.effectAllowed='move';});
+      card.addEventListener('dragend',()=>{card.classList.remove('drag-src');grid.querySelectorAll('.drag-over').forEach(c=>c.classList.remove('drag-over'));});
+      card.addEventListener('dragover',e=>{e.preventDefault();e.dataTransfer.dropEffect='move';if(dragSrcId!==p.id)card.classList.add('drag-over');});
+      card.addEventListener('dragleave',()=>card.classList.remove('drag-over'));
+      card.addEventListener('drop',e=>{
+        e.preventDefault();card.classList.remove('drag-over');
+        if(!dragSrcId||dragSrcId===p.id)return;
+        const si=DB.prompts.findIndex(x=>x.id===dragSrcId),di=DB.prompts.findIndex(x=>x.id===p.id);
+        if(si<0||di<0)return;
+        const [mv]=DB.prompts.splice(si,1);DB.prompts.splice(di,0,mv);
+        render();sched();dragSrcId=null;
+      });
+    }
     grid.appendChild(card);
   });
 }
 
 // ── Grid events ───────────────────────────────────────────
-$('grid').addEventListener('click',async e=>{
-  const b=e.target.closest('button[data-cpzh],button[data-cpen],button[data-edit],button[data-del],button[data-fav],button[data-dupe]');
+$('grid').addEventListener('click',e=>{
+  if(batchMode){const card=e.target.closest('.card');if(card&&!e.target.classList.contains('card-chk'))toggleSel(card.dataset.pid);return;}
   const tagEl=e.target.closest('.tag');
+  const b=e.target.closest('button[data-cpzh],button[data-cpen],button[data-edit],button[data-del],button[data-fav],button[data-dupe],button[data-pin]');
   const card=e.target.closest('.card');
   if(tagEl){setTagFilter(tagEl.dataset.tag);return;}
   if(b){
-    const id=b.dataset.cpzh||b.dataset.cpen||b.dataset.edit||b.dataset.del||b.dataset.fav||b.dataset.dupe;
+    const id=b.dataset.cpzh||b.dataset.cpen||b.dataset.edit||b.dataset.del||b.dataset.fav||b.dataset.dupe||b.dataset.pin;
     const p=DB.prompts.find(x=>x.id===id);if(!p)return;
-    if(b.dataset.cpzh){await navigator.clipboard.writeText(p.promptZh||'');toast('已複製中文 Prompt');}
-    else if(b.dataset.cpen){await navigator.clipboard.writeText(p.promptEn||'');toast('已複製英文 Prompt');}
+    if(b.dataset.cpzh)triggerCopy(p.promptZh||'',p.id,'zh');
+    else if(b.dataset.cpen)triggerCopy(p.promptEn||'',p.id,'en');
     else if(b.dataset.edit)openPromptModal(p);
     else if(b.dataset.fav){p.favorite=!p.favorite;p.updated=Date.now();render();renderMainTabs();sched();}
+    else if(b.dataset.pin){p.pinned=!p.pinned;p.updated=Date.now();render();sched();toast(p.pinned?'已釘選':'已取消釘選');}
     else if(b.dataset.dupe)dupePrompt(p);
     else if(b.dataset.del){if(confirm(`刪除「${p.title}」？`)){DB.prompts=DB.prompts.filter(x=>x.id!==id);render();renderMainTabs();sched();toast('已刪除');}}
     return;
@@ -672,52 +820,124 @@ $('grid').addEventListener('click',async e=>{
   if(card){const p=DB.prompts.find(x=>x.id===card.dataset.pid);if(p)openDetail(p);}
 });
 
+// ── Batch mode ────────────────────────────────────────────
+function toggleSel(id){
+  if(selectedIds.has(id))selectedIds.delete(id);else selectedIds.add(id);
+  const card=document.querySelector(`.card[data-pid="${id}"]`);
+  if(card){card.classList.toggle('selected',selectedIds.has(id));}
+  updateBatchBar();
+}
+function updateBatchBar(){
+  const n=selectedIds.size;
+  $('batchCnt').textContent=`已選 ${n} 筆`;
+  $('batchBar').classList.toggle('show',batchMode&&n>0);
+}
+$('btnBatch').onclick=()=>{
+  batchMode=!batchMode;selectedIds.clear();
+  $('btnBatch').classList.toggle('on',batchMode);
+  updateBatchBar();render();
+};
+$('btnBatchCancel').onclick=()=>{batchMode=false;selectedIds.clear();$('btnBatch').classList.remove('on');updateBatchBar();render();};
+$('btnBatchAll').onclick=()=>{
+  const ids=[...$('grid').querySelectorAll('.card')].map(c=>c.dataset.pid);
+  if(selectedIds.size===ids.length)selectedIds.clear();else ids.forEach(id=>selectedIds.add(id));
+  updateBatchBar();render();
+};
+$('btnBatchDel').onclick=()=>{
+  if(!selectedIds.size)return;
+  if(!confirm(`確定刪除選取的 ${selectedIds.size} 筆提詞？`))return;
+  DB.prompts=DB.prompts.filter(p=>!selectedIds.has(p.id));
+  selectedIds.clear();batchMode=false;$('btnBatch').classList.remove('on');
+  updateBatchBar();render();renderMainTabs();sched();toast('已刪除');
+};
+$('btnBatchMove').onclick=()=>{
+  if(!selectedIds.size)return;
+  $('bulkList').innerHTML=DB.categories.map(cat=>`
+    <div class="bulk-item" data-bcat="${cat.id}" style="border-left:4px solid ${cat.color}">${esc(cat.icon||'')} ${esc(cat.name)}</div>
+    ${cat.subs.map(s=>`<div class="bulk-item sub" data-bcat="${cat.id}" data-bsub="${s.id}" style="border-left:4px solid ${s.color||cat.color}">${esc(s.icon||'')} ${esc(s.name)}</div>`).join('')}
+  `).join('');
+  $('bulkBD').classList.add('open');
+};
+$('bulkList').addEventListener('click',e=>{
+  const item=e.target.closest('[data-bcat]');if(!item)return;
+  const catId=item.dataset.bcat,subId=item.dataset.bsub||'';
+  DB.prompts.forEach(p=>{if(selectedIds.has(p.id)){p.catId=catId;p.subId=subId;p.updated=Date.now();}});
+  selectedIds.clear();batchMode=false;$('btnBatch').classList.remove('on');
+  $('bulkBD').classList.remove('open');updateBatchBar();render();renderMainTabs();renderSubTabs();sched();toast('已移動分類');
+});
+$('btnBulkClose').onclick=()=>$('bulkBD').classList.remove('open');
+$('bulkBD').onclick=e=>{if(e.target===$('bulkBD'))$('bulkBD').classList.remove('open');};
+
+// ── Fullscreen image ──────────────────────────────────────
+$('fsBD').onclick=()=>$('fsBD').classList.remove('open');
+function openFullscreen(src){$('fsImg').src=src;$('fsBD').classList.add('open');}
+
 // ── Detail modal ──────────────────────────────────────────
 function openDetail(p){
   viewPId=p.id;
   const cat=getCat(p.catId),sub=getSub(p.catId,p.subId);
+  const catColor=cat?.color||'#475569',subColor=sub?.color||catColor;
   // image
   const imgWrap=$('detailImgWrap');
-  if(p.thumbnail)imgWrap.innerHTML=`<img class="detail-img" src="${esc(p.thumbnail)}" onerror="this.className='detail-img ph';this.textContent='${esc(cat?.icon||'📄')}'">`;
-  else imgWrap.innerHTML=`<div class="detail-img ph">${esc(cat?.icon||'📄')}</div>`;
+  if(p.thumbnail){
+    imgWrap.innerHTML=`<img class="detail-img" src="${esc(p.thumbnail)}" onerror="this.className='detail-img ph';this.innerHTML='${esc(cat?.icon||'📄')}'">`;
+    imgWrap.querySelector('img').onclick=()=>openFullscreen(p.thumbnail);
+  }else{
+    imgWrap.innerHTML=`<div class="detail-img ph">${esc(cat?.icon||'📄')}</div>`;
+  }
   // badges
-  const catColor=cat?.color||'#475569';
-  const subColor=sub?.color||catColor;
   $('detailBadges').innerHTML=
     (cat?`<span class="badge-main" style="background:${catColor}">${esc(cat.icon||'')} ${esc(cat.name)}</span>`:'')+
     (sub?`<span class="badge-sub" style="background:${subColor}">${esc(sub.icon||'')} ${esc(sub.name)}</span>`:'')+
-    (p.favorite?'<span class="fav-icon" style="font-size:16px">⭐</span>':'');
+    (p.favorite?'<span class="fav-icon" style="font-size:16px">⭐</span>':'')+
+    (p.pinned?'<span class="pin-icon" style="font-size:14px">📌</span>':'');
   $('detailTitle').textContent=p.title||'未命名';
   // zh
-  const zhWrap=$('detailZhWrap');zhWrap.style.display=p.promptZh?'block':'none';
-  $('detailZh').textContent=p.promptZh||'';
+  $('detailZhWrap').style.display=p.promptZh?'block':'none';
+  $('detailZh').innerHTML=p.promptZh?highlightVars(p.promptZh):'';
+  $('charZh').textContent=p.promptZh?`${p.promptZh.length} 字`:'';
   // en
-  const enWrap=$('detailEnWrap');enWrap.style.display=p.promptEn?'block':'none';
-  $('detailEn').textContent=p.promptEn||'';
+  $('detailEnWrap').style.display=p.promptEn?'block':'none';
+  $('detailEn').innerHTML=p.promptEn?highlightVars(p.promptEn):'';
+  $('charEn').textContent=p.promptEn?`${p.promptEn.length} 字`:'';
   // notes
-  const notesWrap=$('detailNotesWrap');notesWrap.style.display=p.notes?'block':'none';
+  $('detailNotesWrap').style.display=p.notes?'block':'none';
   $('detailNotes').textContent=p.notes||'';
   // tags
-  const tagsWrap=$('detailTagsWrap');tagsWrap.style.display=(p.tags&&p.tags.length)?'block':'none';
+  $('detailTagsWrap').style.display=(p.tags?.length)?'block':'none';
   $('detailTags').innerHTML=(p.tags||[]).map(t=>`<span class="detail-tag" data-tag="${esc(t)}">#${esc(t)}</span>`).join('');
-  $('detailMeta').textContent=`建立 ${fmt(p.created)}　更新 ${fmt(p.updated)}`;
+  // meta
+  $('detailMeta').textContent=`建立 ${fmt(p.created)}　更新 ${fmt(p.updated)}${p.copyCount?`　複製 ${p.copyCount} 次`:''}`;
   $('btnDetailFav').textContent=p.favorite?'取消收藏':'⭐ 收藏';
+  $('btnDetailPin').textContent=p.pinned?'取消釘選':'📌 釘選';
+  $('shareBox').style.display='none';
   $('detailBD').classList.add('open');
 }
 $('btnDetailClose').onclick=()=>{$('detailBD').classList.remove('open');viewPId=null;};
 $('detailBD').onclick=e=>{if(e.target===$('detailBD')){$('detailBD').classList.remove('open');viewPId=null;}};
-$('btnCopyZh').onclick=async()=>{const p=DB.prompts.find(x=>x.id===viewPId);if(p){await navigator.clipboard.writeText(p.promptZh||'');toast('已複製中文 Prompt');}};
-$('btnCopyEn').onclick=async()=>{const p=DB.prompts.find(x=>x.id===viewPId);if(p){await navigator.clipboard.writeText(p.promptEn||'');toast('已複製英文 Prompt');}};
+$('btnCopyZh').onclick=()=>{const p=DB.prompts.find(x=>x.id===viewPId);if(p)triggerCopy(p.promptZh||'',p.id,'zh');};
+$('btnCopyEn').onclick=()=>{const p=DB.prompts.find(x=>x.id===viewPId);if(p)triggerCopy(p.promptEn||'',p.id,'en');};
 $('btnDetailEdit').onclick=()=>{const p=DB.prompts.find(x=>x.id===viewPId);if(p){$('detailBD').classList.remove('open');openPromptModal(p);}};
 $('btnDetailFav').onclick=()=>{const p=DB.prompts.find(x=>x.id===viewPId);if(!p)return;p.favorite=!p.favorite;p.updated=Date.now();openDetail(p);render();renderMainTabs();sched();};
+$('btnDetailPin').onclick=()=>{const p=DB.prompts.find(x=>x.id===viewPId);if(!p)return;p.pinned=!p.pinned;p.updated=Date.now();openDetail(p);render();sched();toast(p.pinned?'已釘選':'已取消釘選');};
 $('btnDetailDupe').onclick=()=>{const p=DB.prompts.find(x=>x.id===viewPId);if(p){$('detailBD').classList.remove('open');dupePrompt(p);}};
-$('detailTags').addEventListener('click',e=>{const t=e.target.closest('.detail-tag');if(t){$('detailBD').classList.remove('open');viewPId=null;setTagFilter(t.dataset.tag);}});
+$('btnShare').onclick=()=>{
+  const p=DB.prompts.find(x=>x.id===viewPId);if(!p)return;
+  const url=pageUrl(p.id);
+  navigator.clipboard.writeText(url).catch(()=>{});
+  const box=$('shareBox');box.textContent='🔗 '+url;box.style.display='block';
+  toast('分享連結已複製！');
+};
+$('detailTags').addEventListener('click',e=>{
+  const t=e.target.closest('.detail-tag');
+  if(t){$('detailBD').classList.remove('open');viewPId=null;setTagFilter(t.dataset.tag);}
+});
 
 // ── Duplicate ─────────────────────────────────────────────
 function dupePrompt(p){
   const now=Date.now();
-  const copy={...p,id:uid(),title:(p.title||'')+'（複製）',created:now,updated:now};
-  DB.prompts.push(copy);render();renderMainTabs();sched();toast('已複製一份，可開始編輯');
+  const copy={...p,id:uid(),title:(p.title||'')+'（複製）',created:now,updated:now,pinned:false,copyCount:0};
+  DB.prompts.push(copy);render();renderMainTabs();sched();toast('已複製一份');
   openPromptModal(copy);
 }
 
@@ -734,8 +954,7 @@ function removeImg(){pendingB64=null;pendingName=null;thumbHidden.value='';thumb
 thumbUrl.addEventListener('input',()=>{thumbHidden.value=thumbUrl.value.trim();setImgPreview(thumbUrl.value.trim()||null);pendingB64=null;});
 function handleImgFile(file){
   if(!file||!file.type.startsWith('image/'))return;
-  const ext=file.name?.split('.').pop()||'png';
-  pendingName=`img_${Date.now()}.${ext}`;
+  pendingName=`img_${Date.now()}.${file.name?.split('.').pop()||'png'}`;
   const r=new FileReader();
   r.onload=e=>{pendingB64=e.target.result.split(',')[1];setImgPreview(e.target.result);thumbHidden.value=e.target.result;thumbUrl.value='';};
   r.readAsDataURL(file);
@@ -807,12 +1026,11 @@ $('btnPromptSave').onclick=async()=>{
     tags:(fd.get('tags')||'').split(',').map(s=>s.trim()).filter(Boolean),
     notes:fd.get('notes'),favorite:fd.get('fav')==='on',updated:now};
   if(editPId){const i=DB.prompts.findIndex(p=>p.id===editPId);if(i>=0)DB.prompts[i]={...DB.prompts[i],...payload};}
-  else DB.prompts.push({id:uid(),created:now,...payload});
+  else DB.prompts.push({id:uid(),created:now,pinned:false,copyCount:0,...payload});
   render();renderMainTabs();renderSubTabs();closePromptModal();sched();toast(editPId?'已更新':'已新增');
 };
 
 // ── Cat modal ─────────────────────────────────────────────
-let selColor=COLORS[0];
 function renderColors(cur){
   selColor=cur||COLORS[0];
   $('colorPicker').innerHTML=COLORS.map(c=>`<div class="col-dot${c===selColor?' sel':''}" style="background:${c}" data-c="${c}"></div>`).join('');
@@ -820,15 +1038,15 @@ function renderColors(cur){
 }
 function openCatModal(mode,cat=null,parentId=null){
   editCMode=mode;editCId=cat?cat.id:null;editCParent=parentId;
-  const isSub=mode==='sub';
-  $('catTitle').textContent=cat?(isSub?'編輯小主題':'編輯大主題'):(isSub?'新增小主題':'新增大主題');
+  $('catTitle').textContent=cat?(mode==='sub'?'編輯小主題':'編輯大主題'):(mode==='sub'?'新增小主題':'新增大主題');
   $('catForm').reset();
   if(cat){$('catForm').name.value=cat.name;$('catForm').icon.value=cat.icon||'';}
   renderColors(cat?.color);
   $('catBD').classList.add('open');
 }
 function closeCatModal(){$('catBD').classList.remove('open');editCMode=editCId=editCParent=null;}
-$('btnCatCancel').onclick=closeCatModal;$('catBD').onclick=e=>{if(e.target===$('catBD'))closeCatModal();};
+$('btnCatCancel').onclick=closeCatModal;
+$('catBD').onclick=e=>{if(e.target===$('catBD'))closeCatModal();};
 $('btnCatSave').onclick=()=>{
   const f=$('catForm');if(!f.reportValidity())return;
   const payload={name:f.name.value,icon:f.icon.value||'',color:selColor};
@@ -858,16 +1076,15 @@ function renderCatTree(){
           <button class="sm danger" data-dmain="${cat.id}">刪除</button>
         </div>`:''}
       </div>
-      <div class="subs-list">
-        ${cat.subs.map(s=>`
-          <div class="sub-item">
-            <div class="sub-dot" style="background:${s.color||cat.color}"></div>
-            <div class="sub-name">${esc(s.icon||'')} ${esc(s.name)}</div>
-            ${isEdit?`<div class="sub-acts">
-              <button class="sm ghost" data-esub="${s.id}" data-sp="${cat.id}">編輯</button>
-              <button class="sm danger" data-dsub="${s.id}" data-sp="${cat.id}">刪除</button>
-            </div>`:''}
-          </div>`).join('')}
+      <div class="subs-list">${cat.subs.map(s=>`
+        <div class="sub-item">
+          <div class="sub-dot" style="background:${s.color||cat.color}"></div>
+          <div class="sub-name">${esc(s.icon||'')} ${esc(s.name)}</div>
+          ${isEdit?`<div class="sub-acts">
+            <button class="sm ghost" data-esub="${s.id}" data-sp="${cat.id}">編輯</button>
+            <button class="sm danger" data-dsub="${s.id}" data-sp="${cat.id}">刪除</button>
+          </div>`:''}
+        </div>`).join('')}
       </div>
       ${isEdit?`<div class="add-sub-row"><button class="sm ghost" data-addsub="${cat.id}">＋ 新增小主題</button></div>`:''}
     </div>`).join('');
@@ -891,18 +1108,19 @@ $('catTree').addEventListener('click',e=>{
     renderSubTabs();render();renderCatTree();sched();toast('已刪除');
   }else if(b.dataset.addsub)openCatModal('sub',null,b.dataset.addsub);
 });
-$('btnMgrClose').onclick=closeMgr;$('mgrBD').onclick=e=>{if(e.target===$('mgrBD'))closeMgr();};
+$('btnMgrClose').onclick=closeMgr;
+$('mgrBD').onclick=e=>{if(e.target===$('mgrBD'))closeMgr();};
 $('btnMgrAddMain').onclick=()=>openCatModal('main');
 
 // ── Export ────────────────────────────────────────────────
-const expDD=$('exportDropdown');
+const expDD=$('expDD');
 $('btnExportMenu').onclick=e=>{
   e.stopPropagation();
-  const r=$('btnExportMenu').getBoundingClientRect();
+  const r=e.currentTarget.getBoundingClientRect();
   expDD.style.top=(r.bottom+6)+'px';expDD.style.left=r.left+'px';
-  expDD.style.display=expDD.style.display==='block'?'none':'block';
+  expDD.classList.toggle('open');
 };
-document.addEventListener('click',()=>expDD.style.display='none');
+document.addEventListener('click',()=>expDD.classList.remove('open'));
 $('expJson').onclick=()=>{
   const b=new Blob([JSON.stringify(DB,null,2)],{type:'application/json'});
   const u=URL.createObjectURL(b),a=document.createElement('a');
@@ -911,14 +1129,13 @@ $('expJson').onclick=()=>{
 $('expXlsx').onclick=()=>{
   const rows=DB.prompts.map(p=>{
     const cat=getCat(p.catId),sub=getSub(p.catId,p.subId);
-    return{'大主題':cat?.name||'','小主題':sub?.name||'','標題':p.title||'',
+    return{'大主題':cat?.name||'','小主題':sub?.name||'','標題':p.title||'','釘選':p.pinned?'📌':'',
       '中文 Prompt':p.promptZh||'','英文 Prompt':p.promptEn||'',
       '標籤':(p.tags||[]).join(', '),'備註/參數':p.notes||'',
-      '收藏':p.favorite?'⭐':'','建立日期':fmt(p.created),'更新日期':fmt(p.updated)};
+      '複製次數':p.copyCount||0,'收藏':p.favorite?'⭐':'','建立日期':fmt(p.created),'更新日期':fmt(p.updated)};
   });
   const ws=XLSX.utils.json_to_sheet(rows);
-  // column widths
-  ws['!cols']=[{wch:12},{wch:16},{wch:24},{wch:50},{wch:50},{wch:20},{wch:30},{wch:6},{wch:12},{wch:12}];
+  ws['!cols']=[{wch:12},{wch:16},{wch:24},{wch:6},{wch:50},{wch:50},{wch:20},{wch:30},{wch:10},{wch:6},{wch:12},{wch:12}];
   const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'提詞庫');
   XLSX.writeFile(wb,`提詞庫-${new Date().toISOString().slice(0,10)}.xlsx`);
   toast('已匯出 Excel');
@@ -931,31 +1148,30 @@ $('fileImport').onchange=async e=>{
   try{
     const raw=JSON.parse(await file.text());
     const imported=migrate(raw);
-    const mode=confirm(`匯入 ${imported.prompts.length} 筆提詞？\n\n確定 → 合併（保留現有）\n取消 → 取消匯入`);
-    if(!mode){e.target.value='';return;}
-    // merge prompts
+    if(!confirm(`匯入 ${imported.prompts.length} 筆提詞？\n\n確定 → 合併（保留現有）\n取消 → 取消匯入`)){e.target.value='';return;}
     const existIds=new Set(DB.prompts.map(p=>p.id));
     imported.prompts.forEach(p=>{if(!existIds.has(p.id))DB.prompts.push(p);});
-    // merge categories
     const existCatIds=new Set(DB.categories.map(c=>c.id));
     imported.categories.forEach(c=>{if(!existCatIds.has(c.id))DB.categories.push(c);});
-    render();renderMainTabs();renderSubTabs();sched();
-    toast(`已匯入 ${imported.prompts.length} 筆`);
+    render();renderMainTabs();renderSubTabs();sched();toast(`已匯入 ${imported.prompts.length} 筆`);
   }catch(err){toast('匯入失敗：'+err.message,true);}
   e.target.value='';
 };
 
 // ── Settings ──────────────────────────────────────────────
-function openSettings(){
+$('btnSettings').onclick=()=>{
   const cfg=getCfg();
-  $('tokenInput').value=getTok();$('ownerInput').value=cfg.owner;$('repoInput').value=cfg.repo;
-  $('pathInput').value=cfg.path;$('branchInput').value=cfg.branch;
+  $('tokenInput').value=getTok();$('ownerInput').value=cfg.owner;
+  $('repoInput').value=cfg.repo;$('pathInput').value=cfg.path;$('branchInput').value=cfg.branch;
   $('settingsBD').classList.add('open');
-}
-$('btnSettings').onclick=openSettings;
+};
 $('btnSettingsClose').onclick=()=>$('settingsBD').classList.remove('open');
 $('settingsBD').onclick=e=>{if(e.target===$('settingsBD'))$('settingsBD').classList.remove('open');};
-$('btnLogout').onclick=()=>{if(!confirm('登出？'))return;setTok('');updateMode();$('settingsBD').classList.remove('open');fetchDB().then(()=>{renderMainTabs();renderSubTabs();render();});toast('已登出');};
+$('btnLogout').onclick=()=>{
+  if(!confirm('登出？'))return;setTok('');updateMode();
+  $('settingsBD').classList.remove('open');
+  fetchDB().then(()=>{renderMainTabs();renderSubTabs();render();});toast('已登出');
+};
 $('btnSettingsSave').onclick=async()=>{
   setTok($('tokenInput').value.trim());
   setCfg({owner:$('ownerInput').value.trim()||DEF_CFG.owner,repo:$('repoInput').value.trim()||DEF_CFG.repo,
@@ -972,9 +1188,12 @@ $('btnAddMain').onclick=()=>openCatModal('main');
 $('btnAdd').onclick=()=>openPromptModal();
 $('search').oninput=render;
 $('sortBy').onchange=render;
-// keyboard shortcut: N = new prompt
 document.addEventListener('keydown',e=>{
-  if(e.key==='Escape'){document.querySelectorAll('.backdrop.open').forEach(b=>b.classList.remove('open'));}
+  if(e.key==='Escape'){
+    if($('fsBD').classList.contains('open')){$('fsBD').classList.remove('open');return;}
+    document.querySelectorAll('.backdrop.open').forEach(b=>b.classList.remove('open'));
+    if(batchMode){$('btnBatchCancel').click();}
+  }
   if(e.key==='n'&&!e.ctrlKey&&!e.metaKey&&document.activeElement.tagName!=='INPUT'&&document.activeElement.tagName!=='TEXTAREA'){
     if(document.body.classList.contains('editmode'))openPromptModal();
   }
@@ -988,10 +1207,16 @@ function updateMode(){
   $('modeBadge').textContent=has?'✏️ 可編輯':'👁️ 唯讀';
 }
 
+// ── Share link on load ────────────────────────────────────
+function checkShareUrl(){
+  const id=new URLSearchParams(location.search).get('id');
+  if(id){const p=DB.prompts.find(x=>x.id===id);if(p)openDetail(p);}
+}
+
 // ── Init ──────────────────────────────────────────────────
 setGridSize(gridSize);
 updateMode();
-fetchDB().then(()=>{renderMainTabs();renderSubTabs();render();});
+fetchDB().then(()=>{renderMainTabs();renderSubTabs();render();checkShareUrl();});
 </script>
 </body>
 </html>
