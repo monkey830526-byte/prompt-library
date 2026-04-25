@@ -25,6 +25,10 @@ h1{font-size:22px;color:var(--txt);display:flex;align-items:center;gap:8px;}
 .main-tab.active{background:#3b82f6;border-color:#3b82f6;color:#fff;}
 .tab-count{background:rgba(255,255,255,.2);padding:1px 6px;border-radius:10px;font-size:11px;}
 .main-tab:not(.active) .tab-count{background:var(--bor);color:var(--txt3);}
+.tab-menu-btn{font-size:11px;padding:1px 5px;border-radius:4px;opacity:0;background:rgba(255,255,255,.15);border:none;cursor:pointer;color:inherit;margin-left:3px;line-height:1.4;transition:opacity .15s;flex-shrink:0;}
+.main-tab:hover .tab-menu-btn,.main-tab.active .tab-menu-btn{opacity:1;}
+.sub-menu-btn{font-size:10px;padding:0 4px;border-radius:3px;opacity:0;background:rgba(255,255,255,.15);border:none;cursor:pointer;color:inherit;margin-left:2px;line-height:1.5;transition:opacity .15s;flex-shrink:0;}
+.sub-tab:hover .sub-menu-btn,.sub-tab.active .sub-menu-btn{opacity:1;}
 .tab-add-btn{padding:7px 12px;background:transparent;border:1px dashed var(--txt4);border-radius:8px;cursor:pointer;color:var(--txt3);font-size:13px;transition:all .15s;white-space:nowrap;}
 .tab-add-btn:hover{border-color:var(--txt2);color:var(--txt2);}
 .sub-tabs-wrap{min-height:36px;margin-bottom:14px;overflow-x:auto;-webkit-overflow-scrolling:touch;}
@@ -233,6 +237,14 @@ body.editmode .eo{display:inline-flex!important;}
   <div class="dd-menu" id="expDD">
     <div class="dd-item" id="expJson">📄 匯出 JSON</div>
     <div class="dd-item" id="expXlsx">📊 匯出 Excel</div>
+  </div>
+
+  <!-- Tab context menu (大主題 & 小主題) -->
+  <div class="dd-menu" id="tabCtxMenu">
+    <div class="dd-item" id="ctxEdit">✏️ 編輯</div>
+    <div class="dd-item" id="ctxMoveL">◀ 向左移</div>
+    <div class="dd-item" id="ctxMoveR">▶ 向右移</div>
+    <div class="dd-item" id="ctxDel" style="color:#ef4444">🗑️ 刪除</div>
   </div>
 
   <!-- Recent panel -->
@@ -643,17 +655,74 @@ function getCounts(){
   return{total:DB.prompts.length,fav:DB.prompts.filter(p=>p.favorite).length,byCat,bySub};
 }
 
+// ── Tab context menu ──────────────────────────────────────
+let ctxCatId=null,ctxCatParent=null; // parentId=null → 大主題, parentId=catId → 小主題
+const tabCtxMenu=$('tabCtxMenu');
+function openTabCtx(e,catId,parentId=null){
+  e.stopPropagation();
+  ctxCatId=catId;ctxCatParent=parentId;
+  const r=e.currentTarget.getBoundingClientRect();
+  tabCtxMenu.style.top=(r.bottom+4)+'px';
+  tabCtxMenu.style.left=Math.min(r.left,window.innerWidth-160)+'px';
+  // hide move buttons if at edge
+  const arr=parentId?getCat(parentId)?.subs:DB.categories;
+  const idx=arr?arr.findIndex(x=>x.id===catId):-1;
+  $('ctxMoveL').style.display=(idx>0)?'flex':'none';
+  $('ctxMoveR').style.display=(idx<(arr?.length||0)-1)?'flex':'none';
+  tabCtxMenu.classList.add('open');
+}
+function moveCatItem(dir){
+  const arr=ctxCatParent?getCat(ctxCatParent)?.subs:DB.categories;
+  if(!arr)return;
+  const i=arr.findIndex(x=>x.id===ctxCatId);
+  const j=i+dir;
+  if(j<0||j>=arr.length)return;
+  [arr[i],arr[j]]=[arr[j],arr[i]];
+  renderMainTabs();renderSubTabs();render();sched();toast('已移動');
+}
+$('ctxEdit').onclick=()=>{
+  if(ctxCatParent){openCatModal('sub',getSub(ctxCatParent,ctxCatId),ctxCatParent);}
+  else openCatModal('main',getCat(ctxCatId));
+  tabCtxMenu.classList.remove('open');
+};
+$('ctxMoveL').onclick=()=>{moveCatItem(-1);tabCtxMenu.classList.remove('open');};
+$('ctxMoveR').onclick=()=>{moveCatItem(1);tabCtxMenu.classList.remove('open');};
+$('ctxDel').onclick=()=>{
+  tabCtxMenu.classList.remove('open');
+  if(ctxCatParent){
+    const s=getSub(ctxCatParent,ctxCatId);
+    if(!confirm(`刪除小主題「${s?.name}」？`))return;
+    const cat=getCat(ctxCatParent);if(!cat)return;
+    cat.subs=cat.subs.filter(x=>x.id!==ctxCatId);
+    if(activSub===ctxCatId)activSub='all';
+    renderSubTabs();render();sched();toast('已刪除');
+  }else{
+    const c=getCat(ctxCatId),used=DB.prompts.filter(p=>p.catId===ctxCatId).length;
+    if(!confirm(`刪除大主題「${c?.name}」？${used?`\n（${used} 筆提詞受影響）`:''}`))return;
+    DB.categories=DB.categories.filter(x=>x.id!==ctxCatId);
+    if(activMain===ctxCatId)activMain='all';
+    renderMainTabs();renderSubTabs();render();sched();toast('已刪除');
+  }
+};
+document.addEventListener('click',e=>{if(!tabCtxMenu.contains(e.target))tabCtxMenu.classList.remove('open');});
+
 // ── Tabs ──────────────────────────────────────────────────
 function renderMainTabs(){
   const wrap=$('mainTabs'),addBtn=$('btnAddMain'),counts=getCounts();
+  const isEdit=document.body.classList.contains('editmode');
   $('countAll').textContent=counts.total;$('countFav').textContent=counts.fav;
   Array.from(wrap.children).forEach(el=>{if(el.dataset.dyn)el.remove();});
   DB.categories.forEach(cat=>{
     const el=document.createElement('div');
     el.className='main-tab'+(activMain===cat.id?' active':'');
     el.dataset.main=cat.id;el.dataset.dyn='1';
-    el.innerHTML=`${esc(cat.icon||'')} ${esc(cat.name)} <span class="tab-count">${counts.byCat[cat.id]||0}</span>`;
-    el.onclick=()=>setMain(cat.id);
+    el.innerHTML=`${esc(cat.icon||'')} ${esc(cat.name)} <span class="tab-count">${counts.byCat[cat.id]||0}</span>`
+      +(isEdit?`<button class="tab-menu-btn" title="編輯/移動/刪除">⋮</button>`:'');
+    el.onclick=e=>{if(e.target.classList.contains('tab-menu-btn'))return;setMain(cat.id);};
+    if(isEdit){
+      const menuBtn=el.querySelector('.tab-menu-btn');
+      if(menuBtn)menuBtn.onclick=e=>openTabCtx(e,cat.id,null);
+    }
     wrap.insertBefore(el,addBtn);
   });
   wrap.querySelector('[data-main="all"]').className='main-tab'+(activMain==='all'?' active':'');
@@ -661,6 +730,7 @@ function renderMainTabs(){
 }
 function renderSubTabs(){
   const wrap=$('subTabsWrap'),row=$('subTabs'),cat=getCat(activMain);
+  const isEdit=document.body.classList.contains('editmode');
   if(!cat){wrap.style.display='none';return;}
   wrap.style.display='block';row.innerHTML='';
   const counts=getCounts();
@@ -669,17 +739,23 @@ function renderSubTabs(){
   if(activSub==='all')allEl.style.background=cat.color;
   allEl.innerHTML=`全部 <span class="tab-count">${counts.byCat[cat.id]||0}</span>`;
   allEl.onclick=()=>setSub('all');row.appendChild(allEl);
-  cat.subs.forEach(s=>{
+  (cat.subs||[]).forEach(s=>{
     const el=document.createElement('div');
     el.className='sub-tab'+(activSub===s.id?' active':'');
     if(activSub===s.id)el.style.background=s.color||cat.color;
-    el.innerHTML=`<span class="sub-tab-dot" style="background:${s.color||cat.color}"></span>${esc(s.icon||'')} ${esc(s.name)} <span class="tab-count">${counts.bySub[s.id]||0}</span>`;
-    el.onclick=()=>setSub(s.id);row.appendChild(el);
+    el.innerHTML=`<span class="sub-tab-dot" style="background:${s.color||cat.color}"></span>${esc(s.icon||'')} ${esc(s.name)} <span class="tab-count">${counts.bySub[s.id]||0}</span>`
+      +(isEdit?`<button class="sub-menu-btn" title="編輯/移動/刪除">⋮</button>`:'');
+    el.onclick=e=>{if(e.target.classList.contains('sub-menu-btn'))return;setSub(s.id);};
+    if(isEdit){
+      const menuBtn=el.querySelector('.sub-menu-btn');
+      if(menuBtn)menuBtn.onclick=e=>openTabCtx(e,s.id,cat.id);
+    }
+    row.appendChild(el);
   });
   const addSub=document.createElement('div');
   addSub.className='sub-add-btn eo';addSub.textContent='＋ 小主題';
   addSub.onclick=()=>openCatModal('sub',null,activMain);
-  if(document.body.classList.contains('editmode'))addSub.style.display='flex';
+  if(isEdit)addSub.style.display='flex';
   row.appendChild(addSub);
 }
 function setMain(m){activMain=m;activSub='all';activTag='';renderMainTabs();renderSubTabs();render();}
