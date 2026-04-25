@@ -177,6 +177,22 @@
       "notes": "",
       "favorite": false,
       "updated": 1777132670610
+    },
+    {
+      "id": "moeiwx2e8z5z",
+      "created": 1777132681574,
+      "pinned": false,
+      "copyCount": 0,
+      "catId": "photo",
+      "subId": "",
+      "title": "臉部算命（複製）",
+      "thumbnail": "https://raw.githubusercontent.com/monkey830526-byte/prompt-library/main/images/img_1777132249985.png",
+      "promptZh": "面相命理分析指南：\n請根據我上傳的人像照片，製作一張高質感「面相分析指南」資訊圖表，圖片需要專業，整體為中文版本，風格乾淨時尚、像命理專欄。以上傳的圖片也就是原人物五官要基礎，保留真實長相與辨識度，不過度修圖。版面採視覺優先設計，重點用圖像呈現，描寫過去、現在、未來文字精簡，成果圖片要適合社群分享。",
+      "promptEn": "",
+      "tags": [],
+      "notes": "",
+      "favorite": false,
+      "updated": 1777132681574
     }
   ]
 }
