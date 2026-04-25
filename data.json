@@ -13,6 +13,13 @@
       "icon": "📷",
       "color": "#10b981",
       "subs": []
+    },
+    {
+      "id": "moegptapkdbm",
+      "subs": [],
+      "name": "音樂",
+      "icon": "",
+      "color": "#06b6d4"
     }
   ],
   "prompts": [
@@ -69,10 +76,10 @@
       "subId": ""
     },
     {
-      "id": "moeg3bfuigxy",
-      "created": 1777127939295,
       "pinned": false,
       "copyCount": 0,
+      "id": "moeg3bfuigxy",
+      "created": 1777127939295,
       "catId": "photo",
       "subId": "",
       "title": "房地產 dm 9比16",
