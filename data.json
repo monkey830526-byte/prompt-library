@@ -115,10 +115,10 @@
       "updated": 1777131159666
     },
     {
-      "id": "moei19v6ozi7",
-      "created": 1777131202975,
       "pinned": false,
       "copyCount": 0,
+      "id": "moei19v6ozi7",
+      "created": 1777131202975,
       "catId": "photo",
       "subId": "",
       "title": "衣服穿搭",
@@ -131,10 +131,10 @@
       "updated": 1777131202975
     },
     {
-      "id": "moeinrbii7ox",
-      "created": 1777132251739,
       "pinned": false,
       "copyCount": 0,
+      "id": "moeinrbii7ox",
+      "created": 1777132251739,
       "catId": "photo",
       "subId": "",
       "title": "臉部算命",
@@ -147,10 +147,10 @@
       "updated": 1777132251739
     },
     {
-      "id": "moeiqv76echw",
-      "created": 1777132399218,
       "pinned": false,
       "copyCount": 0,
+      "id": "moeiqv76echw",
+      "created": 1777132399218,
       "catId": "moegptapkdbm",
       "subId": "",
       "title": "SUNO 生成音樂的歌詞音樂",
@@ -163,10 +163,10 @@
       "updated": 1777132399218
     },
     {
-      "id": "moeiwoluewr1",
-      "created": 1777132670610,
       "pinned": false,
       "copyCount": 1,
+      "id": "moeiwoluewr1",
+      "created": 1777132670610,
       "catId": "photo",
       "subId": "",
       "title": "衣服穿搭（複製）",
@@ -179,10 +179,10 @@
       "updated": 1777132670610
     },
     {
-      "id": "moeiwx2e8z5z",
-      "created": 1777132681574,
       "pinned": false,
       "copyCount": 0,
+      "id": "moeiwx2e8z5z",
+      "created": 1777132681574,
       "catId": "photo",
       "subId": "",
       "title": "臉部算命（複製）",
@@ -193,6 +193,24 @@
       "notes": "",
       "favorite": false,
       "updated": 1777132681574
+    },
+    {
+      "id": "mofwoaxo55ss",
+      "created": 1777216258064,
+      "pinned": false,
+      "copyCount": 0,
+      "videoUrl": "",
+      "audioUrl": "",
+      "catId": "photo",
+      "subId": "",
+      "title": "日本封面雜誌",
+      "thumbnail": "https://raw.githubusercontent.com/monkey830526-byte/prompt-library/main/images/img_1777216255347.png",
+      "promptZh": "提示詞如下：\nPrompt：\n主角：請自行設定\n地點：請自行設定\n一張日系編輯風拼貼海報，靈感來自東京獨立ZINE文化，\n結合「日系ZINE拼貼 × 平成年代雜誌感 × 手作質感視覺」，\n畫面中的主角為自然捕捉的東亞年輕女性，\n就像是在東京街頭被隨手拍下的一瞬間，而不是刻意擺拍，\n⸻\n版面與構圖（Layout & Composition）：\n層次豐富但帶有設計感的混亂，靈感來自日本雜誌排版，\n參考日系雜誌風格（偏 Magazine House 系統風格），\n畫面包含：\n照片切割、錯位拼貼、留白與密集區塊交錯，\n使用不對稱設計與「間（ま）」的平衡，\n保留呼吸感，而不是完全填滿的畫面，\n加入紙張重疊質感、和紙膠帶、粗糙裁切邊緣，\n呈現自然的手作痕跡，\n⸻\n字體設計（Typography）：\n日文＋英文混合排版，\n以「日文 × 英文」為主（降低中文比例，強化日系氛圍）\n字體使用：\n・明朝體（優雅）\n・黑體（街頭感）\n・手寫日文（隨性感）\n文字範例：\n「なんかいい感じ」（感覺不錯）",
+      "promptEn": "",
+      "tags": [],
+      "notes": "",
+      "favorite": false,
+      "updated": 1777216258064
     }
   ]
 }
