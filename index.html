@@ -322,6 +322,21 @@ body.editmode .eo{display:inline-flex!important;}
   <img id="fsImg" src="" alt="">
 </div>
 
+<!-- ══ Confirm Dialog ══ -->
+<div class="backdrop" id="confirmBD" style="z-index:300">
+  <div class="modal sm" style="max-width:360px">
+    <div class="modal-body" style="text-align:center;padding:28px 24px">
+      <div id="confirmIcon" style="font-size:40px;margin-bottom:12px">🗑️</div>
+      <div id="confirmMsg" style="font-size:15px;font-weight:600;color:var(--txt);margin-bottom:8px"></div>
+      <div id="confirmSub" style="font-size:12px;color:var(--txt3);margin-bottom:20px"></div>
+    </div>
+    <div class="modal-foot" style="justify-content:center;gap:12px">
+      <button class="ghost" style="min-width:90px" id="btnConfirmNo">取消</button>
+      <button class="danger" style="min-width:90px" id="btnConfirmYes">確認刪除</button>
+    </div>
+  </div>
+</div>
+
 <!-- ══ Detail Modal ══ -->
 <div class="backdrop" id="detailBD">
   <div class="modal lg">
@@ -574,6 +589,21 @@ $('btnTheme').onclick=()=>{
 };
 applyTheme();
 
+// ── Confirm dialog ────────────────────────────────────────
+let _confirmResolve=null;
+function askConfirm(msg,sub='',icon='🗑️'){
+  return new Promise(resolve=>{
+    _confirmResolve=resolve;
+    $('confirmIcon').textContent=icon;
+    $('confirmMsg').textContent=msg;
+    $('confirmSub').textContent=sub;
+    $('confirmBD').classList.add('open');
+  });
+}
+$('btnConfirmNo').onclick=()=>{$('confirmBD').classList.remove('open');if(_confirmResolve)_confirmResolve(false);_confirmResolve=null;};
+$('btnConfirmYes').onclick=()=>{$('confirmBD').classList.remove('open');if(_confirmResolve)_confirmResolve(true);_confirmResolve=null;};
+$('confirmBD').onclick=e=>{if(e.target===$('confirmBD')){$('confirmBD').classList.remove('open');if(_confirmResolve)_confirmResolve(false);_confirmResolve=null;}};
+
 // ── Toast & Sync ──────────────────────────────────────────
 function toast(msg,err=false){
   const t=$('toastEl');t.textContent=msg;t.className='toast show'+(err?' err':'');
@@ -730,18 +760,20 @@ $('ctxEdit').onclick=()=>{
 };
 $('ctxMoveL').onclick=()=>{moveCatItem(-1);tabCtxMenu.classList.remove('open');};
 $('ctxMoveR').onclick=()=>{moveCatItem(1);tabCtxMenu.classList.remove('open');};
-$('ctxDel').onclick=()=>{
+$('ctxDel').onclick=async()=>{
   tabCtxMenu.classList.remove('open');
   if(ctxCatParent){
     const s=getSub(ctxCatParent,ctxCatId);
-    if(!confirm(`刪除小主題「${s?.name}」？`))return;
+    const ok=await askConfirm(`刪除小主題「${s?.name}」？`,'刪除後無法復原','⚠️');
+    if(!ok)return;
     const cat=getCat(ctxCatParent);if(!cat)return;
     cat.subs=cat.subs.filter(x=>x.id!==ctxCatId);
     if(activSub===ctxCatId)activSub='all';
     renderSubTabs();render();sched();toast('已刪除');
   }else{
     const c=getCat(ctxCatId),used=DB.prompts.filter(p=>p.catId===ctxCatId).length;
-    if(!confirm(`刪除大主題「${c?.name}」？${used?`\n（${used} 筆提詞受影響）`:''}`))return;
+    const ok=await askConfirm(`刪除大主題「${c?.name}」？`,used?`有 ${used} 筆提詞屬於此分類`:'','⚠️');
+    if(!ok)return;
     DB.categories=DB.categories.filter(x=>x.id!==ctxCatId);
     if(activMain===ctxCatId)activMain='all';
     renderMainTabs();renderSubTabs();render();sched();toast('已刪除');
@@ -958,7 +990,7 @@ function render(){
 }
 
 // ── Grid events ───────────────────────────────────────────
-$('grid').addEventListener('click',e=>{
+$('grid').addEventListener('click',async e=>{
   if(batchMode){const card=e.target.closest('.card');if(card&&!e.target.classList.contains('card-chk'))toggleSel(card.dataset.pid);return;}
   const tagEl=e.target.closest('.tag');
   const b=e.target.closest('button[data-cpzh],button[data-cpen],button[data-edit],button[data-del],button[data-fav],button[data-dupe],button[data-pin]');
@@ -973,7 +1005,10 @@ $('grid').addEventListener('click',e=>{
     else if(b.dataset.fav){p.favorite=!p.favorite;p.updated=Date.now();render();renderMainTabs();sched();}
     else if(b.dataset.pin){p.pinned=!p.pinned;p.updated=Date.now();render();sched();toast(p.pinned?'已釘選':'已取消釘選');}
     else if(b.dataset.dupe)dupePrompt(p);
-    else if(b.dataset.del){if(confirm(`刪除「${p.title}」？`)){DB.prompts=DB.prompts.filter(x=>x.id!==id);render();renderMainTabs();sched();toast('已刪除');}}
+    else if(b.dataset.del){
+      const ok=await askConfirm(`確定要刪除這筆提詞嗎？`,`「${p.title}」刪除後無法復原`,'🗑️');
+      if(ok){DB.prompts=DB.prompts.filter(x=>x.id!==id);render();renderMainTabs();sched();toast('已刪除');}
+    }
     return;
   }
   if(card){const p=DB.prompts.find(x=>x.id===card.dataset.pid);if(p)openDetail(p);}
@@ -1002,9 +1037,10 @@ $('btnBatchAll').onclick=()=>{
   if(selectedIds.size===ids.length)selectedIds.clear();else ids.forEach(id=>selectedIds.add(id));
   updateBatchBar();render();
 };
-$('btnBatchDel').onclick=()=>{
+$('btnBatchDel').onclick=async()=>{
   if(!selectedIds.size)return;
-  if(!confirm(`確定刪除選取的 ${selectedIds.size} 筆提詞？`))return;
+  const ok=await askConfirm(`確定刪除選取的 ${selectedIds.size} 筆提詞？`,'刪除後無法復原','🗑️');
+  if(!ok)return;
   DB.prompts=DB.prompts.filter(p=>!selectedIds.has(p.id));
   selectedIds.clear();batchMode=false;$('btnBatch').classList.remove('on');
   updateBatchBar();render();renderMainTabs();sched();toast('已刪除');
@@ -1387,19 +1423,21 @@ function renderCatTree(){
       ${isEdit?`<div class="add-sub-row"><button class="sm ghost" data-addsub="${cat.id}">＋ 新增小主題</button></div>`:''}
     </div>`;}).join('');
 }
-$('catTree').addEventListener('click',e=>{
+$('catTree').addEventListener('click',async e=>{
   const b=e.target.closest('button');if(!b)return;
   if(b.dataset.emain)openCatModal('main',getCat(b.dataset.emain));
   else if(b.dataset.dmain){
     const c=getCat(b.dataset.dmain),used=DB.prompts.filter(p=>p.catId===b.dataset.dmain).length;
-    if(!confirm(`刪除「${c?.name}」？${used?`\n（${used} 筆提詞受影響）`:''}`))return;
+    const ok=await askConfirm(`刪除大主題「${c?.name}」？`,used?`有 ${used} 筆提詞屬於此分類`:'','⚠️');
+    if(!ok)return;
     DB.categories=DB.categories.filter(c=>c.id!==b.dataset.dmain);
     if(activMain===b.dataset.dmain)activMain='all';
     renderMainTabs();renderSubTabs();render();renderCatTree();sched();toast('已刪除');
   }else if(b.dataset.esub)openCatModal('sub',getSub(b.dataset.sp,b.dataset.esub),b.dataset.sp);
   else if(b.dataset.dsub){
     const s=getSub(b.dataset.sp,b.dataset.dsub);
-    if(!confirm(`刪除「${s?.name}」？`))return;
+    const ok=await askConfirm(`刪除小主題「${s?.name}」？`,'刪除後無法復原','⚠️');
+    if(!ok)return;
     const cat=getCat(b.dataset.sp);if(!cat)return;
     cat.subs=cat.subs.filter(x=>x.id!==b.dataset.dsub);
     if(activSub===b.dataset.dsub)activSub='all';
