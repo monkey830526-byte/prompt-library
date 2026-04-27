@@ -1281,11 +1281,14 @@ function openPromptModal(p=null){
   }
   $('promptBD').classList.add('open');
 }
-function closePromptModal(){$('promptBD').classList.remove('open');editPId=null;resetImg();}
+
 $('btnPromptCancel').onclick=closePromptModal;
 $('promptBD').onclick=e=>{if(e.target===$('promptBD'))closePromptModal();};
 $('btnPromptSave').onclick=async()=>{
+  const saveBtn=$('btnPromptSave');
+  if(saveBtn.disabled)return;   // 防止重複點擊
   if(!$('promptForm').checkValidity()){$('promptForm').reportValidity();return;}
+  saveBtn.disabled=true;saveBtn.textContent='儲存中…';
   const fd=new FormData($('promptForm')),now=Date.now();
   let thumb='';
   const existingThumb=thumbHidden.value||'';
@@ -1328,7 +1331,12 @@ $('btnPromptSave').onclick=async()=>{
   if(editPId){const i=DB.prompts.findIndex(p=>p.id===editPId);if(i>=0)DB.prompts[i]={...DB.prompts[i],...payload};}
   else DB.prompts.push({id:uid(),created:now,pinned:false,copyCount:0,videoUrl:'',audioUrl:'',...payload});
   render();renderMainTabs();renderSubTabs();closePromptModal();sched();toast(editPId?'已更新':'已新增');
+  saveBtn.disabled=false;saveBtn.textContent='儲存';
 };
+function closePromptModal(){
+  $('promptBD').classList.remove('open');editPId=null;resetImg();
+  const saveBtn=$('btnPromptSave');saveBtn.disabled=false;saveBtn.textContent='儲存';
+}
 
 // ── Emoji picker ──────────────────────────────────────────
 const EMOJIS={
