@@ -27,6 +27,13 @@
       "name": "APP",
       "icon": "🖥️",
       "color": "#06b6d4"
+    },
+    {
+      "id": "moiozhqkvqm2",
+      "subs": [],
+      "name": "網頁",
+      "icon": "🌐",
+      "color": "#6366f1"
     }
   ],
   "prompts": [
@@ -199,10 +206,10 @@
       "updated": 1777269515977
     },
     {
-      "id": "mogtz4ft3a9w",
-      "created": 1777272186964,
       "pinned": false,
       "copyCount": 0,
+      "id": "mogtz4ft3a9w",
+      "created": 1777272186964,
       "videoUrl": "",
       "audioUrl": "",
       "catId": "photo",
