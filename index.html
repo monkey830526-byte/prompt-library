@@ -194,6 +194,30 @@ button.icon-btn.on{background:#3b82f6;border-color:#3b82f6;color:#fff;}
 .detail-audio{width:100%;border-radius:8px;margin-top:4px;}
 .media-badge{font-size:10px;padding:1px 5px;border-radius:3px;color:#fff;display:inline-flex;align-items:center;gap:2px;}
 .mbv{background:#7c3aed;}.mba{background:#0ea5e9;}
+/* ── Voiceover ── */
+.fc-badge{font-size:10px;padding:2px 7px;border-radius:4px;font-weight:600;display:inline-flex;align-items:center;gap:3px;}
+.fc-pending{background:rgba(245,158,11,.15);color:#f59e0b;}
+.fc-verified{background:rgba(16,185,129,.15);color:#10b981;}
+.fc-na{background:var(--bor);color:var(--txt3);}
+.vo-card-preview{background:var(--sur2);padding:6px 8px;border-radius:5px;font-size:11px;max-height:44px;overflow:hidden;white-space:pre-wrap;word-break:break-word;line-height:1.5;position:relative;color:var(--txt2);}
+.vo-card-preview::after{content:'';position:absolute;bottom:0;left:0;right:0;height:16px;background:linear-gradient(transparent,var(--sur2));}
+.plat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:6px;}
+.plat-card{background:var(--sur2);border:1px solid var(--bor);border-radius:10px;padding:10px 12px;}
+.plat-head{display:flex;align-items:center;gap:7px;margin-bottom:7px;}
+.plat-badge{width:22px;height:22px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;flex-shrink:0;}
+.plat-name{font-size:12px;font-weight:500;flex:1;}
+.plat-copy{font-size:11px;padding:2px 8px;border-radius:5px;background:transparent;border:1px solid var(--bor);color:var(--txt3);cursor:pointer;}
+.plat-copy:hover{background:var(--bor);color:var(--txt);}
+.plat-card textarea{width:100%;font-size:12.5px;line-height:1.7;color:var(--txt);background:transparent;border:none;resize:vertical;min-height:80px;padding:0;}
+.plat-card textarea:focus{outline:none;}
+.fc-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:4px;}
+.fc-btn{padding:5px 12px;border-radius:6px;font-size:12px;cursor:pointer;border:1px solid var(--bor);background:var(--sur);color:var(--txt2);transition:all .15s;}
+.fc-btn.sel-pending{background:rgba(245,158,11,.2);border-color:#f59e0b;color:#f59e0b;}
+.fc-btn.sel-verified{background:rgba(16,185,129,.2);border-color:#10b981;color:#10b981;}
+.fc-btn.sel-na{background:var(--bor);color:var(--txt);}
+.vo-section{border:1px solid var(--bor);border-radius:10px;padding:14px;background:var(--sur2);margin-bottom:13px;}
+.vo-section-title{font-size:11px;color:var(--txt3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px;display:flex;align-items:center;gap:6px;}
+@media(max-width:600px){.plat-grid{grid-template-columns:1fr;}}
 .emoji-scroll{max-height:180px;overflow-y:auto;border:1px solid var(--bor);border-radius:8px;padding:6px 8px;background:var(--sur2);}
 .emoji-cat-lbl{font-size:10px;color:var(--txt3);text-transform:uppercase;letter-spacing:.05em;padding:4px 2px 2px;display:block;}
 .emoji-row{display:flex;flex-wrap:wrap;gap:2px;margin-bottom:4px;}
@@ -368,6 +392,11 @@ body.editmode .eo{display:inline-flex!important;}
         <div class="detail-label">備註 / 參數</div>
         <div class="detail-notes" id="detailNotes"></div>
       </div>
+      <!-- Voiceover platform section -->
+      <div id="detailVoWrap" class="detail-section" style="display:none">
+        <div class="detail-label">🎙️ 五平台文案</div>
+        <div class="plat-grid" id="detailPlatGrid"></div>
+      </div>
       <div id="detailTagsWrap" class="detail-section">
         <div class="detail-label">標籤</div>
         <div class="detail-tags" id="detailTags"></div>
@@ -410,6 +439,37 @@ body.editmode .eo{display:inline-flex!important;}
           <div class="img-status" id="imgStatus" style="display:none">⏳ 上傳中…</div>
           <input type="hidden" name="thumbnail" id="thumbHidden">
           <input id="thumbUrl" placeholder="或貼上圖片網址…" style="margin-top:6px;width:100%;font-size:12px;padding:7px 10px">
+        </div>
+        <!-- Voiceover section (shown for 口播 category) -->
+        <div id="voFormSection" style="display:none">
+          <div class="vo-section">
+            <div class="vo-section-title">🎙️ 口播專用欄位</div>
+            <div class="fg" style="margin-bottom:10px">
+              <label>來源連結</label>
+              <input id="voSource" placeholder="貼上原始資料來源網址（查證用）">
+            </div>
+            <div class="fg" style="margin-bottom:10px">
+              <label>查證狀態</label>
+              <div class="fc-row">
+                <button type="button" class="fc-btn" id="fcPending" onclick="setFc('pending')">⚠ 待查證</button>
+                <button type="button" class="fc-btn" id="fcVerified" onclick="setFc('verified')">✓ 已查證</button>
+                <button type="button" class="fc-btn" id="fcNa" onclick="setFc('na')">— 無需查證</button>
+              </div>
+              <input type="hidden" id="voFc" value="pending">
+            </div>
+            <div class="fg" style="margin-bottom:10px">
+              <label>純口播稿</label>
+              <textarea id="voVoiceover" rows="5" placeholder="【0:00】共感開場…&#10;【0:10】…&#10;&#10;每段標時間，最後標總字數與秒數"></textarea>
+            </div>
+            <div class="fg" style="margin-bottom:10px">
+              <label>剪輯對照表</label>
+              <textarea id="voEditing" rows="4" placeholder="時間 | 口播重點 | 建議畫面 | 字卡/音效&#10;0:00–0:10 | … | … | …" style="font-size:12.5px"></textarea>
+            </div>
+            <div class="fg" style="margin-bottom:0">
+              <label>五平台文案</label>
+              <div class="plat-grid" id="voPlatsForm"></div>
+            </div>
+          </div>
         </div>
         <!-- Video upload -->
         <div class="fg">
@@ -548,7 +608,11 @@ const CFG_KEY='plib_cfg', TOK_KEY='plib_tok', LOCAL_KEY='plib_data_v3',
       SIZE_KEY='plib_size', THEME_KEY='plib_theme', RECENT_KEY='plib_recent';
 const DEF_CFG={owner:'monkey830526-byte',repo:'prompt-library',path:'data.json',branch:'main'};
 const COLORS=['#8b5cf6','#3b82f6','#10b981','#f59e0b','#ef4444','#06b6d4','#ec4899','#f97316','#84cc16','#6366f1'];
-const DEF_CATS=[{id:'video',name:'影片',icon:'🎞️',color:'#8b5cf6',subs:[]},{id:'photo',name:'照片',icon:'📷',color:'#10b981',subs:[]}];
+const DEF_CATS=[
+  {id:'video',name:'影片',icon:'🎞️',color:'#8b5cf6',subs:[]},
+  {id:'photo',name:'照片',icon:'📷',color:'#10b981',subs:[]},
+  {id:'voiceover',name:'口播',icon:'🎙️',color:'#b1442a',subs:[],voMode:true},
+];
 
 const getCfg=()=>{try{return{...DEF_CFG,...JSON.parse(localStorage.getItem(CFG_KEY)||'{}')};}catch{return{...DEF_CFG};}};
 const setCfg=c=>localStorage.setItem(CFG_KEY,JSON.stringify(c));
@@ -953,14 +1017,18 @@ function render(){
           ${p.audioUrl?'<span class="media-badge mba">🎵 音樂</span>':''}
         </div>
         <div class="card-title">${esc(p.title||'未命名')}</div>
-        ${p.promptZh?`<div class="prompt-box pzh">${esc(p.promptZh)}</div>`:''}
-        ${p.promptEn?`<div class="prompt-box pen">${esc(p.promptEn)}</div>`:''}
+        ${p.voiceover?`<div class="vo-card-preview">${esc(p.voiceover)}</div>`
+          :(p.promptZh?`<div class="prompt-box pzh">${esc(p.promptZh)}</div>`:'')}
+        ${(!p.voiceover&&p.promptEn)?`<div class="prompt-box pen">${esc(p.promptEn)}</div>`:''}
         ${p.notes?`<span class="notes-chip">📝 ${esc(p.notes)}</span>`:''}
+        ${p.editing?`<span class="notes-chip">🎬 剪輯對照表</span>`:''}
+        ${p.platforms&&Object.values(p.platforms).some(v=>v.trim())?`<span class="notes-chip">📱 ${Object.values(p.platforms).filter(v=>v.trim()).length}/5 平台文案</span>`:''}
         ${tags?`<div class="tags">${tags}</div>`:''}
-        <div class="card-meta">更新 ${fmt(p.updated)}${p.copyCount?` · 📋 ${p.copyCount}次`:''}</div>
+        <div class="card-meta">更新 ${fmt(p.updated)}${p.copyCount?` · 📋 ${p.copyCount}次`:''}${p.factCheck?` · <span class="fc-badge ${FC_MAP[p.factCheck]?.c||''}">${FC_MAP[p.factCheck]?.t||''}</span>`:''}</div>
         <div class="card-copy-row">
-          ${p.promptZh?`<button class="copy-btn" data-cpzh="${p.id}" onclick="event.stopPropagation()">📋 中文</button>`:''}
-          ${p.promptEn?`<button class="copy-btn ghost" data-cpen="${p.id}" onclick="event.stopPropagation()">📋 英文</button>`:''}
+          ${p.voiceover?`<button class="copy-btn" data-cpzh="${p.id}" onclick="event.stopPropagation()">📋 口播稿</button>`
+            :(p.promptZh?`<button class="copy-btn" data-cpzh="${p.id}" onclick="event.stopPropagation()">📋 中文</button>`:'')}
+          ${(!p.voiceover&&p.promptEn)?`<button class="copy-btn ghost" data-cpen="${p.id}" onclick="event.stopPropagation()">📋 英文</button>`:''}
         </div>
         ${isEdit?`<div class="card-edit-row">
           <button class="sm ghost eo" data-edit="${p.id}" onclick="event.stopPropagation()">✏️</button>
@@ -1104,11 +1172,14 @@ function openDetail(p){
   // notes
   $('detailNotesWrap').style.display=p.notes?'block':'none';
   $('detailNotes').textContent=p.notes||'';
+  // voiceover platforms
+  buildDetailPlatGrid(p.platforms||{});
   // tags
   $('detailTagsWrap').style.display=(p.tags?.length)?'block':'none';
   $('detailTags').innerHTML=(p.tags||[]).map(t=>`<span class="detail-tag" data-tag="${esc(t)}">#${esc(t)}</span>`).join('');
   // meta
-  $('detailMeta').textContent=`建立 ${fmt(p.created)}　更新 ${fmt(p.updated)}${p.copyCount?`　複製 ${p.copyCount} 次`:''}`;
+  const fcInfo=p.factCheck?FC_MAP[p.factCheck]:null;
+  $('detailMeta').innerHTML=`建立 ${fmt(p.created)}　更新 ${fmt(p.updated)}${p.copyCount?`　複製 ${p.copyCount} 次`:''}${fcInfo?`　<span class="fc-badge ${fcInfo.c}">${fcInfo.t}</span>`:''}${p.source?`　<a href="${esc(p.source)}" target="_blank" style="color:#60a5fa;font-size:11px">來源 ↗</a>`:''}`;
   $('btnDetailFav').textContent=p.favorite?'取消收藏':'⭐ 收藏';
   $('btnDetailPin').textContent=p.pinned?'取消釘選':'📌 釘選';
   $('shareBox').style.display='none';
@@ -1146,6 +1217,59 @@ function dupePrompt(p){
   const copy={...p,id:uid(),title:(p.title||'')+'（複製）',created:now,updated:now,pinned:false,copyCount:0};
   DB.prompts.push(copy);render();renderMainTabs();sched();toast('已複製一份');
   openPromptModal(copy);
+}
+
+// ── Voiceover helpers ─────────────────────────────────────
+const PLATS=[
+  {k:'tiktok', name:'抖音 TikTok',cls:'#1f1b16',label:'抖'},
+  {k:'youtube',name:'YouTube',    cls:'#c4302b',label:'YT'},
+  {k:'ig',     name:'Instagram',  cls:'#c13584',label:'IG'},
+  {k:'threads',name:'脆 Threads', cls:'#1f1b16',label:'脆'},
+  {k:'fb',     name:'Facebook',   cls:'#1877f2',label:'f'},
+];
+const FC_MAP={pending:{t:'⚠ 待查證',c:'fc-pending'},verified:{t:'✓ 已查證',c:'fc-verified'},na:{t:'— 無需查證',c:'fc-na'}};
+let voFcVal='pending';
+function isVoMode(){return !!getCat($('mainSel').value)?.voMode;}
+function setFc(v){
+  voFcVal=v;$('voFc').value=v;
+  ['pending','verified','na'].forEach(x=>{
+    const btn=$('fc'+x.charAt(0).toUpperCase()+x.slice(1));
+    btn.className='fc-btn'+(x===v?' sel-'+x:'');
+  });
+}
+function buildVoPlatForm(data={}){
+  $('voPlatsForm').innerHTML=PLATS.map(pl=>`
+    <div class="plat-card">
+      <div class="plat-head">
+        <div class="plat-badge" style="background:${pl.cls}">${pl.label}</div>
+        <div class="plat-name">${pl.name}</div>
+      </div>
+      <textarea id="vp-${pl.k}" placeholder="${pl.name} 文案…">${(data[pl.k]||'').replace(/</g,'&lt;')}</textarea>
+    </div>`).join('');
+}
+function getVoPlats(){
+  const out={};PLATS.forEach(pl=>{out[pl.k]=($('vp-'+pl.k)?.value||'');});return out;
+}
+function toggleVoSection(){
+  const vo=isVoMode();
+  $('voFormSection').style.display=vo?'block':'none';
+}
+function buildDetailPlatGrid(platforms={}){
+  const filled=PLATS.filter(pl=>(platforms[pl.k]||'').trim());
+  if(!filled.length){$('detailVoWrap').style.display='none';return;}
+  $('detailVoWrap').style.display='block';
+  $('detailPlatGrid').innerHTML=filled.map(pl=>`
+    <div class="plat-card">
+      <div class="plat-head">
+        <div class="plat-badge" style="background:${pl.cls}">${pl.label}</div>
+        <div class="plat-name">${pl.name}</div>
+        <button class="plat-copy" data-pltxt="${esc(platforms[pl.k]||'')}">複製</button>
+      </div>
+      <div style="font-size:12.5px;line-height:1.7;color:var(--txt2);white-space:pre-wrap;word-break:break-word">${esc(platforms[pl.k]||'')}</div>
+    </div>`).join('');
+  $('detailPlatGrid').querySelectorAll('[data-pltxt]').forEach(btn=>{
+    btn.onclick=()=>navigator.clipboard.writeText(btn.dataset.pltxt).then(()=>toast('已複製'));
+  });
 }
 
 // ── Video / Audio upload ──────────────────────────────────
@@ -1262,7 +1386,7 @@ function updateSubSel(selId=''){
   const cat=getCat($('mainSel').value);
   $('subSel').innerHTML=`<option value="">（無小主題）</option>`+(cat?.subs||[]).map(s=>`<option value="${s.id}"${s.id===selId?' selected':''}>${esc(s.icon||'')} ${esc(s.name)}</option>`).join('');
 }
-$('mainSel').onchange=()=>updateSubSel();
+$('mainSel').onchange=()=>{updateSubSel();toggleVoSection();};
 function openPromptModal(p=null){
   editPId=p?p.id:null;
   $('promptTitle').textContent=p?'編輯提詞':'新增提詞';
@@ -1271,6 +1395,9 @@ function openPromptModal(p=null){
   populateMainSel(p?.catId||defCat);updateSubSel(p?.subId||'');
   resetImg(p?.thumbnail||'');
   resetMediaUI(p?.videoUrl||'',p?.audioUrl||'');
+  toggleVoSection();
+  buildVoPlatForm(p?.platforms||{});
+  setFc(p?.factCheck||'pending');
   if(p){
     $('promptForm').title.value=p.title||'';
     $('promptForm').promptZh.value=p.promptZh||'';
@@ -1278,6 +1405,11 @@ function openPromptModal(p=null){
     $('promptForm').tags.value=(p.tags||[]).join(', ');
     $('promptForm').notes.value=p.notes||'';
     $('promptForm').fav.checked=!!p.favorite;
+    $('voSource').value=p.source||'';
+    $('voVoiceover').value=p.voiceover||'';
+    $('voEditing').value=p.editing||'';
+  }else{
+    $('voSource').value='';$('voVoiceover').value='';$('voEditing').value='';
   }
   $('promptBD').classList.add('open');
 }
@@ -1324,10 +1456,19 @@ $('btnPromptSave').onclick=async()=>{
       finally{$('imgStatus').style.display='none';}
     }
   }else if(audioUrl.startsWith('data:'))audioUrl='';
+  const vo=isVoMode();
   const payload={catId:fd.get('catId'),subId:fd.get('subId')||'',title:fd.get('title'),
-    thumbnail:thumb,videoUrl,audioUrl,promptZh:fd.get('promptZh'),promptEn:fd.get('promptEn'),
+    thumbnail:thumb,videoUrl,audioUrl,
+    promptZh:vo?$('voVoiceover').value:fd.get('promptZh'),
+    promptEn:vo?'':fd.get('promptEn'),
     tags:(fd.get('tags')||'').split(',').map(s=>s.trim()).filter(Boolean),
-    notes:fd.get('notes'),favorite:fd.get('fav')==='on',updated:now};
+    notes:fd.get('notes'),favorite:fd.get('fav')==='on',updated:now,
+    source:vo?$('voSource').value:'',
+    factCheck:vo?voFcVal:'',
+    voiceover:vo?$('voVoiceover').value:'',
+    editing:vo?$('voEditing').value:'',
+    platforms:vo?getVoPlats():{},
+  };
   if(editPId){const i=DB.prompts.findIndex(p=>p.id===editPId);if(i>=0)DB.prompts[i]={...DB.prompts[i],...payload};}
   else DB.prompts.push({id:uid(),created:now,pinned:false,copyCount:0,videoUrl:'',audioUrl:'',...payload});
   render();renderMainTabs();renderSubTabs();closePromptModal();sched();toast(editPId?'已更新':'已新增');
