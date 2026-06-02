@@ -218,6 +218,20 @@ button.icon-btn.on{background:#3b82f6;border-color:#3b82f6;color:#fff;}
 .vo-section{border:1px solid var(--bor);border-radius:10px;padding:14px;background:var(--sur2);margin-bottom:13px;}
 .vo-section-title{font-size:11px;color:var(--txt3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px;display:flex;align-items:center;gap:6px;}
 @media(max-width:600px){.plat-grid{grid-template-columns:1fr;}}
+/* ── Editing reference images ── */
+.edit-imgs{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px;}
+.edit-imgs:empty{margin-bottom:0;}
+.edit-img-thumb{position:relative;width:84px;height:84px;border-radius:8px;overflow:hidden;border:1px solid var(--bor);background:var(--sur2);flex-shrink:0;cursor:zoom-in;}
+.edit-img-thumb img{width:100%;height:100%;object-fit:cover;display:block;}
+.edit-img-del{position:absolute;top:2px;right:2px;width:18px;height:18px;border-radius:50%;background:rgba(0,0,0,.65);color:#fff;border:none;font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;line-height:1;}
+.edit-img-del:hover{background:#ef4444;}
+.edit-img-add{display:flex;align-items:center;justify-content:center;gap:6px;width:100%;padding:10px;border:1px dashed var(--bor);border-radius:8px;cursor:pointer;transition:all .2s;background:var(--sur2);}
+.edit-img-add:hover{border-color:#3b82f6;}
+.edit-img-add.drag{border-color:#3b82f6;background:#1e3a5f;}
+/* detail editing images */
+.detail-edit-imgs{display:flex;flex-wrap:wrap;gap:8px;}
+.detail-edit-imgs img{width:120px;height:120px;object-fit:cover;border-radius:8px;border:1px solid var(--bor);cursor:zoom-in;transition:transform .15s;}
+.detail-edit-imgs img:hover{transform:scale(1.03);}
 .emoji-scroll{max-height:180px;overflow-y:auto;border:1px solid var(--bor);border-radius:8px;padding:6px 8px;background:var(--sur2);}
 .emoji-cat-lbl{font-size:10px;color:var(--txt3);text-transform:uppercase;letter-spacing:.05em;padding:4px 2px 2px;display:block;}
 .emoji-row{display:flex;flex-wrap:wrap;gap:2px;margin-bottom:4px;}
@@ -372,9 +386,9 @@ body.editmode .eo{display:inline-flex!important;}
       <div class="detail-badges" id="detailBadges"></div>
       <div class="detail-title" id="detailTitle"></div>
       <div id="detailZhWrap" class="detail-section">
-        <div class="detail-label">中文 Prompt <span class="char-count" id="charZh"></span></div>
+        <div class="detail-label"><span id="detailZhLabel">中文 Prompt</span> <span class="char-count" id="charZh"></span></div>
         <div class="detail-prompt zh" id="detailZh"></div>
-        <button class="detail-copy-btn ghost" id="btnCopyZh">📋 複製中文 Prompt</button>
+        <button class="detail-copy-btn ghost" id="btnCopyZh">📋 複製</button>
       </div>
       <div id="detailEnWrap" class="detail-section">
         <div class="detail-label">英文 Prompt <span class="char-count" id="charEn"></span></div>
@@ -394,6 +408,16 @@ body.editmode .eo{display:inline-flex!important;}
       <div id="detailNotesWrap" class="detail-section">
         <div class="detail-label">備註 / 參數</div>
         <div class="detail-notes" id="detailNotes"></div>
+      </div>
+      <!-- Voiceover editing table -->
+      <div id="detailEditWrap" class="detail-section" style="display:none">
+        <div class="detail-label">🎬 剪輯對照表 <button class="detail-copy-btn ghost" id="btnCopyEdit" style="width:auto;margin:0;padding:3px 10px;font-size:11px">📋 複製</button></div>
+        <div class="detail-prompt zh" id="detailEdit" style="font-size:12.5px"></div>
+      </div>
+      <!-- Voiceover editing screenshots -->
+      <div id="detailEditImgsWrap" class="detail-section" style="display:none">
+        <div class="detail-label">📸 剪輯參考截圖</div>
+        <div class="detail-edit-imgs" id="detailEditImgs"></div>
       </div>
       <!-- Voiceover platform section -->
       <div id="detailVoWrap" class="detail-section" style="display:none">
@@ -467,6 +491,15 @@ body.editmode .eo{display:inline-flex!important;}
             <div class="fg" style="margin-bottom:10px">
               <label>剪輯對照表</label>
               <textarea id="voEditing" rows="4" placeholder="時間 | 口播重點 | 建議畫面 | 字卡/音效&#10;0:00–0:10 | … | … | …" style="font-size:12.5px"></textarea>
+            </div>
+            <div class="fg" style="margin-bottom:10px">
+              <label>剪輯參考截圖 <span style="color:var(--txt3);font-weight:normal;font-size:10px;text-transform:none">可多張，點擊/拖曳/Ctrl+V</span></label>
+              <div class="edit-imgs" id="editImgsBox"></div>
+              <div class="edit-img-add" id="editImgAdd">
+                <span class="img-icon" style="font-size:20px">📸</span>
+                <span style="font-size:11px;color:var(--txt3)">新增截圖 / 照片</span>
+              </div>
+              <div class="img-status" id="editImgStatus" style="display:none">⏳ 上傳中…</div>
             </div>
             <div class="fg" style="margin-bottom:0">
               <label>五平台文案</label>
@@ -1052,6 +1085,7 @@ function render(){
         ${(!p.voiceover&&p.promptEn)?`<div class="prompt-box pen">${esc(p.promptEn)}</div>`:''}
         ${p.notes?`<span class="notes-chip">📝 ${esc(p.notes)}</span>`:''}
         ${p.editing?`<span class="notes-chip">🎬 剪輯對照表</span>`:''}
+        ${p.editingImages&&p.editingImages.length?`<span class="notes-chip">📸 ${p.editingImages.length} 張截圖</span>`:''}
         ${p.platforms&&Object.values(p.platforms).some(v=>v.trim())?`<span class="notes-chip">📱 ${Object.values(p.platforms).filter(v=>v.trim()).length}/5 平台文案</span>`:''}
         ${tags?`<div class="tags">${tags}</div>`:''}
         <div class="card-meta">更新 ${fmt(p.updated)}${p.copyCount?` · 📋 ${p.copyCount}次`:''}${p.factCheck?` · <span class="fc-badge ${FC_MAP[p.factCheck]?.c||''}">${FC_MAP[p.factCheck]?.t||''}</span>`:''}</div>
@@ -1185,7 +1219,9 @@ function openDetail(p){
     (p.favorite?'<span class="fav-icon" style="font-size:16px">⭐</span>':'')+
     (p.pinned?'<span class="pin-icon" style="font-size:14px">📌</span>':'');
   $('detailTitle').textContent=p.title||'未命名';
-  // zh
+  // zh (口播模式顯示為「純口播稿」)
+  const isVo=!!(p.voiceover||getCat(p.catId)?.voMode||p.catId==='voiceover');
+  $('detailZhLabel').textContent=isVo?'🎙️ 純口播稿':'中文 Prompt';
   $('detailZhWrap').style.display=p.promptZh?'block':'none';
   $('detailZh').innerHTML=p.promptZh?highlightVars(p.promptZh):'';
   $('charZh').textContent=p.promptZh?`${p.promptZh.length} 字`:'';
@@ -1202,6 +1238,14 @@ function openDetail(p){
   // notes
   $('detailNotesWrap').style.display=p.notes?'block':'none';
   $('detailNotes').textContent=p.notes||'';
+  // voiceover editing table
+  $('detailEditWrap').style.display=p.editing?'block':'none';
+  $('detailEdit').textContent=p.editing||'';
+  // voiceover editing screenshots
+  const eimgs=p.editingImages||[];
+  $('detailEditImgsWrap').style.display=eimgs.length?'block':'none';
+  $('detailEditImgs').innerHTML=eimgs.map(u=>`<img src="${esc(u)}" data-fs="${esc(u)}" alt="">`).join('');
+  $('detailEditImgs').querySelectorAll('img').forEach(im=>im.onclick=()=>openFullscreen(im.dataset.fs));
   // voiceover platforms
   buildDetailPlatGrid(p.platforms||{});
   // tags
@@ -1225,6 +1269,7 @@ $('btnDetailClose').onclick=closeDetail;
 $('detailBD').onclick=e=>{if(e.target===$('detailBD'))closeDetail();};
 $('btnCopyZh').onclick=()=>{const p=DB.prompts.find(x=>x.id===viewPId);if(p)triggerCopy(p.promptZh||'',p.id,'zh');};
 $('btnCopyEn').onclick=()=>{const p=DB.prompts.find(x=>x.id===viewPId);if(p)triggerCopy(p.promptEn||'',p.id,'en');};
+$('btnCopyEdit').onclick=e=>{e.stopPropagation();const p=DB.prompts.find(x=>x.id===viewPId);if(p)navigator.clipboard.writeText(p.editing||'').then(()=>toast('已複製剪輯對照表'));};
 $('btnDetailEdit').onclick=()=>{const p=DB.prompts.find(x=>x.id===viewPId);if(p){$('detailBD').classList.remove('open');openPromptModal(p);}};
 $('btnDetailFav').onclick=()=>{const p=DB.prompts.find(x=>x.id===viewPId);if(!p)return;p.favorite=!p.favorite;p.updated=Date.now();openDetail(p);render();renderMainTabs();sched();};
 $('btnDetailPin').onclick=()=>{const p=DB.prompts.find(x=>x.id===viewPId);if(!p)return;p.pinned=!p.pinned;p.updated=Date.now();openDetail(p);render();sched();toast(p.pinned?'已釘選':'已取消釘選');};
@@ -1304,6 +1349,48 @@ function buildDetailPlatGrid(platforms={}){
     btn.onclick=()=>navigator.clipboard.writeText(btn.dataset.pltxt).then(()=>toast('已複製'));
   });
 }
+
+// ── Editing reference images ──────────────────────────────
+// state item: {url:string, b64:string|null, name:string|null}
+let editImgsState=[];
+function renderEditImgs(){
+  const box=$('editImgsBox');
+  box.innerHTML=editImgsState.map((it,i)=>`
+    <div class="edit-img-thumb" data-eview="${i}">
+      <img src="${esc(it.url)}" alt="">
+      <button type="button" class="edit-img-del" data-edel="${i}" title="移除">✕</button>
+    </div>`).join('');
+  box.querySelectorAll('[data-edel]').forEach(b=>b.onclick=e=>{
+    e.stopPropagation();editImgsState.splice(+b.dataset.edel,1);renderEditImgs();
+  });
+  box.querySelectorAll('[data-eview]').forEach(t=>t.onclick=()=>openFullscreen(editImgsState[+t.dataset.eview].url));
+}
+function addEditImgFile(file){
+  if(!file||!file.type.startsWith('image/')){toast('請選擇圖片檔案',true);return;}
+  const ext=file.name?.split('.').pop()||'png';
+  const r=new FileReader();
+  r.onload=e=>{editImgsState.push({url:e.target.result,b64:e.target.result.split(',')[1],name:`edit_${Date.now()}_${editImgsState.length}.${ext}`});renderEditImgs();};
+  r.readAsDataURL(file);
+}
+async function uploadPendingEditImgs(){
+  const urls=[];
+  for(const it of editImgsState){
+    if(it.b64){
+      try{const up=await uploadMediaFile(it.b64,it.name,'images');if(up)urls.push(up);}
+      catch(e){console.error(e);toast('截圖上傳失敗',true);}
+    }else if(it.url){urls.push(it.url);}
+  }
+  return urls;
+}
+// wire up add button + drag/drop
+$('editImgAdd').onclick=()=>{const inp=document.createElement('input');inp.type='file';inp.accept='image/*';inp.multiple=true;inp.onchange=e=>{[...e.target.files].forEach(addEditImgFile);};inp.click();};
+['dragover','dragleave','drop'].forEach(ev=>{
+  $('editImgAdd').addEventListener(ev,e=>{
+    e.preventDefault();
+    if(ev==='dragover')$('editImgAdd').classList.add('drag');else $('editImgAdd').classList.remove('drag');
+    if(ev==='drop')[...e.dataTransfer.files].forEach(addEditImgFile);
+  });
+});
 
 // ── Video / Audio upload ──────────────────────────────────
 const VIDEO_MAX=10*1024*1024, AUDIO_MAX=5*1024*1024;
@@ -1390,7 +1477,10 @@ imgArea.addEventListener('drop',e=>{e.preventDefault();imgArea.classList.remove(
 document.addEventListener('paste',e=>{
   if(!$('promptBD').classList.contains('open'))return;
   const item=Array.from(e.clipboardData.items).find(i=>i.type.startsWith('image/'));
-  if(item)handleImgFile(item.getAsFile());
+  if(!item)return;
+  // 口播模式：貼上的截圖加入「剪輯參考截圖」；其他模式：當作縮圖
+  if(isVoMode())addEditImgFile(item.getAsFile());
+  else handleImgFile(item.getAsFile());
 });
 async function uploadImg(){
   if(!pendingB64||!pendingName)return null;
@@ -1431,6 +1521,8 @@ function openPromptModal(p=null){
   toggleVoSection();
   buildVoPlatForm(p?.platforms||{});
   setFc(p?.factCheck||'pending');
+  editImgsState=(p?.editingImages||[]).map(u=>({url:u,b64:null,name:null}));
+  renderEditImgs();
   if(p){
     $('promptForm').title.value=p.title||'';
     $('promptForm').promptZh.value=p.promptZh||'';
@@ -1490,6 +1582,15 @@ $('btnPromptSave').onclick=async()=>{
     }
   }else if(audioUrl.startsWith('data:'))audioUrl='';
   const vo=isVoMode();
+  // 上傳剪輯參考截圖
+  let editingImages=[];
+  if(vo&&editImgsState.length){
+    if(editImgsState.some(it=>it.b64)&&!getTok()){toast('⚠️ 需要 Token 才能上傳截圖',true);}
+    $('editImgStatus').style.display='block';
+    try{editingImages=await uploadPendingEditImgs();}
+    catch(e){console.error(e);}
+    finally{$('editImgStatus').style.display='none';}
+  }
   const payload={catId:fd.get('catId'),subId:fd.get('subId')||'',title:fd.get('title'),
     thumbnail:thumb,videoUrl,audioUrl,
     promptZh:vo?$('voVoiceover').value:fd.get('promptZh'),
@@ -1500,6 +1601,7 @@ $('btnPromptSave').onclick=async()=>{
     factCheck:vo?voFcVal:'',
     voiceover:vo?$('voVoiceover').value:'',
     editing:vo?$('voEditing').value:'',
+    editingImages:vo?editingImages:[],
     platforms:vo?getVoPlats():{},
   };
   if(editPId){const i=DB.prompts.findIndex(p=>p.id===editPId);if(i>=0)DB.prompts[i]={...DB.prompts[i],...payload};}
