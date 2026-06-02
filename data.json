@@ -34,6 +34,14 @@
       "name": "網頁",
       "icon": "🌐",
       "color": "#6366f1"
+    },
+    {
+      "id": "voiceover",
+      "name": "口播",
+      "icon": "🎙️",
+      "color": "#b1442a",
+      "subs": [],
+      "voMode": true
     }
   ],
   "prompts": [
