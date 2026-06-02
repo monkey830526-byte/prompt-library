@@ -34,6 +34,13 @@
       "name": "網頁",
       "icon": "🌐",
       "color": "#6366f1"
+    },
+    {
+      "id": "mpwgew4hk8dz",
+      "subs": [],
+      "name": "口播",
+      "icon": "🎙️",
+      "color": "#8b5cf6"
     }
   ],
   "prompts": [
@@ -258,10 +265,10 @@
       "updated": 1777888697652
     },
     {
-      "id": "mpf5u15bbckc",
-      "created": 1779347957215,
       "pinned": false,
       "copyCount": 0,
+      "id": "mpf5u15bbckc",
+      "created": 1779347957215,
       "videoUrl": "",
       "audioUrl": "",
       "catId": "moiozhqkvqm2",
