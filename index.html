@@ -236,7 +236,7 @@ button.icon-btn.on{background:#3b82f6;border-color:#3b82f6;color:#fff;}
 .vo-reader{display:none;position:fixed;inset:0;z-index:600;background:#f4f0e6;color:#1f1b16;overflow-y:auto;-webkit-overflow-scrolling:touch;}
 .vo-reader.open{display:block;}
 .vo-reader-inner{max-width:720px;margin:0 auto;padding:24px 22px 60px;}
-.vo-reader-cover{width:100%;max-height:300px;object-fit:cover;border-radius:16px;margin-bottom:20px;box-shadow:0 8px 30px rgba(31,27,22,.15);}
+.vo-reader-cover{width:100%;height:auto;display:block;border-radius:16px;margin-bottom:20px;box-shadow:0 8px 30px rgba(31,27,22,.15);cursor:zoom-in;}
 .vo-reader-badge{display:inline-block;font-size:12px;letter-spacing:2px;color:#b1442a;background:rgba(177,68,42,.1);padding:4px 12px;border-radius:20px;margin-bottom:12px;font-weight:600;}
 .vo-reader-title{font-size:26px;font-weight:900;line-height:1.3;margin-bottom:20px;border-bottom:2px solid #1f1b16;padding-bottom:16px;}
 .vo-reader-script{font-size:var(--vo-fs,19px);line-height:2;white-space:pre-wrap;word-break:break-word;color:#1f1b16;letter-spacing:.3px;}
@@ -1360,7 +1360,7 @@ $('btnVoLine').onclick=()=>{
 let voReaderFont=19;
 function openVoReader(p){
   const cover=$('voReaderCover');
-  if(p.thumbnail){cover.src=p.thumbnail;cover.style.display='block';cover.onerror=()=>cover.style.display='none';}
+  if(p.thumbnail){cover.src=p.thumbnail;cover.style.display='block';cover.onerror=()=>cover.style.display='none';cover.onclick=()=>window.open(p.thumbnail,'_blank');}
   else cover.style.display='none';
   $('voReaderTitle').textContent=p.title||'口播稿';
   $('voReaderScript').textContent=p.voiceover||p.promptZh||'（尚無口播稿內容）';
