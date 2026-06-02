@@ -343,6 +343,36 @@
       "editingImages": [
         "https://raw.githubusercontent.com/monkey830526-byte/prompt-library/main/images/edit_1780395025490_0.png"
       ]
+    },
+    {
+      "id": "mpwhdscj5npq",
+      "created": 1780395282883,
+      "pinned": false,
+      "copyCount": 0,
+      "videoUrl": "",
+      "audioUrl": "",
+      "catId": "voiceover",
+      "subId": "",
+      "title": "板橋最危險大樓之一終於要拆了",
+      "thumbnail": "",
+      "promptZh": "",
+      "promptEn": "",
+      "tags": [],
+      "notes": "",
+      "favorite": false,
+      "updated": 1780395282883,
+      "source": "https://estate.ltn.com.tw/article/27982",
+      "factCheck": "pending",
+      "voiceover": "",
+      "editing": "",
+      "editingImages": [],
+      "platforms": {
+        "tiktok": "",
+        "youtube": "",
+        "ig": "",
+        "threads": "",
+        "fb": ""
+      }
     }
   ]
 }
