@@ -34,13 +34,6 @@
       "name": "網頁",
       "icon": "🌐",
       "color": "#6366f1"
-    },
-    {
-      "id": "mpwgew4hk8dz",
-      "subs": [],
-      "name": "口播",
-      "icon": "🎙️",
-      "color": "#8b5cf6"
     }
   ],
   "prompts": [
