@@ -232,6 +232,20 @@ button.icon-btn.on{background:#3b82f6;border-color:#3b82f6;color:#fff;}
 .detail-edit-imgs{display:flex;flex-wrap:wrap;gap:8px;}
 .detail-edit-imgs img{width:120px;height:120px;object-fit:cover;border-radius:8px;border:1px solid var(--bor);cursor:zoom-in;transition:transform .15s;}
 .detail-edit-imgs img:hover{transform:scale(1.03);}
+/* ── 口播分享檢視（唯讀全屏） ── */
+.vo-reader{display:none;position:fixed;inset:0;z-index:600;background:#f4f0e6;color:#1f1b16;overflow-y:auto;-webkit-overflow-scrolling:touch;}
+.vo-reader.open{display:block;}
+.vo-reader-inner{max-width:720px;margin:0 auto;padding:24px 22px 60px;}
+.vo-reader-cover{width:100%;max-height:300px;object-fit:cover;border-radius:16px;margin-bottom:20px;box-shadow:0 8px 30px rgba(31,27,22,.15);}
+.vo-reader-badge{display:inline-block;font-size:12px;letter-spacing:2px;color:#b1442a;background:rgba(177,68,42,.1);padding:4px 12px;border-radius:20px;margin-bottom:12px;font-weight:600;}
+.vo-reader-title{font-size:26px;font-weight:900;line-height:1.3;margin-bottom:20px;border-bottom:2px solid #1f1b16;padding-bottom:16px;}
+.vo-reader-script{font-size:var(--vo-fs,19px);line-height:2;white-space:pre-wrap;word-break:break-word;color:#1f1b16;letter-spacing:.3px;}
+.vo-reader-foot{position:sticky;bottom:0;display:flex;gap:10px;justify-content:center;padding:14px 0 6px;margin-top:30px;background:linear-gradient(transparent,#f4f0e6 30%);}
+.vo-reader-btn{font-size:14px;font-weight:600;padding:11px 22px;border-radius:10px;border:none;cursor:pointer;background:#1f1b16;color:#f4f0e6;}
+.vo-reader-btn.ghost{background:transparent;color:#1f1b16;border:1px solid #d8cfbd;}
+.vo-reader-btn:active{transform:scale(.97);}
+.vo-reader-credit{text-align:center;font-size:11px;color:#938a7c;letter-spacing:2px;margin-top:18px;}
+@media(max-width:600px){.vo-reader-title{font-size:22px;}.vo-reader-inner{padding:18px 16px 50px;}}
 .emoji-scroll{max-height:180px;overflow-y:auto;border:1px solid var(--bor);border-radius:8px;padding:6px 8px;background:var(--sur2);}
 .emoji-cat-lbl{font-size:10px;color:var(--txt3);text-transform:uppercase;letter-spacing:.05em;padding:4px 2px 2px;display:block;}
 .emoji-row{display:flex;flex-wrap:wrap;gap:2px;margin-bottom:4px;}
@@ -437,6 +451,7 @@ body.editmode .eo{display:inline-flex!important;}
       <button class="ghost eo" id="btnDetailFav">收藏</button>
       <button class="ghost eo" id="btnDetailPin">📌 釘選</button>
       <button class="ghost" id="btnShare">🔗 分享</button>
+      <button id="btnVoShare" style="display:none;background:#06c755">📱 分享口播</button>
       <button class="eo" id="btnDetailEdit">✏️ 編輯</button>
     </div>
   </div>
@@ -633,6 +648,42 @@ body.editmode .eo{display:inline-flex!important;}
       <button class="ghost" id="btnSettingsClose">關閉</button>
       <button id="btnSettingsSave">儲存並重載</button>
     </div>
+  </div>
+</div>
+
+<!-- ══ 口播分享彈窗（給擁有者用，產生連結 / LINE） ══ -->
+<div class="backdrop" id="voShareDlg" style="z-index:320">
+  <div class="modal sm" style="max-width:400px">
+    <div class="modal-body">
+      <h2>📱 分享口播稿</h2>
+      <p style="font-size:12.5px;color:var(--txt3);margin-bottom:14px;line-height:1.6">對方打開後<b>只會看到封面照片與口播稿</b>，方便照著念，不會看到平台文案或編輯功能。</p>
+      <div class="fg" style="margin-bottom:12px">
+        <label>分享連結</label>
+        <input id="voShareLink" readonly style="font-size:12px;color:#60a5fa">
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button id="btnVoCopyLink" class="ghost" style="flex:1">📋 複製連結</button>
+        <button id="btnVoLine" style="flex:1;background:#06c755">💬 用 LINE 傳送</button>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="ghost" id="btnVoShareClose">關閉</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 口播分享檢視（給收到連結的人看，唯讀全屏） ══ -->
+<div id="voReader" class="vo-reader">
+  <div class="vo-reader-inner">
+    <img id="voReaderCover" class="vo-reader-cover" alt="" style="display:none">
+    <div class="vo-reader-badge">🎙️ 口播稿</div>
+    <h1 id="voReaderTitle" class="vo-reader-title"></h1>
+    <div id="voReaderScript" class="vo-reader-script"></div>
+    <div class="vo-reader-foot">
+      <button id="btnVoReaderCopy" class="vo-reader-btn">📋 複製全文</button>
+      <button id="btnVoReaderFont" class="vo-reader-btn ghost">🔤 字級</button>
+    </div>
+    <div class="vo-reader-credit">提詞庫 · 口播分享</div>
   </div>
 </div>
 
@@ -1256,6 +1307,9 @@ function openDetail(p){
   $('detailMeta').innerHTML=`建立 ${fmt(p.created)}　更新 ${fmt(p.updated)}${p.copyCount?`　複製 ${p.copyCount} 次`:''}${fcInfo?`　<span class="fc-badge ${fcInfo.c}">${fcInfo.t}</span>`:''}${p.source?`　<a href="${esc(p.source)}" target="_blank" style="color:#60a5fa;font-size:11px">來源 ↗</a>`:''}`;
   $('btnDetailFav').textContent=p.favorite?'取消收藏':'⭐ 收藏';
   $('btnDetailPin').textContent=p.pinned?'取消釘選':'📌 釘選';
+  // 口播項目才顯示「分享口播」按鈕
+  const voItem=!!(p.voiceover||getCat(p.catId)?.voMode||p.catId==='voiceover');
+  $('btnVoShare').style.display=voItem?'inline-flex':'none';
   $('shareBox').style.display='none';
   $('detailBD').classList.add('open');
 }
@@ -1280,6 +1334,46 @@ $('btnShare').onclick=()=>{
   navigator.clipboard.writeText(url).catch(()=>{});
   const box=$('shareBox');box.textContent='🔗 '+url;box.style.display='block';
   toast('分享連結已複製！');
+};
+
+// ── 口播分享（產生唯讀連結 + LINE） ───────────────────────
+const voShareUrl=id=>{const u=new URL(location.href);u.search='';u.searchParams.set('vo',id);return u.href;};
+$('btnVoShare').onclick=()=>{
+  const p=DB.prompts.find(x=>x.id===viewPId);if(!p)return;
+  $('voShareLink').value=voShareUrl(p.id);
+  $('voShareDlg').classList.add('open');
+};
+$('btnVoShareClose').onclick=()=>$('voShareDlg').classList.remove('open');
+$('voShareDlg').onclick=e=>{if(e.target===$('voShareDlg'))$('voShareDlg').classList.remove('open');};
+$('btnVoCopyLink').onclick=()=>{
+  $('voShareLink').select();
+  navigator.clipboard.writeText($('voShareLink').value).then(()=>toast('連結已複製，可貼到 LINE')).catch(()=>toast('已選取，請手動複製'));
+};
+$('btnVoLine').onclick=()=>{
+  const p=DB.prompts.find(x=>x.id===viewPId);if(!p)return;
+  const url=$('voShareLink').value;
+  const text=`🎙️ ${p.title||'口播稿'}\n${url}`;
+  window.open('https://line.me/R/msg/text/?'+encodeURIComponent(text),'_blank');
+};
+
+// ── 口播唯讀檢視（收到連結的人看的畫面） ──────────────────
+let voReaderFont=19;
+function openVoReader(p){
+  const cover=$('voReaderCover');
+  if(p.thumbnail){cover.src=p.thumbnail;cover.style.display='block';cover.onerror=()=>cover.style.display='none';}
+  else cover.style.display='none';
+  $('voReaderTitle').textContent=p.title||'口播稿';
+  $('voReaderScript').textContent=p.voiceover||p.promptZh||'（尚無口播稿內容）';
+  document.documentElement.style.setProperty('--vo-fs',voReaderFont+'px');
+  $('voReader').classList.add('open');
+  document.body.style.overflow='hidden';
+}
+$('btnVoReaderCopy').onclick=()=>{
+  navigator.clipboard.writeText($('voReaderScript').textContent).then(()=>toast('口播稿已複製')).catch(()=>toast('複製失敗'));
+};
+$('btnVoReaderFont').onclick=()=>{
+  voReaderFont=voReaderFont>=25?15:voReaderFont+2;
+  document.documentElement.style.setProperty('--vo-fs',voReaderFont+'px');
 };
 $('detailTags').addEventListener('click',e=>{
   const t=e.target.closest('.detail-tag');
@@ -1830,7 +1924,10 @@ function updateMode(){
 
 // ── Share link on load ────────────────────────────────────
 function checkShareUrl(){
-  const id=new URLSearchParams(location.search).get('id');
+  const params=new URLSearchParams(location.search);
+  const voId=params.get('vo');
+  if(voId){const p=DB.prompts.find(x=>x.id===voId);if(p){openVoReader(p);return;}}
+  const id=params.get('id');
   if(id){const p=DB.prompts.find(x=>x.id===id);if(p)openDetail(p);}
 }
 
