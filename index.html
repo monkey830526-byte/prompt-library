@@ -315,6 +315,9 @@ body.editmode .eo{display:inline-flex!important;}
       <option value="hottest">最熱門</option>
       <option value="fav_first">收藏優先</option>
     </select>
+    <select id="monthFilter" style="min-width:110px">
+      <option value="">📅 全部時間</option>
+    </select>
     <span id="tagFilterChip" style="display:none"></span>
     <span class="stats" id="statsEl"></span>
     <div class="toolbar-right">
@@ -866,6 +869,7 @@ function renderMainTabs(){
   const wrap=$('mainTabs'),addBtn=$('btnAddMain'),counts=getCounts();
   const isEdit=document.body.classList.contains('editmode');
   $('countAll').textContent=counts.total;$('countFav').textContent=counts.fav;
+  refreshMonthFilter();
   Array.from(wrap.children).forEach(el=>{if(el.dataset.dyn)el.remove();});
   DB.categories.forEach(cat=>{
     const el=document.createElement('div');
@@ -973,9 +977,18 @@ $('btnTplCopy').onclick=async()=>{
 };
 
 // ── Render grid ───────────────────────────────────────────
+function ym(ts){const d=new Date(ts);return`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;}
+function ymLabel(k){const[y,m]=k.split('-');return`${y} 年 ${parseInt(m)} 月`;}
+function refreshMonthFilter(){
+  const sel=$('monthFilter'),prev=sel.value;
+  const months=[...new Set(DB.prompts.map(p=>ym(p.updated||p.created||Date.now())))].sort().reverse();
+  sel.innerHTML='<option value="">📅 全部時間</option>'+months.map(k=>`<option value="${k}">${ymLabel(k)}</option>`).join('');
+  if(months.includes(prev))sel.value=prev;
+}
 function render(){
   const q=$('search').value.trim().toLowerCase();
   const sort=$('sortBy').value;
+  const mf=$('monthFilter').value;
   let list=DB.prompts.slice();
   if(activMain==='fav')list=list.filter(p=>p.favorite);
   else if(activMain!=='all'){
@@ -983,6 +996,7 @@ function render(){
     if(activSub!=='all')list=list.filter(p=>p.subId===activSub);
   }
   if(activTag)list=list.filter(p=>(p.tags||[]).includes(activTag));
+  if(mf)list=list.filter(p=>ym(p.updated||p.created||Date.now())===mf);
   if(q)list=list.filter(p=>{
     const cat=getCat(p.catId),sub=getSub(p.catId,p.subId);
     return(p.title||'').toLowerCase().includes(q)||(p.promptZh||'').toLowerCase().includes(q)||
@@ -1692,6 +1706,7 @@ $('btnAddMain').onclick=()=>openCatModal('main');
 $('btnAdd').onclick=()=>openPromptModal();
 $('search').oninput=render;
 $('sortBy').onchange=render;
+$('monthFilter').onchange=render;
 document.addEventListener('keydown',e=>{
   if(e.key==='Escape'){
     if($('fsBD').classList.contains('open')){$('fsBD').classList.remove('open');return;}
