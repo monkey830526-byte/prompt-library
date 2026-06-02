@@ -724,11 +724,27 @@ async function fetchDB(){
       if(!r.ok){if(r.status===404){initEmpty();setSync('（尚未有資料）');return;}throw new Error(r.status);}
       DB=migrate(await r.json());
     }
+    ensureBuiltinCats();
     setSync(`✓ 已同步 · ${DB.prompts.length} 筆`);
   }catch(e){
     console.error(e);setSync('⚠️ 載入失敗');toast('載入失敗：'+e.message,true);
     try{const l=localStorage.getItem(LOCAL_KEY);if(l){DB=JSON.parse(l);setSync('（離線模式）');}}catch{}
   }
+}
+// 確保口播等內建分類存在（不影響用戶自訂分類）
+function ensureBuiltinCats(){
+  const builtins=[{id:'voiceover',name:'口播',icon:'🎙️',color:'#b1442a',subs:[],voMode:true}];
+  let changed=false;
+  builtins.forEach(b=>{
+    if(!DB.categories.find(c=>c.id===b.id||c.name===b.name)){
+      DB.categories.push(b);changed=true;
+    }else{
+      // 補上 voMode 旗標（若舊資料沒有）
+      const c=DB.categories.find(x=>x.id===b.id||x.name===b.name);
+      if(c&&!c.voMode){c.voMode=true;changed=true;}
+    }
+  });
+  if(changed&&getTok())sched();
 }
 function initEmpty(){DB={categories:DEF_CATS.map(c=>({...c,subs:[...c.subs]})),prompts:[]};sha=null;}
 function migrate(raw){
@@ -1229,7 +1245,10 @@ const PLATS=[
 ];
 const FC_MAP={pending:{t:'⚠ 待查證',c:'fc-pending'},verified:{t:'✓ 已查證',c:'fc-verified'},na:{t:'— 無需查證',c:'fc-na'}};
 let voFcVal='pending';
-function isVoMode(){return !!getCat($('mainSel').value)?.voMode;}
+function isVoMode(){
+  const cat=getCat($('mainSel').value);
+  return !!(cat?.voMode||cat?.name==='口播'||cat?.id==='voiceover');
+}
 function setFc(v){
   voFcVal=v;$('voFc').value=v;
   ['pending','verified','na'].forEach(x=>{
