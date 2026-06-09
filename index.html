@@ -70,6 +70,21 @@ button.icon-btn.on{background:#3b82f6;border-color:#3b82f6;color:#fff;}
 .grid.size-sm{grid-template-columns:repeat(auto-fill,minmax(220px,1fr));}
 .grid.size-md{grid-template-columns:repeat(auto-fill,minmax(290px,1fr));}
 .grid.size-lg{grid-template-columns:repeat(auto-fill,minmax(380px,1fr));}
+/* 列表檢視 */
+.grid.size-list{grid-template-columns:1fr;gap:8px;}
+.grid.size-list .card{flex-direction:row;align-items:stretch;}
+.grid.size-list .card-thumb{width:120px;min-width:120px;height:auto!important;min-height:96px;}
+.grid.size-list .card-thumb.ph{height:auto!important;min-height:96px;font-size:30px!important;}
+.grid.size-list .card-body{flex:1;min-width:0;}
+.grid.size-list .prompt-box,.grid.size-list .vo-card-preview{max-height:40px;}
+.grid.size-list .card-chk{top:10px;left:10px;}
+/* 收納選單（手機） */
+.hdr-more{display:none;}
+@media(max-width:640px){
+  .hdr-collapse{display:none!important;}
+  .hdr-more{display:inline-flex!important;}
+  .grid.size-list .card-thumb{width:88px;min-width:88px;}
+}
 .card{background:var(--sur);border:1px solid var(--bor);border-radius:12px;overflow:hidden;display:flex;flex-direction:column;transition:all .2s;cursor:pointer;position:relative;}
 .card:hover{border-color:#3b82f6;transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.3);}
 .card.drag-over{border-color:#f59e0b;border-style:dashed;transform:none;}
@@ -287,14 +302,15 @@ body.editmode .eo{display:inline-flex!important;}
     <h1>🎬 提詞庫 <span class="mode-badge read" id="modeBadge">👁️ 唯讀</span></h1>
     <div class="header-right">
       <span class="sync" id="syncEl"></span>
-      <button class="icon-btn" id="btnTheme" title="切換主題">☀️</button>
-      <button class="icon-btn eo" id="btnBatch" title="批次操作">☑️</button>
-      <button class="icon-btn" id="btnRecent" title="最近複製">🕐</button>
-      <button class="icon-btn eo" id="btnForceSave" title="立即儲存">💾</button>
+      <button class="icon-btn hdr-collapse" id="btnTheme" title="切換主題">☀️</button>
+      <button class="icon-btn eo hdr-collapse" id="btnBatch" title="批次操作">☑️</button>
+      <button class="icon-btn hdr-collapse" id="btnRecent" title="最近複製">🕐</button>
+      <button class="icon-btn eo hdr-collapse" id="btnForceSave" title="立即儲存">💾</button>
       <button class="eo" id="btnAdd">＋ 新增</button>
       <button class="ghost" id="btnExportMenu">匯出 ▾</button>
-      <button class="ghost eo" id="btnImport">匯入</button>
+      <button class="ghost eo hdr-collapse" id="btnImport">匯入</button>
       <input type="file" id="fileImport" accept="application/json" style="display:none">
+      <button class="icon-btn hdr-more" id="btnMore" title="更多">⋯</button>
       <button class="icon-btn" id="btnSettings">⚙️</button>
     </div>
   </header>
@@ -303,6 +319,15 @@ body.editmode .eo{display:inline-flex!important;}
   <div class="dd-menu" id="expDD">
     <div class="dd-item" id="expJson">📄 匯出 JSON</div>
     <div class="dd-item" id="expXlsx">📊 匯出 Excel</div>
+  </div>
+
+  <!-- More menu (手機收納) -->
+  <div class="dd-menu" id="moreDD">
+    <div class="dd-item" id="moreTheme">🌗 切換主題</div>
+    <div class="dd-item" id="moreRecent">🕐 最近複製</div>
+    <div class="dd-item eo" id="moreBatch">☑️ 批次操作</div>
+    <div class="dd-item eo" id="moreForceSave">💾 立即儲存</div>
+    <div class="dd-item eo" id="moreImport">📥 匯入</div>
   </div>
 
   <!-- Tab context menu (大主題 & 小主題) -->
@@ -346,8 +371,15 @@ body.editmode .eo{display:inline-flex!important;}
       <option value="hottest">最熱門</option>
       <option value="fav_first">收藏優先</option>
     </select>
+    <button class="icon-btn" id="sortDirBtn" title="升序／降序切換" style="padding:8px 11px">↓</button>
     <select id="monthFilter" style="min-width:110px">
       <option value="">📅 全部時間</option>
+    </select>
+    <select id="fcFilter" style="min-width:120px;display:none">
+      <option value="">🔍 所有查證</option>
+      <option value="pending">⚠ 待查證</option>
+      <option value="verified">✓ 已查證</option>
+      <option value="na">— 無需查證</option>
     </select>
     <span id="tagFilterChip" style="display:none"></span>
     <span class="stats" id="statsEl"></span>
@@ -355,6 +387,7 @@ body.editmode .eo{display:inline-flex!important;}
       <span class="size-btn active" id="szSm" title="小格">⊞</span>
       <span class="size-btn" id="szMd" title="中格">▦</span>
       <span class="size-btn" id="szLg" title="大格">▣</span>
+      <span class="size-btn" id="szList" title="列表檢視">☰</span>
     </div>
   </div>
 
@@ -722,6 +755,7 @@ let gridSize=localStorage.getItem(SIZE_KEY)||'md';
 let batchMode=false, selectedIds=new Set();
 let dragSrcId=null;
 let tplCopyData=null; // {text, pid, lang}
+let sortDir='desc'; // 'desc' | 'asc'
 
 const $=id=>document.getElementById(id);
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
@@ -785,19 +819,40 @@ $('recentList').addEventListener('click',e=>{
   const p=DB.prompts.find(x=>x.id===item.dataset.rid);
   if(p){$('recentPanel').classList.remove('open');openDetail(p);}
 });
-$('btnRecent').onclick=e=>{
-  e.stopPropagation();renderRecent();
-  const r=e.currentTarget.getBoundingClientRect();
+function openRecentPanel(anchor){
+  renderRecent();
+  const r=anchor.getBoundingClientRect();
   const panel=$('recentPanel');
   panel.style.top=(r.bottom+6)+'px';
   panel.style.right=(window.innerWidth-r.right)+'px';
   panel.style.left='auto';
   panel.classList.toggle('open');
-};
+}
+$('btnRecent').onclick=e=>{e.stopPropagation();openRecentPanel(e.currentTarget);};
 document.addEventListener('click',e=>{
-  if(!$('recentPanel').contains(e.target)&&e.target!==$('btnRecent'))
+  if(!$('recentPanel').contains(e.target)&&e.target!==$('btnRecent')&&e.target!==$('moreRecent'))
     $('recentPanel').classList.remove('open');
 });
+
+// ── 更多選單（手機收納）+ 排序方向 + 查證篩選 ──────────────
+$('btnMore').onclick=e=>{
+  e.stopPropagation();
+  const r=e.currentTarget.getBoundingClientRect();
+  const dd=$('moreDD');
+  dd.style.top=(r.bottom+6)+'px';
+  dd.style.left=Math.min(r.left,window.innerWidth-170)+'px';
+  dd.classList.toggle('open');
+};
+document.addEventListener('click',e=>{if(!$('moreDD').contains(e.target)&&e.target!==$('btnMore'))$('moreDD').classList.remove('open');});
+$('moreTheme').onclick=()=>{$('btnTheme').click();$('moreDD').classList.remove('open');};
+$('moreRecent').onclick=()=>{$('moreDD').classList.remove('open');openRecentPanel($('btnMore'));};
+$('moreBatch').onclick=()=>{$('btnBatch').click();$('moreDD').classList.remove('open');};
+$('moreForceSave').onclick=()=>{$('btnForceSave').click();$('moreDD').classList.remove('open');};
+$('moreImport').onclick=()=>{$('moreDD').classList.remove('open');$('fileImport').click();};
+// 排序方向
+$('sortDirBtn').onclick=()=>{sortDir=sortDir==='desc'?'asc':'desc';$('sortDirBtn').textContent=sortDir==='desc'?'↓':'↑';render();};
+// 查證篩選
+$('fcFilter').onchange=render;
 
 // ── GitHub API ────────────────────────────────────────────
 async function fetchDB(){
@@ -1022,15 +1077,17 @@ function setTagFilter(tag){
 }
 
 // ── Grid size ─────────────────────────────────────────────
+const SIZE_BTN={sm:'szSm',md:'szMd',lg:'szLg',list:'szList'};
 function setGridSize(s){
   gridSize=s;localStorage.setItem(SIZE_KEY,s);
   $('grid').className=`grid size-${s}`;
-  ['Sm','Md','Lg'].forEach(x=>$('sz'+x).classList.remove('active'));
-  $('sz'+s[0].toUpperCase()+s.slice(1)).classList.add('active');
+  Object.values(SIZE_BTN).forEach(id=>$(id)&&$(id).classList.remove('active'));
+  if(SIZE_BTN[s])$(SIZE_BTN[s]).classList.add('active');
 }
 $('szSm').onclick=()=>setGridSize('sm');
 $('szMd').onclick=()=>setGridSize('md');
 $('szLg').onclick=()=>setGridSize('lg');
+$('szList').onclick=()=>setGridSize('list');
 
 // ── Template vars ─────────────────────────────────────────
 function extractVars(text){return[...new Set([...text.matchAll(/\{\{([^}]+)\}\}/g)].map(m=>m[1].trim()))];}
@@ -1078,6 +1135,10 @@ function render(){
   const q=$('search').value.trim().toLowerCase();
   const sort=$('sortBy').value;
   const mf=$('monthFilter').value;
+  // 口播查證狀態篩選器：僅在口播分類顯示
+  const voCat=!!getCat(activMain)?.voMode;
+  $('fcFilter').style.display=voCat?'inline-block':'none';
+  const fcVal=voCat?$('fcFilter').value:'';
   let list=DB.prompts.slice();
   if(activMain==='fav')list=list.filter(p=>p.favorite);
   else if(activMain!=='all'){
@@ -1086,6 +1147,7 @@ function render(){
   }
   if(activTag)list=list.filter(p=>(p.tags||[]).includes(activTag));
   if(mf)list=list.filter(p=>ym(p.updated||p.created||Date.now())===mf);
+  if(fcVal)list=list.filter(p=>(p.factCheck||'pending')===fcVal);
   if(q)list=list.filter(p=>{
     const cat=getCat(p.catId),sub=getSub(p.catId,p.subId);
     return(p.title||'').toLowerCase().includes(q)||(p.promptZh||'').toLowerCase().includes(q)||
@@ -1098,6 +1160,7 @@ function render(){
   else if(sort==='hottest')list.sort((a,b)=>(b.copyCount||0)-(a.copyCount||0));
   else if(sort==='fav_first')list.sort((a,b)=>(b.favorite?1:0)-(a.favorite?1:0));
   else list.sort((a,b)=>b.updated-a.updated);
+  if(sortDir==='asc')list.reverse(); // 升/降序切換
   list.sort((a,b)=>(b.pinned?1:0)-(a.pinned?1:0)); // pinned always on top
 
   $('statsEl').textContent=`${list.length} / ${DB.prompts.length} 筆`;
