@@ -679,6 +679,7 @@ body.editmode .eo{display:inline-flex!important;}
 <!-- ══ 口播分享檢視（給收到連結的人看，唯讀全屏） ══ -->
 <div id="voReader" class="vo-reader">
   <div class="vo-reader-inner">
+    <div id="voReaderClose" style="display:none;position:sticky;top:0;text-align:right;margin-bottom:4px"><button class="vo-reader-btn ghost" onclick="closeVoReader()" style="padding:6px 14px">← 返回</button></div>
     <img id="voReaderCover" class="vo-reader-cover" alt="" style="display:none">
     <div class="vo-reader-badge">🎙️ 口播稿</div>
     <h1 id="voReaderTitle" class="vo-reader-title"></h1>
@@ -851,7 +852,7 @@ async function saveDB(){
   const cfg=getCfg(),tok=getTok();
   if(!tok||saving)return;
   saving=true;setSync('儲存中…',true);
-  localStorage.setItem(LOCAL_KEY,JSON.stringify(DB));
+  try{localStorage.setItem(LOCAL_KEY,JSON.stringify(DB));}catch(e){console.warn('本機備份寫入失敗（容量可能已滿），不影響雲端儲存',e);}
   try{
     // If sha is missing, fetch it first
     if(!sha){
@@ -1319,9 +1320,10 @@ function openDetail(p){
 }
 function closeDetail(){
   $('detailBD').classList.remove('open');viewPId=null;
-  // pause media on close
+  // 停止並清空影音，避免殘留與浪費流量
   const v=$('detailVideo'),a=$('detailAudio');
-  if(v&&!v.paused)v.pause();if(a&&!a.paused)a.pause();
+  if(v){v.pause();v.removeAttribute('src');v.load();}
+  if(a){a.pause();a.removeAttribute('src');a.load();}
 }
 $('btnDetailClose').onclick=closeDetail;
 $('detailBD').onclick=e=>{if(e.target===$('detailBD'))closeDetail();};
@@ -1440,6 +1442,7 @@ function openVoReader(p){
   $('voReaderTitle').textContent=p.title||'口播稿';
   $('voReaderScript').textContent=p.voiceover||p.promptZh||'（尚無口播稿內容）';
   document.documentElement.style.setProperty('--vo-fs',voReaderFont+'px');
+  $('voReaderClose').style.display=getTok()?'block':'none'; // 擁有者才顯示返回鈕
   $('voReader').classList.add('open');
   document.body.style.overflow='hidden';
 }
@@ -1975,11 +1978,14 @@ $('mainTabs').querySelector('[data-main="all"]').onclick=()=>setMain('all');
 $('mainTabs').querySelector('[data-main="fav"]').onclick=()=>setMain('fav');
 $('btnAddMain').onclick=()=>openCatModal('main');
 $('btnAdd').onclick=()=>openPromptModal();
-$('search').oninput=render;
+let _searchTimer=null;
+$('search').oninput=()=>{clearTimeout(_searchTimer);_searchTimer=setTimeout(render,180);};
 $('sortBy').onchange=render;
 $('monthFilter').onchange=render;
+function closeVoReader(){$('voReader').classList.remove('open');document.body.style.overflow='';}
 document.addEventListener('keydown',e=>{
   if(e.key==='Escape'){
+    if($('voReader').classList.contains('open')){closeVoReader();return;}
     if($('fsBD').classList.contains('open')){$('fsBD').classList.remove('open');return;}
     document.querySelectorAll('.backdrop.open').forEach(b=>b.classList.remove('open'));
     if(batchMode){$('btnBatchCancel').click();}
