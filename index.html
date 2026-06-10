@@ -892,10 +892,22 @@ async function fetchDB(){
     }
     ensureBuiltinCats();
     setSync(`✓ 已同步 · ${DB.prompts.length} 筆`);
+    checkDbSize();
   }catch(e){
     console.error(e);setSync('⚠️ 載入失敗');toast('載入失敗：'+e.message,true);
     try{const l=localStorage.getItem(LOCAL_KEY);if(l){DB=JSON.parse(l);setSync('（離線模式）');}}catch{}
   }
+}
+// 資料檔大小監控：GitHub API 讀取上限 1MB，超過 80% 主動提醒
+function checkDbSize(){
+  try{
+    const bytes=new Blob([JSON.stringify(DB,null,2)]).size;
+    const pct=Math.round(bytes/1048576*100);
+    if(bytes>800*1024){
+      setSync(`⚠️ 資料檔 ${pct}%（${(bytes/1024).toFixed(0)}KB / 1MB 上限）`);
+      toast(`⚠️ 資料檔已用 ${pct}%，建議匯出備份並歸檔舊提詞`,true);
+    }
+  }catch{}
 }
 // 確保口播等內建分類存在（不影響用戶自訂分類）
 function ensureBuiltinCats(){
@@ -950,6 +962,7 @@ async function saveDB(){
     if(!r.ok){const e=await r.json().catch(()=>({}));throw new Error(e.message||r.status);}
     sha=(await r.json()).content.sha;
     setSync(`✓ 已同步 · ${DB.prompts.length} 筆`);
+    checkDbSize();
   }catch(e){
     console.error(e);
     setSync('⚠️ 儲存失敗 — 點此重試');
