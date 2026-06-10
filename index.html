@@ -217,6 +217,12 @@ button.icon-btn.on{background:#3b82f6;border-color:#3b82f6;color:#fff;}
 .fc-pending{background:rgba(245,158,11,.15);color:#f59e0b;}
 .fc-verified{background:rgba(16,185,129,.15);color:#10b981;}
 .fc-na{background:var(--bor);color:var(--txt3);}
+.done-bar{font-size:12px;font-weight:600;padding:6px 10px;border-radius:6px;text-align:center;cursor:pointer;border:1px dashed var(--bor);color:var(--txt3);transition:all .15s;user-select:none;}
+.done-bar:hover{border-color:#10b981;color:#10b981;}
+.done-bar.is-done{background:rgba(16,185,129,.15);border:1px solid #10b981;color:#10b981;}
+.card-done{opacity:.72;}
+.card-done:hover{opacity:1;}
+.card-done .card-thumb{filter:grayscale(.3);}
 .vo-card-preview{background:var(--sur2);padding:6px 8px;border-radius:5px;font-size:11px;max-height:44px;overflow:hidden;white-space:pre-wrap;word-break:break-word;line-height:1.5;position:relative;color:var(--txt2);}
 .vo-card-preview::after{content:'';position:absolute;bottom:0;left:0;right:0;height:16px;background:linear-gradient(transparent,var(--sur2));}
 .plat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:6px;}
@@ -381,6 +387,11 @@ body.editmode .eo{display:inline-flex!important;}
       <option value="verified">✓ 已查證</option>
       <option value="na">— 無需查證</option>
     </select>
+    <select id="doneFilter" style="min-width:110px;display:none">
+      <option value="">📋 全部進度</option>
+      <option value="todo">⬜ 待口播</option>
+      <option value="done">✅ 已口播</option>
+    </select>
     <span id="tagFilterChip" style="display:none"></span>
     <span class="stats" id="statsEl"></span>
     <div class="toolbar-right">
@@ -522,6 +533,12 @@ body.editmode .eo{display:inline-flex!important;}
         <div id="voFormSection" style="display:none">
           <div class="vo-section">
             <div class="vo-section-title">🎙️ 口播專用欄位</div>
+            <div class="fg" style="margin-bottom:10px">
+              <label style="display:flex;align-items:center;gap:8px;cursor:pointer;text-transform:none;font-size:14px;color:var(--txt)">
+                <input type="checkbox" id="voDone" style="width:auto;width:18px;height:18px;accent-color:#10b981">
+                <span>✅ 已完成口播（標記後卡片會打勾）</span>
+              </label>
+            </div>
             <div class="fg" style="margin-bottom:10px">
               <label>來源連結</label>
               <input id="voSource" placeholder="貼上原始資料來源網址（查證用）">
@@ -851,8 +868,9 @@ $('moreForceSave').onclick=()=>{$('btnForceSave').click();$('moreDD').classList.
 $('moreImport').onclick=()=>{$('moreDD').classList.remove('open');$('fileImport').click();};
 // 排序方向
 $('sortDirBtn').onclick=()=>{sortDir=sortDir==='desc'?'asc':'desc';$('sortDirBtn').textContent=sortDir==='desc'?'↓':'↑';render();};
-// 查證篩選
+// 查證篩選 + 口播進度篩選
 $('fcFilter').onchange=render;
+$('doneFilter').onchange=render;
 
 // ── GitHub API ────────────────────────────────────────────
 async function fetchDB(){
@@ -1135,10 +1153,12 @@ function render(){
   const q=$('search').value.trim().toLowerCase();
   const sort=$('sortBy').value;
   const mf=$('monthFilter').value;
-  // 口播查證狀態篩選器：僅在口播分類顯示
+  // 口播篩選器（查證狀態 + 口播進度）：僅在口播分類顯示
   const voCat=!!getCat(activMain)?.voMode;
   $('fcFilter').style.display=voCat?'inline-block':'none';
+  $('doneFilter').style.display=voCat?'inline-block':'none';
   const fcVal=voCat?$('fcFilter').value:'';
+  const doneVal=voCat?$('doneFilter').value:'';
   let list=DB.prompts.slice();
   if(activMain==='fav')list=list.filter(p=>p.favorite);
   else if(activMain!=='all'){
@@ -1148,6 +1168,8 @@ function render(){
   if(activTag)list=list.filter(p=>(p.tags||[]).includes(activTag));
   if(mf)list=list.filter(p=>ym(p.updated||p.created||Date.now())===mf);
   if(fcVal)list=list.filter(p=>(p.factCheck||'pending')===fcVal);
+  if(doneVal==='done')list=list.filter(p=>p.done);
+  else if(doneVal==='todo')list=list.filter(p=>!p.done);
   if(q)list=list.filter(p=>{
     const cat=getCat(p.catId),sub=getSub(p.catId,p.subId);
     return(p.title||'').toLowerCase().includes(q)||(p.promptZh||'').toLowerCase().includes(q)||
@@ -1182,8 +1204,9 @@ function render(){
       ?`<img class="card-thumb" src="${esc(p.thumbnail)}" onerror="this.outerHTML='<div class=\\'card-thumb ph\\'>${esc(cat?.icon||'📄')}</div>'" loading="lazy">`
       :`<div class="card-thumb ph">${esc(cat?.icon||'📄')}</div>`;
     const tags=(p.tags||[]).map(t=>`<span class="tag" data-tag="${esc(t)}">#${esc(t)}</span>`).join('');
+    const voItem=!!(p.voiceover||cat?.voMode||p.catId==='voiceover');
     const card=document.createElement('div');
-    card.className='card'+(selectedIds.has(p.id)?' selected':'');
+    card.className='card'+(selectedIds.has(p.id)?' selected':'')+(voItem&&p.done?' card-done':'');
     card.dataset.pid=p.id;
     if(isEdit)card.draggable=true;
     card.innerHTML=`
@@ -1199,6 +1222,7 @@ function render(){
           ${p.audioUrl?'<span class="media-badge mba">🎵 音樂</span>':''}
         </div>
         <div class="card-title">${esc(p.title||'未命名')}</div>
+        ${voItem?`<div class="done-bar ${p.done?'is-done':''}" data-done="${p.id}" onclick="event.stopPropagation()">${p.done?'✅ 已口播':'⬜ 待口播 · 點此標記'}</div>`:''}
         ${p.voiceover?`<div class="vo-card-preview">${esc(p.voiceover)}</div>`
           :(p.promptZh?`<div class="prompt-box pzh">${esc(p.promptZh)}</div>`:'')}
         ${(!p.voiceover&&p.promptEn)?`<div class="prompt-box pen">${esc(p.promptEn)}</div>`:''}
@@ -1243,6 +1267,12 @@ function render(){
 // ── Grid events ───────────────────────────────────────────
 $('grid').addEventListener('click',async e=>{
   if(batchMode){const card=e.target.closest('.card');if(card&&!e.target.classList.contains('card-chk'))toggleSel(card.dataset.pid);return;}
+  const doneEl=e.target.closest('[data-done]');
+  if(doneEl){
+    const p=DB.prompts.find(x=>x.id===doneEl.dataset.done);
+    if(p){p.done=!p.done;p.updated=Date.now();render();sched();toast(p.done?'✅ 已標記為已口播':'已取消標記');}
+    return;
+  }
   const tagEl=e.target.closest('.tag');
   const b=e.target.closest('button[data-cpzh],button[data-cpen],button[data-edit],button[data-del],button[data-fav],button[data-dupe],button[data-pin]');
   const card=e.target.closest('.card');
@@ -1774,8 +1804,9 @@ function openPromptModal(p=null){
     $('voSource').value=p.source||'';
     $('voVoiceover').value=p.voiceover||'';
     $('voEditing').value=p.editing||'';
+    $('voDone').checked=!!p.done;
   }else{
-    $('voSource').value='';$('voVoiceover').value='';$('voEditing').value='';
+    $('voSource').value='';$('voVoiceover').value='';$('voEditing').value='';$('voDone').checked=false;
   }
   $('promptBD').classList.add('open');
 }
@@ -1844,6 +1875,7 @@ $('btnPromptSave').onclick=async()=>{
     editing:vo?$('voEditing').value:'',
     editingImages:vo?editingImages:[],
     platforms:vo?getVoPlats():{},
+    done:vo?$('voDone').checked:false,
   };
   if(editPId){const i=DB.prompts.findIndex(p=>p.id===editPId);if(i>=0)DB.prompts[i]={...DB.prompts[i],...payload};}
   else DB.prompts.push({id:uid(),created:now,pinned:false,copyCount:0,videoUrl:'',audioUrl:'',...payload});
