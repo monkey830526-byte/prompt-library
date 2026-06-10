@@ -7,6 +7,9 @@
 <meta property="og:title" content="提詞庫">
 <meta property="og:description" content="AI 影音・口播・提詞收藏庫">
 <meta property="og:type" content="website">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
 <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
 <style>
 :root{
@@ -20,7 +23,7 @@ body.light{
   --glow:0 0 14px rgba(59,130,246,.18);
 }
 *{box-sizing:border-box;margin:0;padding:0;}
-body{font-family:-apple-system,"Segoe UI","Microsoft JhengHei",sans-serif;background:var(--bg);color:var(--txt);min-height:100vh;padding:20px;transition:background .2s,color .2s;position:relative;}
+body{font-family:'Noto Sans TC',-apple-system,"Segoe UI","Microsoft JhengHei",sans-serif;background:var(--bg);color:var(--txt);min-height:100vh;padding:20px;transition:background .2s,color .2s;position:relative;}
 /* 科技感背景：光暈 + 網格 */
 body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:-1;
   background:
@@ -334,12 +337,56 @@ body.editmode .eo{display:inline-flex!important;}
 @media(max-width:400px){
   .grid.size-sm,.grid.size-md,.grid.size-lg{grid-template-columns:1fr;}
 }
+
+/* ════════ v2 驚豔升級 ════════ */
+/* 動態極光 */
+.aurora{position:fixed;inset:0;z-index:-2;overflow:hidden;pointer-events:none;}
+.aurora span{position:absolute;border-radius:50%;filter:blur(90px);opacity:.55;will-change:transform;}
+.aurora span:nth-child(1){width:560px;height:560px;background:radial-gradient(circle,#0e7490 0%,transparent 70%);top:-200px;left:-140px;animation:drift1 26s ease-in-out infinite alternate;}
+.aurora span:nth-child(2){width:500px;height:500px;background:radial-gradient(circle,#6d28d9 0%,transparent 70%);bottom:-180px;right:-120px;animation:drift2 32s ease-in-out infinite alternate;}
+.aurora span:nth-child(3){width:380px;height:380px;background:radial-gradient(circle,#1d4ed8 0%,transparent 70%);top:35%;left:55%;animation:drift3 38s ease-in-out infinite alternate;opacity:.35;}
+@keyframes drift1{to{transform:translate(150px,100px) scale(1.18);}}
+@keyframes drift2{to{transform:translate(-130px,-80px) scale(1.12);}}
+@keyframes drift3{to{transform:translate(-100px,60px) scale(1.25);}}
+body.light .aurora span{opacity:.18;}
+/* 品牌區 */
+.brand{display:flex;align-items:center;gap:13px;}
+.logo-cube{width:46px;height:46px;border-radius:14px;background:var(--grad);display:flex;align-items:center;justify-content:center;font-size:23px;flex-shrink:0;box-shadow:0 0 26px rgba(34,211,238,.4),0 4px 14px rgba(0,0,0,.4);animation:logoPulse 3.5s ease-in-out infinite;}
+@keyframes logoPulse{50%{box-shadow:0 0 40px rgba(139,92,246,.5),0 4px 14px rgba(0,0,0,.4);}}
+.brand-sub{font-size:10px;letter-spacing:5px;color:var(--txt3);margin-top:2px;font-weight:500;}
+/* 數據儀表板 */
+.stats-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:18px;}
+.stat-card{background:linear-gradient(180deg,var(--sur),var(--sur2));border:1px solid var(--bor);border-radius:14px;padding:13px 17px;position:relative;overflow:hidden;transition:all .2s;}
+.stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--sg,var(--grad));opacity:.8;}
+.stat-card:hover{transform:translateY(-2px);border-color:var(--txt4);}
+.stat-num{font-size:27px;font-weight:900;background:var(--sg,var(--grad));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;line-height:1.15;}
+.stat-lbl{font-size:11px;color:var(--txt3);letter-spacing:1.5px;margin-top:2px;}
+.stat-card.c1{--sg:linear-gradient(135deg,#22d3ee,#3b82f6);}
+.stat-card.c2{--sg:linear-gradient(135deg,#fbbf24,#f59e0b);}
+.stat-card.c3{--sg:linear-gradient(135deg,#f472b6,#e11d48);}
+.stat-card.c4{--sg:linear-gradient(135deg,#34d399,#10b981);}
+@media(max-width:640px){.stats-strip{grid-template-columns:repeat(2,1fr);gap:8px;}.stat-num{font-size:22px;}}
+/* 卡片掃光 + 進場動畫 */
+.card::before{content:'';position:absolute;top:0;left:-80%;width:50%;height:100%;background:linear-gradient(105deg,transparent,rgba(255,255,255,.07),transparent);transform:skewX(-18deg);transition:left .55s ease;pointer-events:none;z-index:2;}
+.card:hover::before{left:135%;}
+.grid .card{animation:cardIn .34s cubic-bezier(.2,.8,.3,1) both;}
+@keyframes cardIn{from{opacity:0;transform:translateY(14px) scale(.985);}to{opacity:1;transform:none;}}
+/* 工具列玻璃面板 */
+.toolbar{background:rgba(13,20,36,.45);border:1px solid var(--bor);border-radius:14px;padding:10px 12px;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);}
+body.light .toolbar{background:rgba(255,255,255,.6);}
 </style>
 </head>
 <body>
+<div class="aurora"><span></span><span></span><span></span></div>
 <div class="container">
   <header>
-    <h1>🎬 提詞庫 <span class="mode-badge read" id="modeBadge">👁️ 唯讀</span></h1>
+    <div class="brand">
+      <div class="logo-cube">🎬</div>
+      <div>
+        <h1>提詞庫 <span class="mode-badge read" id="modeBadge">👁️ 唯讀</span></h1>
+        <div class="brand-sub">AI PROMPT LIBRARY</div>
+      </div>
+    </div>
     <div class="header-right">
       <span class="sync" id="syncEl"></span>
       <button class="icon-btn hdr-collapse" id="btnTheme" title="切換主題">☀️</button>
@@ -354,6 +401,9 @@ body.editmode .eo{display:inline-flex!important;}
       <button class="icon-btn" id="btnSettings">⚙️</button>
     </div>
   </header>
+
+  <!-- 數據儀表板 -->
+  <div class="stats-strip" id="statsStrip"></div>
 
   <!-- Export dropdown -->
   <div class="dd-menu" id="expDD">
@@ -1075,10 +1125,20 @@ $('ctxDel').onclick=async()=>{
 document.addEventListener('click',e=>{if(!tabCtxMenu.contains(e.target))tabCtxMenu.classList.remove('open');});
 
 // ── Tabs ──────────────────────────────────────────────────
+function renderStats(counts){
+  const voPrompts=DB.prompts.filter(p=>p.voiceover||getCat(p.catId)?.voMode);
+  const voDone=voPrompts.filter(p=>p.done).length;
+  $('statsStrip').innerHTML=`
+    <div class="stat-card c1"><div class="stat-num">${counts.total}</div><div class="stat-lbl">📦 全部提詞</div></div>
+    <div class="stat-card c2"><div class="stat-num">${counts.fav}</div><div class="stat-lbl">⭐ 收藏</div></div>
+    <div class="stat-card c3"><div class="stat-num">${voPrompts.length-voDone}</div><div class="stat-lbl">🎙️ 待口播</div></div>
+    <div class="stat-card c4"><div class="stat-num">${voDone}</div><div class="stat-lbl">✅ 已口播</div></div>`;
+}
 function renderMainTabs(){
   const wrap=$('mainTabs'),addBtn=$('btnAddMain'),counts=getCounts();
   const isEdit=document.body.classList.contains('editmode');
   $('countAll').textContent=counts.total;$('countFav').textContent=counts.fav;
+  renderStats(counts);
   refreshMonthFilter();
   Array.from(wrap.children).forEach(el=>{if(el.dataset.dyn)el.remove();});
   DB.categories.forEach(cat=>{
@@ -1253,7 +1313,7 @@ function render(){
   const isEdit=document.body.classList.contains('editmode');
   grid.classList.toggle('batch-mode',batchMode);
 
-  list.forEach(p=>{
+  list.forEach((p,idx)=>{
     const cat=getCat(p.catId),sub=getSub(p.catId,p.subId);
     const catColor=cat?.color||'#475569',subColor=sub?.color||catColor;
     const thumb=p.thumbnail
@@ -1263,6 +1323,7 @@ function render(){
     const voItem=!!(p.voiceover||cat?.voMode||p.catId==='voiceover');
     const card=document.createElement('div');
     card.className='card'+(selectedIds.has(p.id)?' selected':'')+(voItem&&p.done?' card-done':'');
+    card.style.animationDelay=Math.min(idx,11)*28+'ms'; // 交錯進場
     card.dataset.pid=p.id;
     if(isEdit&&manual)card.draggable=true; // 僅「自訂順序」模式可拖曳
     card.innerHTML=`
