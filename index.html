@@ -1571,7 +1571,7 @@ $('detailTags').addEventListener('click',e=>{
 // ── Duplicate ─────────────────────────────────────────────
 function dupePrompt(p){
   const now=Date.now();
-  const copy={...p,id:uid(),title:(p.title||'')+'（複製）',created:now,updated:now,pinned:false,copyCount:0};
+  const copy={...p,id:uid(),title:(p.title||'')+'（複製）',created:now,updated:now,pinned:false,copyCount:0,done:false};
   DB.prompts.push(copy);render();renderMainTabs();sched();toast('已複製一份');
   openPromptModal(copy);
 }
@@ -2041,6 +2041,19 @@ $('expXlsx').onclick=()=>{
   const ws=XLSX.utils.json_to_sheet(rows);
   ws['!cols']=[{wch:12},{wch:16},{wch:24},{wch:6},{wch:50},{wch:50},{wch:20},{wch:30},{wch:10},{wch:6},{wch:12},{wch:12}];
   const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'提詞庫');
+  // 口播專屬工作表（含查證/進度/平台文案）
+  const voRows=DB.prompts.filter(p=>p.voiceover||getCat(p.catId)?.voMode).map(p=>({
+    '標題':p.title||'','已口播':p.done?'✅':'⬜',
+    '查證狀態':FC_MAP[p.factCheck]?.t||'','來源連結':p.source||'',
+    '口播稿':p.voiceover||'','剪輯對照表':p.editing||'',
+    'TikTok':p.platforms?.tiktok||'','YouTube':p.platforms?.youtube||'',
+    'Instagram':p.platforms?.ig||'','Threads':p.platforms?.threads||'','Facebook':p.platforms?.fb||'',
+    '更新日期':fmt(p.updated)}));
+  if(voRows.length){
+    const ws2=XLSX.utils.json_to_sheet(voRows);
+    ws2['!cols']=[{wch:28},{wch:7},{wch:10},{wch:35},{wch:60},{wch:50},{wch:30},{wch:30},{wch:30},{wch:30},{wch:30},{wch:12}];
+    XLSX.utils.book_append_sheet(wb,ws2,'口播');
+  }
   XLSX.writeFile(wb,`提詞庫-${new Date().toISOString().slice(0,10)}.xlsx`);
   toast('已匯出 Excel');
 };
@@ -2104,6 +2117,10 @@ document.addEventListener('keydown',e=>{
   if(e.key==='Escape'){
     if($('voReader').classList.contains('open')){closeVoReader();return;}
     if($('fsBD').classList.contains('open')){$('fsBD').classList.remove('open');return;}
+    // 確認彈窗：必須走「取消」流程，否則等待中的刪除邏輯會永久卡住
+    if($('confirmBD').classList.contains('open')){$('btnConfirmNo').click();return;}
+    // 提詞表單：走正規關閉流程，重置儲存按鈕與編輯狀態
+    if($('promptBD').classList.contains('open')){closePromptModal();return;}
     document.querySelectorAll('.backdrop.open').forEach(b=>b.classList.remove('open'));
     if(batchMode){$('btnBatchCancel').click();}
   }
