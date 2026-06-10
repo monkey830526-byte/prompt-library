@@ -1183,6 +1183,7 @@ function render(){
   else if(sort==='fav_first')list.sort((a,b)=>(b.favorite?1:0)-(a.favorite?1:0));
   else list.sort((a,b)=>b.updated-a.updated);
   if(sortDir==='asc')list.reverse(); // 升/降序切換
+  if(voCat)list.sort((a,b)=>(a.done?1:0)-(b.done?1:0)); // 口播分類：待口播優先、已口播沉底
   list.sort((a,b)=>(b.pinned?1:0)-(a.pinned?1:0)); // pinned always on top
 
   $('statsEl').textContent=`${list.length} / ${DB.prompts.length} 筆`;
