@@ -376,6 +376,7 @@ body.editmode .eo{display:inline-flex!important;}
       <option value="title">標題 A-Z</option>
       <option value="hottest">最熱門</option>
       <option value="fav_first">收藏優先</option>
+      <option value="manual">✋ 自訂順序（可拖曳）</option>
     </select>
     <button class="icon-btn" id="sortDirBtn" title="升序／降序切換" style="padding:8px 11px">↓</button>
     <select id="monthFilter" style="min-width:110px">
@@ -1177,14 +1178,21 @@ function render(){
       (p.tags||[]).some(t=>t.toLowerCase().includes(q))||
       (cat?.name||'').toLowerCase().includes(q)||(sub?.name||'').toLowerCase().includes(q);
   });
-  if(sort==='title')list.sort((a,b)=>(a.title||'').localeCompare(b.title||''));
-  else if(sort==='created')list.sort((a,b)=>b.created-a.created);
-  else if(sort==='hottest')list.sort((a,b)=>(b.copyCount||0)-(a.copyCount||0));
-  else if(sort==='fav_first')list.sort((a,b)=>(b.favorite?1:0)-(a.favorite?1:0));
-  else list.sort((a,b)=>b.updated-a.updated);
-  if(sortDir==='asc')list.reverse(); // 升/降序切換
-  if(voCat)list.sort((a,b)=>(a.done?1:0)-(b.done?1:0)); // 口播分類：待口播優先、已口播沉底
-  list.sort((a,b)=>(b.pinned?1:0)-(a.pinned?1:0)); // pinned always on top
+  const manual=sort==='manual';
+  if(manual){
+    // 自訂順序：完全照 DB.prompts 陣列順序（拖曳結果），不套用任何自動排序
+    const order=new Map(DB.prompts.map((p,i)=>[p.id,i]));
+    list.sort((a,b)=>order.get(a.id)-order.get(b.id));
+  }else{
+    if(sort==='title')list.sort((a,b)=>(a.title||'').localeCompare(b.title||''));
+    else if(sort==='created')list.sort((a,b)=>b.created-a.created);
+    else if(sort==='hottest')list.sort((a,b)=>(b.copyCount||0)-(a.copyCount||0));
+    else if(sort==='fav_first')list.sort((a,b)=>(b.favorite?1:0)-(a.favorite?1:0));
+    else list.sort((a,b)=>b.updated-a.updated);
+    if(sortDir==='asc')list.reverse(); // 升/降序切換
+    if(voCat)list.sort((a,b)=>(a.done?1:0)-(b.done?1:0)); // 口播分類：待口播優先、已口播沉底
+    list.sort((a,b)=>(b.pinned?1:0)-(a.pinned?1:0)); // pinned always on top
+  }
 
   $('statsEl').textContent=`${list.length} / ${DB.prompts.length} 筆`;
   const grid=$('grid');grid.innerHTML='';
@@ -1209,7 +1217,7 @@ function render(){
     const card=document.createElement('div');
     card.className='card'+(selectedIds.has(p.id)?' selected':'')+(voItem&&p.done?' card-done':'');
     card.dataset.pid=p.id;
-    if(isEdit)card.draggable=true;
+    if(isEdit&&manual)card.draggable=true; // 僅「自訂順序」模式可拖曳
     card.innerHTML=`
       <input type="checkbox" class="card-chk" ${selectedIds.has(p.id)?'checked':''} onclick="event.stopPropagation();toggleSel('${p.id}')">
       ${thumb}
@@ -1246,8 +1254,8 @@ function render(){
           <button class="sm danger eo" data-del="${p.id}" onclick="event.stopPropagation()">✕</button>
         </div>`:''}
       </div>`;
-    // Drag & drop (edit mode only)
-    if(isEdit){
+    // Drag & drop（僅「自訂順序」模式）
+    if(isEdit&&manual){
       card.addEventListener('dragstart',e=>{dragSrcId=p.id;card.classList.add('drag-src');e.dataTransfer.effectAllowed='move';});
       card.addEventListener('dragend',()=>{card.classList.remove('drag-src');grid.querySelectorAll('.drag-over').forEach(c=>c.classList.remove('drag-over'));});
       card.addEventListener('dragover',e=>{e.preventDefault();e.dataTransfer.dropEffect='move';if(dragSrcId!==p.id)card.classList.add('drag-over');});
@@ -2084,7 +2092,12 @@ $('btnAddMain').onclick=()=>openCatModal('main');
 $('btnAdd').onclick=()=>openPromptModal();
 let _searchTimer=null;
 $('search').oninput=()=>{clearTimeout(_searchTimer);_searchTimer=setTimeout(render,180);};
-$('sortBy').onchange=render;
+$('sortBy').onchange=()=>{
+  if($('sortBy').value==='manual'){
+    toast(document.body.classList.contains('editmode')?'✋ 拖曳卡片即可排列順序':'✋ 需登入後才能拖曳排列');
+  }
+  render();
+};
 $('monthFilter').onchange=render;
 function closeVoReader(){$('voReader').classList.remove('open');document.body.style.overflow='';}
 document.addEventListener('keydown',e=>{
