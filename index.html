@@ -1222,7 +1222,7 @@ function render(){
           ${p.audioUrl?'<span class="media-badge mba">🎵 音樂</span>':''}
         </div>
         <div class="card-title">${esc(p.title||'未命名')}</div>
-        ${voItem?`<div class="done-bar ${p.done?'is-done':''}" data-done="${p.id}" onclick="event.stopPropagation()">${p.done?'✅ 已口播':'⬜ 待口播 · 點此標記'}</div>`:''}
+        ${voItem?`<div class="done-bar ${p.done?'is-done':''}" onclick="event.stopPropagation();toggleDone('${p.id}')">${p.done?'✅ 已口播':'⬜ 待口播 · 點此標記'}</div>`:''}
         ${p.voiceover?`<div class="vo-card-preview">${esc(p.voiceover)}</div>`
           :(p.promptZh?`<div class="prompt-box pzh">${esc(p.promptZh)}</div>`:'')}
         ${(!p.voiceover&&p.promptEn)?`<div class="prompt-box pen">${esc(p.promptEn)}</div>`:''}
@@ -1267,12 +1267,6 @@ function render(){
 // ── Grid events ───────────────────────────────────────────
 $('grid').addEventListener('click',async e=>{
   if(batchMode){const card=e.target.closest('.card');if(card&&!e.target.classList.contains('card-chk'))toggleSel(card.dataset.pid);return;}
-  const doneEl=e.target.closest('[data-done]');
-  if(doneEl){
-    const p=DB.prompts.find(x=>x.id===doneEl.dataset.done);
-    if(p){p.done=!p.done;p.updated=Date.now();render();sched();toast(p.done?'✅ 已標記為已口播':'已取消標記');}
-    return;
-  }
   const tagEl=e.target.closest('.tag');
   const b=e.target.closest('button[data-cpzh],button[data-cpen],button[data-edit],button[data-del],button[data-fav],button[data-dupe],button[data-pin]');
   const card=e.target.closest('.card');
@@ -1301,6 +1295,14 @@ function toggleSel(id){
   const card=document.querySelector(`.card[data-pid="${id}"]`);
   if(card){card.classList.toggle('selected',selectedIds.has(id));}
   updateBatchBar();
+}
+// 卡片上直接切換「已口播」（不進編輯）
+function toggleDone(id){
+  const p=DB.prompts.find(x=>x.id===id);
+  if(!p)return;
+  p.done=!p.done;p.updated=Date.now();
+  render();sched();
+  toast(p.done?'✅ 已標記為已口播':'已取消標記');
 }
 function updateBatchBar(){
   const n=selectedIds.size;
