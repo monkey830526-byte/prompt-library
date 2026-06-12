@@ -374,6 +374,48 @@ body.light .aurora span{opacity:.18;}
 /* 工具列玻璃面板 */
 .toolbar{background:rgba(13,20,36,.45);border:1px solid var(--bor);border-radius:14px;padding:10px 12px;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);}
 body.light .toolbar{background:rgba(255,255,255,.6);}
+
+/* ════════ v3 舒適度優化 ════════ */
+/* 字級放大（久看不累） */
+.prompt-box,.vo-card-preview{font-size:12.5px;max-height:56px;}
+.card-meta{font-size:11px;}
+.notes-chip{font-size:11px;}
+.tag{font-size:11px;}
+/* 搜尋清除鈕 */
+.search-clear{position:absolute;right:10px;top:50%;transform:translateY(-50%);color:var(--txt3);cursor:pointer;font-size:13px;padding:4px 6px;border-radius:6px;display:none;line-height:1;}
+.search-clear:hover{color:var(--txt);background:var(--bor);}
+.search-wrap input{padding-right:32px;}
+/* 篩選群組：桌面直接攤平（display:contents 不影響排版） */
+.filters{display:contents;}
+.mobile-filter-btn{display:none;}
+/* 刪除復原列 */
+.undo-bar{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(80px);background:linear-gradient(180deg,var(--sur),var(--sur2));border:1px solid var(--bor);color:var(--txt);padding:10px 14px 10px 18px;border-radius:12px;z-index:401;display:flex;align-items:center;gap:12px;font-size:13px;box-shadow:0 10px 32px rgba(0,0,0,.5),0 0 0 1px rgba(34,211,238,.1);transition:transform .25s cubic-bezier(.2,.8,.3,1);white-space:nowrap;}
+.undo-bar.show{transform:translateX(-50%) translateY(0);}
+/* 表單摺疊區 */
+details.fold{border:1px solid var(--bor);border-radius:10px;background:var(--sur2);margin-bottom:13px;overflow:hidden;}
+details.fold>summary{cursor:pointer;padding:11px 14px;font-size:13px;font-weight:600;color:var(--txt2);list-style:none;display:flex;align-items:center;gap:8px;user-select:none;transition:color .15s;}
+details.fold>summary::-webkit-details-marker{display:none;}
+details.fold>summary::after{content:'▾';margin-left:auto;color:var(--txt3);transition:transform .2s;}
+details.fold[open]>summary::after{transform:rotate(180deg);}
+details.fold>summary:hover{color:var(--txt);}
+details.fold>.fold-body{padding:4px 14px 14px;}
+/* 手機緊湊模式 */
+@media(max-width:640px){
+  .aurora{display:none;} /* 手機關閉極光，省電省效能 */
+  body::before{background-size:auto,auto,auto,56px 56px,56px 56px;}
+  .stats-strip{display:flex;gap:6px;margin-bottom:10px;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:2px;}
+  .stat-card{display:flex;align-items:baseline;gap:7px;padding:7px 12px;border-radius:10px;flex-shrink:0;}
+  .stat-num{font-size:17px;}
+  .stat-lbl{font-size:10px;margin-top:0;letter-spacing:.5px;white-space:nowrap;}
+  .mobile-filter-btn{display:inline-flex;padding:8px 13px;font-size:13px;}
+  .filters{display:none;width:100%;flex-wrap:wrap;gap:6px;}
+  .filters.open{display:flex;}
+  .filters select{flex:1;min-width:calc(50% - 6px);}
+  .toolbar{padding:8px 10px;gap:6px;}
+  .logo-cube{width:38px;height:38px;font-size:19px;border-radius:11px;}
+  h1{font-size:19px;}
+  .brand-sub{letter-spacing:3px;}
+}
 </style>
 </head>
 <body>
@@ -453,30 +495,34 @@ body.light .toolbar{background:rgba(255,255,255,.6);}
     <div class="search-wrap">
       <span class="search-icon">🔍</span>
       <input id="search" placeholder="搜尋標題、Prompt、標籤…">
+      <span class="search-clear" id="searchClear" title="清除">✕</span>
     </div>
-    <select id="sortBy">
-      <option value="updated">最近更新</option>
-      <option value="created">建立時間</option>
-      <option value="title">標題 A-Z</option>
-      <option value="hottest">最熱門</option>
-      <option value="fav_first">收藏優先</option>
-      <option value="manual">✋ 自訂順序（可拖曳）</option>
-    </select>
-    <button class="icon-btn" id="sortDirBtn" title="升序／降序切換" style="padding:8px 11px">↓</button>
-    <select id="monthFilter" style="min-width:110px">
-      <option value="">📅 全部時間</option>
-    </select>
-    <select id="fcFilter" style="min-width:120px;display:none">
-      <option value="">🔍 所有查證</option>
-      <option value="pending">⚠ 待查證</option>
-      <option value="verified">✓ 已查證</option>
-      <option value="na">— 無需查證</option>
-    </select>
-    <select id="doneFilter" style="min-width:110px;display:none">
-      <option value="">📋 全部進度</option>
-      <option value="todo">⬜ 待口播</option>
-      <option value="done">✅ 已口播</option>
-    </select>
+    <button class="ghost mobile-filter-btn" id="btnFilters">篩選 ▾</button>
+    <div class="filters" id="filtersWrap">
+      <select id="sortBy">
+        <option value="updated">最近更新</option>
+        <option value="created">建立時間</option>
+        <option value="title">標題 A-Z</option>
+        <option value="hottest">最熱門</option>
+        <option value="fav_first">收藏優先</option>
+        <option value="manual">✋ 自訂順序（可拖曳）</option>
+      </select>
+      <button class="icon-btn" id="sortDirBtn" title="升序／降序切換" style="padding:8px 11px">↓</button>
+      <select id="monthFilter" style="min-width:110px">
+        <option value="">📅 全部時間</option>
+      </select>
+      <select id="fcFilter" style="min-width:120px;display:none">
+        <option value="">🔍 所有查證</option>
+        <option value="pending">⚠ 待查證</option>
+        <option value="verified">✓ 已查證</option>
+        <option value="na">— 無需查證</option>
+      </select>
+      <select id="doneFilter" style="min-width:110px;display:none">
+        <option value="">📋 全部進度</option>
+        <option value="todo">⬜ 待口播</option>
+        <option value="done">✅ 已口播</option>
+      </select>
+    </div>
     <span id="tagFilterChip" style="display:none"></span>
     <span class="stats" id="statsEl"></span>
     <div class="toolbar-right">
@@ -641,47 +687,58 @@ body.light .toolbar{background:rgba(255,255,255,.6);}
               <label>純口播稿</label>
               <textarea id="voVoiceover" rows="5" placeholder="【0:00】共感開場…&#10;【0:10】…&#10;&#10;每段標時間，最後標總字數與秒數"></textarea>
             </div>
-            <div class="fg" style="margin-bottom:10px">
-              <label>剪輯對照表</label>
-              <textarea id="voEditing" rows="4" placeholder="時間 | 口播重點 | 建議畫面 | 字卡/音效&#10;0:00–0:10 | … | … | …" style="font-size:12.5px"></textarea>
-            </div>
-            <div class="fg" style="margin-bottom:10px">
-              <label>剪輯參考截圖 <span style="color:var(--txt3);font-weight:normal;font-size:10px;text-transform:none">可多張，點擊/拖曳/Ctrl+V</span></label>
-              <div class="edit-imgs" id="editImgsBox"></div>
-              <div class="edit-img-add" id="editImgAdd">
-                <span class="img-icon" style="font-size:20px">📸</span>
-                <span style="font-size:11px;color:var(--txt3)">新增截圖 / 照片</span>
+            <details class="fold">
+              <summary>🎬 剪輯對照表＋參考截圖</summary>
+              <div class="fold-body">
+                <div class="fg" style="margin-bottom:10px">
+                  <label>剪輯對照表</label>
+                  <textarea id="voEditing" rows="4" placeholder="時間 | 口播重點 | 建議畫面 | 字卡/音效&#10;0:00–0:10 | … | … | …" style="font-size:12.5px"></textarea>
+                </div>
+                <div class="fg" style="margin-bottom:0">
+                  <label>剪輯參考截圖 <span style="color:var(--txt3);font-weight:normal;font-size:10px;text-transform:none">可多張，點擊/拖曳/Ctrl+V</span></label>
+                  <div class="edit-imgs" id="editImgsBox"></div>
+                  <div class="edit-img-add" id="editImgAdd">
+                    <span class="img-icon" style="font-size:20px">📸</span>
+                    <span style="font-size:11px;color:var(--txt3)">新增截圖 / 照片</span>
+                  </div>
+                  <div class="img-status" id="editImgStatus" style="display:none">⏳ 上傳中…</div>
+                </div>
               </div>
-              <div class="img-status" id="editImgStatus" style="display:none">⏳ 上傳中…</div>
+            </details>
+            <details class="fold" style="margin-bottom:0">
+              <summary>📱 五平台文案</summary>
+              <div class="fold-body">
+                <div class="plat-grid" id="voPlatsForm"></div>
+              </div>
+            </details>
+          </div>
+        </div>
+        <!-- 影音上傳（摺疊，選填） -->
+        <details class="fold" id="mediaFold">
+          <summary>🎬 影音檔案（選填）</summary>
+          <div class="fold-body">
+            <div class="fg">
+              <label>影片檔案 <span style="color:var(--txt3);font-weight:normal;font-size:10px;text-transform:none">上限 10MB，mp4/mov/webm</span></label>
+              <div class="media-drop" id="videoDrop">
+                <span class="media-drop-icon">🎬</span>
+                <span class="media-drop-hint" id="videoHint">拖曳影片 / 點擊選擇</span>
+                <button type="button" class="sm danger" id="btnRemoveVideo" style="display:none" onclick="event.stopPropagation();removeVideo()">✕</button>
+              </div>
+              <input type="file" id="videoFile" accept="video/*" style="display:none">
+              <input type="hidden" id="videoHidden">
             </div>
             <div class="fg" style="margin-bottom:0">
-              <label>五平台文案</label>
-              <div class="plat-grid" id="voPlatsForm"></div>
+              <label>音樂檔案 <span style="color:var(--txt3);font-weight:normal;font-size:10px;text-transform:none">上限 5MB，mp3/wav/ogg/aac</span></label>
+              <div class="media-drop" id="audioDrop">
+                <span class="media-drop-icon">🎵</span>
+                <span class="media-drop-hint" id="audioHint">拖曳音樂 / 點擊選擇</span>
+                <button type="button" class="sm danger" id="btnRemoveAudio" style="display:none" onclick="event.stopPropagation();removeAudio()">✕</button>
+              </div>
+              <input type="file" id="audioFile" accept="audio/*" style="display:none">
+              <input type="hidden" id="audioHidden">
             </div>
           </div>
-        </div>
-        <!-- Video upload -->
-        <div class="fg">
-          <label>影片檔案 <span style="color:var(--txt3);font-weight:normal;font-size:10px;text-transform:none">上限 10MB，mp4/mov/webm</span></label>
-          <div class="media-drop" id="videoDrop">
-            <span class="media-drop-icon">🎬</span>
-            <span class="media-drop-hint" id="videoHint">拖曳影片 / 點擊選擇</span>
-            <button type="button" class="sm danger" id="btnRemoveVideo" style="display:none" onclick="event.stopPropagation();removeVideo()">✕</button>
-          </div>
-          <input type="file" id="videoFile" accept="video/*" style="display:none">
-          <input type="hidden" id="videoHidden">
-        </div>
-        <!-- Audio upload -->
-        <div class="fg">
-          <label>音樂檔案 <span style="color:var(--txt3);font-weight:normal;font-size:10px;text-transform:none">上限 5MB，mp3/wav/ogg/aac</span></label>
-          <div class="media-drop" id="audioDrop">
-            <span class="media-drop-icon">🎵</span>
-            <span class="media-drop-hint" id="audioHint">拖曳音樂 / 點擊選擇</span>
-            <button type="button" class="sm danger" id="btnRemoveAudio" style="display:none" onclick="event.stopPropagation();removeAudio()">✕</button>
-          </div>
-          <input type="file" id="audioFile" accept="audio/*" style="display:none">
-          <input type="hidden" id="audioHidden">
-        </div>
+        </details>
         <div class="fg">
           <label>中文 Prompt <span style="color:var(--txt3);font-weight:normal;font-size:10px;text-transform:none">支援 {{變數}} 模板</span></label>
           <textarea name="promptZh" placeholder="用中文描述你想要的畫面，用 {{人物}} {{場景}} 建立模板"></textarea>
@@ -828,6 +885,11 @@ body.light .toolbar{background:rgba(255,255,255,.6);}
 </div>
 
 <div class="toast" id="toastEl"></div>
+<!-- 刪除復原列 -->
+<div class="undo-bar" id="undoBar">
+  <span id="undoMsg"></span>
+  <button class="sm" id="btnUndo">↩ 復原</button>
+</div>
 
 <script>
 // ── Constants ─────────────────────────────────────────────
@@ -902,6 +964,32 @@ function toast(msg,err=false){
   clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),2200);
 }
 function setSync(txt,spin=false){$('syncEl').innerHTML=spin?`<span class="spin">⏳</span> ${txt}`:txt;}
+
+// ── 刪除復原 ──────────────────────────────────────────────
+let _undoTimer=null,_undoFn=null;
+function showUndo(msg,fn){
+  _undoFn=fn;
+  $('undoMsg').textContent=msg;
+  $('undoBar').classList.add('show');
+  clearTimeout(_undoTimer);
+  _undoTimer=setTimeout(()=>{$('undoBar').classList.remove('show');_undoFn=null;},5000);
+}
+$('btnUndo').onclick=()=>{
+  $('undoBar').classList.remove('show');clearTimeout(_undoTimer);
+  if(_undoFn){_undoFn();_undoFn=null;}
+};
+// 刪除（含復原）：ids 為要刪的 id 陣列
+function deleteWithUndo(ids){
+  const removed=[];
+  ids.forEach(id=>{const i=DB.prompts.findIndex(x=>x.id===id);if(i>=0)removed.push({p:DB.prompts[i],i});});
+  removed.sort((a,b)=>b.i-a.i).forEach(r=>DB.prompts.splice(r.i,1));
+  render();renderMainTabs();renderSubTabs();sched();
+  const label=removed.length>1?`已刪除 ${removed.length} 筆`:`已刪除「${(removed[0]?.p.title||'').slice(0,14)}」`;
+  showUndo(label,()=>{
+    removed.sort((a,b)=>a.i-b.i).forEach(r=>DB.prompts.splice(Math.min(r.i,DB.prompts.length),0,r.p));
+    render();renderMainTabs();renderSubTabs();sched();toast('已復原');
+  });
+}
 
 // ── Recent Copies ─────────────────────────────────────────
 function getRecent(){try{return JSON.parse(localStorage.getItem(RECENT_KEY)||'[]');}catch{return[];}}
@@ -1398,8 +1486,8 @@ $('grid').addEventListener('click',async e=>{
     else if(b.dataset.pin){p.pinned=!p.pinned;p.updated=Date.now();render();sched();toast(p.pinned?'已釘選':'已取消釘選');}
     else if(b.dataset.dupe)dupePrompt(p);
     else if(b.dataset.del){
-      const ok=await askConfirm(`確定要刪除這筆提詞嗎？`,`「${p.title}」刪除後無法復原`,'🗑️');
-      if(ok){DB.prompts=DB.prompts.filter(x=>x.id!==id);render();renderMainTabs();sched();toast('已刪除');}
+      const ok=await askConfirm(`確定要刪除這筆提詞嗎？`,`「${p.title}」（刪除後 5 秒內可復原）`,'🗑️');
+      if(ok)deleteWithUndo([id]);
     }
     return;
   }
@@ -1439,11 +1527,12 @@ $('btnBatchAll').onclick=()=>{
 };
 $('btnBatchDel').onclick=async()=>{
   if(!selectedIds.size)return;
-  const ok=await askConfirm(`確定刪除選取的 ${selectedIds.size} 筆提詞？`,'刪除後無法復原','🗑️');
+  const ok=await askConfirm(`確定刪除選取的 ${selectedIds.size} 筆提詞？`,'刪除後 5 秒內可復原','🗑️');
   if(!ok)return;
-  DB.prompts=DB.prompts.filter(p=>!selectedIds.has(p.id));
+  const ids=[...selectedIds];
   selectedIds.clear();batchMode=false;$('btnBatch').classList.remove('on');
-  updateBatchBar();render();renderMainTabs();sched();toast('已刪除');
+  updateBatchBar();
+  deleteWithUndo(ids);
 };
 $('btnBatchMove').onclick=()=>{
   if(!selectedIds.size)return;
@@ -1927,6 +2016,10 @@ function openPromptModal(p=null){
   }else{
     $('voSource').value='';$('voVoiceover').value='';$('voEditing').value='';$('voDone').checked=false;
   }
+  // 摺疊區智慧展開：有內容的區自動打開，沒內容收合省空間
+  $('voEditing').closest('details').open=!!(p&&(p.editing||(p.editingImages&&p.editingImages.length)));
+  $('voPlatsForm').closest('details').open=!!(p&&p.platforms&&Object.values(p.platforms).some(v=>v&&v.trim()));
+  $('mediaFold').open=!!(p&&(p.videoUrl||p.audioUrl));
   $('promptBD').classList.add('open');
 }
 
@@ -2212,7 +2305,17 @@ $('mainTabs').querySelector('[data-main="fav"]').onclick=()=>setMain('fav');
 $('btnAddMain').onclick=()=>openCatModal('main');
 $('btnAdd').onclick=()=>openPromptModal();
 let _searchTimer=null;
-$('search').oninput=()=>{clearTimeout(_searchTimer);_searchTimer=setTimeout(render,180);};
+$('search').oninput=()=>{
+  $('searchClear').style.display=$('search').value?'block':'none';
+  clearTimeout(_searchTimer);_searchTimer=setTimeout(render,180);
+};
+$('searchClear').onclick=()=>{$('search').value='';$('searchClear').style.display='none';render();$('search').focus();};
+// 手機篩選展開
+$('btnFilters').onclick=()=>{
+  const w=$('filtersWrap');
+  w.classList.toggle('open');
+  $('btnFilters').textContent=w.classList.contains('open')?'篩選 ▴':'篩選 ▾';
+};
 $('sortBy').onchange=()=>{
   if($('sortBy').value==='manual'){
     toast(document.body.classList.contains('editmode')?'✋ 拖曳卡片即可排列順序':'✋ 需登入後才能拖曳排列');
