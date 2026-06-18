@@ -48,6 +48,38 @@
     {
       "pinned": false,
       "copyCount": 0,
+      "id": "mqj0bs7mw3q6",
+      "created": 1781757357970,
+      "videoUrl": "",
+      "audioUrl": "",
+      "catId": "voiceover",
+      "subId": "",
+      "title": "【串聯測試】這是一筆測試口播，待會會自動刪除",
+      "thumbnail": "",
+      "promptZh": "【0:00】這是串聯測試。\n📝 測試用",
+      "promptEn": "",
+      "tags": [
+        "測試"
+      ],
+      "notes": "串聯管道測試",
+      "favorite": false,
+      "updated": 1781757357970,
+      "source": "https://example.com/test",
+      "factCheck": "pending",
+      "voiceover": "【0:00】這是串聯測試。\n📝 測試用",
+      "editing": "【0:00】測試\n→ 測試畫面",
+      "done": false,
+      "platforms": {
+        "tiktok": "抖音測試",
+        "youtube": "YT測試",
+        "ig": "IG測試",
+        "threads": "脆測試",
+        "fb": "FB測試"
+      }
+    },
+    {
+      "pinned": false,
+      "copyCount": 0,
       "id": "mqj04q3lc3b5",
       "created": 1781757028641,
       "videoUrl": "",
