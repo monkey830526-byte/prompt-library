@@ -1,0 +1,16 @@
+{
+  "title": "（必填）影片標題",
+  "source": "https://（選填）新聞或資料來源連結",
+  "factCheck": "pending",
+  "tags": ["標籤1", "標籤2", "台南房市"],
+  "voiceover": "（必填）口播稿全文，例如：\n【0:00】開場…\n【0:08】…\n\n📝 約 290 字 ｜ 預估朗讀 ≈ 60 秒",
+  "editing": "（選填）剪輯對照表純文字：\n【0:00–0:08】口播內容\n→ 畫面/字卡建議\n\n【0:08–0:18】…\n→ …",
+  "notes": "（選填）備註：心理學配方、查核摘要、專業提醒等",
+  "platforms": {
+    "tiktok": "抖音文案…",
+    "youtube": "YouTube Shorts 文案…",
+    "ig": "Instagram Reels 文案…",
+    "threads": "脆 Threads 文案…",
+    "fb": "Facebook 文案…"
+  }
+}
