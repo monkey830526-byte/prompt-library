@@ -51,6 +51,7 @@ items.slice().reverse().forEach(it=>{ // reverse 讓多篇保持原順序 unshif
     notes:it.notes?String(it.notes):'',favorite:false,updated:now,
     source:/^https?:\/\//i.test(it.source||'')?it.source:'',
     factCheck:FC.includes(it.factCheck)?it.factCheck:'pending',
+    hook:it.hook?String(it.hook):'',
     voiceover:String(it.voiceover),
     editing:it.editing?String(it.editing):'',
     done:false,

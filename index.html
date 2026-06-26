@@ -254,6 +254,8 @@ body.light .card:hover{box-shadow:0 10px 26px rgba(15,23,42,.12),0 0 18px rgba(5
 .fc-pending{background:rgba(245,158,11,.15);color:#f59e0b;}
 .fc-verified{background:rgba(16,185,129,.15);color:#10b981;}
 .fc-na{background:var(--bor);color:var(--txt3);}
+.hook-box{background:linear-gradient(135deg,rgba(245,158,11,.12),rgba(244,63,94,.1));border:1px solid rgba(245,158,11,.35);border-radius:8px;padding:11px 13px;font-size:15px;font-weight:700;line-height:1.5;color:var(--txt);white-space:pre-wrap;word-break:break-word;}
+.hook-chip{font-size:11px;color:#f59e0b;background:rgba(245,158,11,.13);padding:2px 7px;border-radius:4px;display:inline-flex;align-items:center;gap:3px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .done-bar{font-size:12px;font-weight:600;padding:6px 10px;border-radius:6px;text-align:center;cursor:pointer;border:1px dashed var(--bor);color:var(--txt3);transition:all .15s;user-select:none;}
 .done-bar:hover{border-color:#10b981;color:#10b981;}
 .done-bar.is-done{background:rgba(16,185,129,.15);border:1px solid #10b981;color:#10b981;box-shadow:0 0 10px rgba(16,185,129,.18);}
@@ -577,6 +579,10 @@ details.fold>.fold-body{padding:4px 14px 14px;}
     <div class="detail-content">
       <div class="detail-badges" id="detailBadges"></div>
       <div class="detail-title" id="detailTitle"></div>
+      <div id="detailHookWrap" class="detail-section" style="display:none">
+        <div class="detail-label">✨ 精華鉤子（封面字卡） <button class="detail-copy-btn ghost" id="btnCopyHook" style="width:auto;margin:0;padding:3px 10px;font-size:11px">📋 複製</button></div>
+        <div class="hook-box" id="detailHook"></div>
+      </div>
       <div id="detailZhWrap" class="detail-section">
         <div class="detail-label"><span id="detailZhLabel">中文 Prompt</span> <span class="char-count" id="charZh"></span></div>
         <div class="detail-prompt zh" id="detailZh"></div>
@@ -682,6 +688,10 @@ details.fold>.fold-body{padding:4px 14px 14px;}
                 <button type="button" class="fc-btn" id="fcNa" onclick="setFc('na')">— 無需查證</button>
               </div>
               <input type="hidden" id="voFc" value="pending">
+            </div>
+            <div class="fg" style="margin-bottom:10px">
+              <label>✨ 精華鉤子（封面字卡）</label>
+              <textarea id="voHook" rows="2" placeholder="封面用的白字精華鉤子，例如：省 20 萬仲介費，結果【賠更多】" style="font-weight:600"></textarea>
             </div>
             <div class="fg" style="margin-bottom:10px">
               <label>純口播稿</label>
@@ -1428,6 +1438,7 @@ function render(){
         </div>
         <div class="card-title">${esc(p.title||'未命名')}</div>
         ${voItem?`<div class="done-bar ${p.done?'is-done':''}" onclick="event.stopPropagation();toggleDone('${p.id}')">${p.done?'✅ 已口播':'⬜ 待口播 · 點此標記'}</div>`:''}
+        ${p.hook?`<span class="hook-chip">✨ ${esc(p.hook)}</span>`:''}
         ${p.voiceover?`<div class="vo-card-preview">${esc(p.voiceover)}</div>`
           :(p.promptZh?`<div class="prompt-box pzh">${esc(p.promptZh)}</div>`:'')}
         ${(!p.voiceover&&p.promptEn)?`<div class="prompt-box pen">${esc(p.promptEn)}</div>`:''}
@@ -1576,6 +1587,9 @@ function openDetail(p){
     (p.favorite?'<span class="fav-icon" style="font-size:16px">⭐</span>':'')+
     (p.pinned?'<span class="pin-icon" style="font-size:14px">📌</span>':'');
   $('detailTitle').textContent=p.title||'未命名';
+  // hook（精華鉤子，封面字卡）
+  $('detailHookWrap').style.display=p.hook?'block':'none';
+  $('detailHook').textContent=p.hook||'';
   // zh (口播模式顯示為「純口播稿」)
   const isVo=!!(p.voiceover||getCat(p.catId)?.voMode||p.catId==='voiceover');
   $('detailZhLabel').textContent=isVo?'🎙️ 純口播稿':'中文 Prompt';
@@ -1631,6 +1645,7 @@ $('detailBD').onclick=e=>{if(e.target===$('detailBD'))closeDetail();};
 $('btnCopyZh').onclick=()=>{const p=DB.prompts.find(x=>x.id===viewPId);if(p)triggerCopy(p.promptZh||'',p.id,'zh');};
 $('btnCopyEn').onclick=()=>{const p=DB.prompts.find(x=>x.id===viewPId);if(p)triggerCopy(p.promptEn||'',p.id,'en');};
 $('btnCopyEdit').onclick=e=>{e.stopPropagation();const p=DB.prompts.find(x=>x.id===viewPId);if(p)navigator.clipboard.writeText(p.editing||'').then(()=>toast('已複製剪輯對照表'));};
+$('btnCopyHook').onclick=e=>{e.stopPropagation();const p=DB.prompts.find(x=>x.id===viewPId);if(p)navigator.clipboard.writeText(p.hook||'').then(()=>toast('已複製精華鉤子'));};
 $('btnDetailEdit').onclick=()=>{const p=DB.prompts.find(x=>x.id===viewPId);if(p){$('detailBD').classList.remove('open');openPromptModal(p);}};
 $('btnDetailFav').onclick=()=>{const p=DB.prompts.find(x=>x.id===viewPId);if(!p)return;p.favorite=!p.favorite;p.updated=Date.now();openDetail(p);render();renderMainTabs();sched();};
 $('btnDetailPin').onclick=()=>{const p=DB.prompts.find(x=>x.id===viewPId);if(!p)return;p.pinned=!p.pinned;p.updated=Date.now();openDetail(p);render();sched();toast(p.pinned?'已釘選':'已取消釘選');};
@@ -1672,6 +1687,7 @@ function buildSharePageHtml(p){
   const cover=p.thumbnail||'';
   const desc=(script||'點開查看完整口播內容').replace(/\s+/g,' ').slice(0,90);
   const src=/^https?:\/\//i.test(p.source||'')?p.source:''; // 僅允許 http(s) 來源連結
+  const hook=p.hook||'';
   // 平台文案區（只列有填的平台）
   const filledPlats=PLATS.filter(pl=>(p.platforms?.[pl.k]||'').trim());
   const platHtml=filledPlats.length?`<div class="plats-sec"><div class="sec-title">📱 平台文案</div>${filledPlats.map(pl=>`
@@ -1712,12 +1728,15 @@ button.g{background:transparent;color:#1f1b16;border:1px solid #d8cfbd;}
 .pcopy{font-size:12px;padding:5px 13px;border-radius:7px;border:1px solid #d8cfbd;background:transparent;color:#1f1b16;cursor:pointer;transition:.15s;}
 .pcopy:hover{background:#1f1b16;color:#f4f0e6;}
 .ptext{font-size:13.5px;line-height:1.8;white-space:pre-wrap;word-break:break-word;color:#3a342c;}
+.hook-box{margin:0 0 18px;padding:14px 16px;background:linear-gradient(135deg,#fff7e6,#ffeef0);border:1px solid #f0d9a8;border-radius:12px;font-size:17px;font-weight:700;line-height:1.5;color:#8a3320;white-space:pre-wrap;word-break:break-word;}
+.hook-label{font-size:11px;letter-spacing:1px;color:#b1442a;font-weight:700;margin-bottom:6px;}
 @media(max-width:600px){h1{font-size:22px}.wrap{padding:18px 16px 56px}}
 </style></head><body>
 <div class="wrap">
 ${cover?`<img class="cover" src="${esc(cover)}" onclick="window.open(this.src)">`:''}
 <div class="badge">🎙️ 口播稿</div>
 <h1>${esc(title)}</h1>
+${hook?`<div class="hook-box"><div class="hook-label">✨ 精華鉤子（封面字卡）</div>${esc(hook)}</div>`:''}
 <div class="script" id="s">${esc(script||'（尚無口播稿內容）')}</div>
 ${src?`<div class="source-box"><div class="source-label">📰 新聞來源</div><a href="${esc(src)}" target="_blank" rel="noopener">${esc(src)}</a></div>`:''}
 ${platHtml}
@@ -2024,11 +2043,12 @@ function openPromptModal(p=null){
     $('promptForm').notes.value=p.notes||'';
     $('promptForm').fav.checked=!!p.favorite;
     $('voSource').value=p.source||'';
+    $('voHook').value=p.hook||'';
     $('voVoiceover').value=p.voiceover||'';
     $('voEditing').value=p.editing||'';
     $('voDone').checked=!!p.done;
   }else{
-    $('voSource').value='';$('voVoiceover').value='';$('voEditing').value='';$('voDone').checked=false;
+    $('voSource').value='';$('voHook').value='';$('voVoiceover').value='';$('voEditing').value='';$('voDone').checked=false;
   }
   // 摺疊區智慧展開：有內容的區自動打開，沒內容收合省空間
   $('voEditing').closest('details').open=!!(p&&(p.editing||(p.editingImages&&p.editingImages.length)));
@@ -2097,6 +2117,7 @@ $('btnPromptSave').onclick=async()=>{
     notes:fd.get('notes'),favorite:fd.get('fav')==='on',updated:now,
     source:vo?$('voSource').value:'',
     factCheck:vo?voFcVal:'',
+    hook:vo?$('voHook').value:'',
     voiceover:vo?$('voVoiceover').value:'',
     editing:vo?$('voEditing').value:'',
     editingImages:vo?editingImages:[],
@@ -2260,13 +2281,14 @@ $('expXlsx').onclick=()=>{
   const voRows=DB.prompts.filter(p=>p.voiceover||getCat(p.catId)?.voMode).map(p=>({
     '標題':p.title||'','已口播':p.done?'✅':'⬜',
     '查證狀態':FC_MAP[p.factCheck]?.t||'','來源連結':p.source||'',
+    '精華鉤子':p.hook||'',
     '口播稿':p.voiceover||'','剪輯對照表':p.editing||'',
     'TikTok':p.platforms?.tiktok||'','YouTube':p.platforms?.youtube||'',
     'Instagram':p.platforms?.ig||'','Threads':p.platforms?.threads||'','Facebook':p.platforms?.fb||'',
     '更新日期':fmt(p.updated)}));
   if(voRows.length){
     const ws2=XLSX.utils.json_to_sheet(voRows);
-    ws2['!cols']=[{wch:28},{wch:7},{wch:10},{wch:35},{wch:60},{wch:50},{wch:30},{wch:30},{wch:30},{wch:30},{wch:30},{wch:12}];
+    ws2['!cols']=[{wch:28},{wch:7},{wch:10},{wch:35},{wch:30},{wch:60},{wch:50},{wch:30},{wch:30},{wch:30},{wch:30},{wch:30},{wch:12}];
     XLSX.utils.book_append_sheet(wb,ws2,'口播');
   }
   XLSX.writeFile(wb,`提詞庫-${new Date().toISOString().slice(0,10)}.xlsx`);
