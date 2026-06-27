@@ -45,7 +45,7 @@ items.slice().reverse().forEach(it=>{ // reverse 讓多篇保持原順序 unshif
   db.prompts.unshift({
     pinned:false,copyCount:0,id:uid(),created:now,
     videoUrl:'',audioUrl:'',catId:'voiceover',subId:'',
-    title:String(it.title),thumbnail:'',
+    title:String(it.title),thumbnail:it.thumbnail?String(it.thumbnail):'',
     promptZh:String(it.voiceover),promptEn:'',
     tags:Array.isArray(it.tags)?it.tags:[],
     notes:it.notes?String(it.notes):'',favorite:false,updated:now,
